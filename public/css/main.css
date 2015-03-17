@@ -1,0 +1,26 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 18.06.2014, 18:31:53
+    Author     : Christoph Franke
+*/
+
+html, body {
+}
+
+body {
+}
+
+#mainFrame{
+}
+
+.visualization {
+    width: 90%;
+    height: 600px;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+}

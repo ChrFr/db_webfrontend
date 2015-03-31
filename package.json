@@ -18,6 +18,8 @@
   },
   "main": "./server/server",
   "devDependencies": {
+    "d3": "3.5.x",
+    "jsdom": "https://github.com/springmeyer/jsdom-nogyp/tarball/c501ee8b71d8",
     "express": "4.x",
     "csurf": "1.x",
     "cookie-parser": "1.x",

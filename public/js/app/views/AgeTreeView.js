@@ -4,10 +4,8 @@ define(["backbone", "d3"],
         var AgeTreeView = Backbone.View.extend({
             el: "mainFrame",
             
-            initialize: function() {    
-                
-                _.bindAll(this, 'render');
-                this.collection.fetch({success: this.render});
+            initialize: function(options) { 
+                this.render();
                                 
             },
 
@@ -16,13 +14,11 @@ define(["backbone", "d3"],
 
             render: function() {
             
-                var femaleModel = this.collection.findWhere({weiblich: true});
-                var femaleAges = femaleModel.get('alter');
-                var maleModel = this.collection.findWhere({weiblich: false});
-                var maleAges = maleModel.get('alter');
+                var femaleAges = this.model.get('alter_weiblich');
+                var maleAges = this.model.get('alter_maennlich');
                 
-                var region = femaleModel.get('rs');
-                var year = femaleModel.get('jahr');
+                var region = this.model.get('rs');
+                var year = this.model.get('jahr');
                 var title = "Bevölkerungsentwicklung " + region + " " + year;
                 
                 var margin = {
@@ -113,7 +109,7 @@ define(["backbone", "d3"],
                   .tickPadding(margin.middle);
           
                 yAxis.tickFormat(function(d) {
-                    return (d % 5 != 0) ? '': d;
+                    return (d % 5 !== 0) ? '': d;
                 });
 
                 var xAxisRight = d3.svg.axis()

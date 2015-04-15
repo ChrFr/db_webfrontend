@@ -9,9 +9,6 @@ define(["backbone"],
             initialize: function(options) {
                 this.url = this.url.replace('{rs}', options.rs)
                                    .replace('{year}', options.year);
-                if(typeof(options.female) !== 'undefined')
-                    this.url += '?weiblich=' + options.female.toString();
-                                   
             },
         });
         return AgeModel;

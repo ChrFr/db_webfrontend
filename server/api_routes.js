@@ -66,7 +66,13 @@ module.exports = function(){
     
     var bevoelkerungsprognose = {
         list: function(req, res){
-            return res.status(404).send("not implemented");
+          pgQuery('SELECT jahr FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(result){
+              //var ret = [];
+              //result.forEach(function(entry){
+              //    ret.push(entry.jahr);
+              //});
+              return res.status(200).send(result);
+          });
         },
         
         getYear: function(req, res, onSuccess){            

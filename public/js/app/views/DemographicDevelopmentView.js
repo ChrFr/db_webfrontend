@@ -8,7 +8,8 @@ define(["backbone", "text!templates/DemographicDevelopment.html",  "views/AgeTre
             // View constructor
             initialize: function() {       
                 _.bindAll(this, 'render');
-                this.model.fetch({success: this.render});
+                this.render();
+                //this.model.fetch({success: this.render});
             },
 
             events: {
@@ -17,9 +18,12 @@ define(["backbone", "text!templates/DemographicDevelopment.html",  "views/AgeTre
 
             render: function() {
                 this.template = _.template(template, {});
-                this.el.innerHTML = this.template;     
+                this.el.innerHTML = this.template;    
+                var width = document.getElementsByTagName('body')[0].clientWidth;
                 this.agetree = new AgeTreeView({el: this.el.getElementsByClassName("visualization"),
-                                               model: this.model});
+                                                model: this.model,
+                                                width: 0.9 * width,
+                                                height: 600});
                 return this;
             },                   
             

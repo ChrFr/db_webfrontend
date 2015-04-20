@@ -5,6 +5,8 @@ define(["backbone", "d3"],
             el: "mainFrame",
             
             initialize: function(options) { 
+                this.width = options.width;
+                this.height = options.height;
                 this.render();
                                 
             },
@@ -13,7 +15,6 @@ define(["backbone", "d3"],
             },
 
             render: function() {
-            
                 var femaleAges = this.model.get('alter_weiblich');
                 var maleAges = this.model.get('alter_maennlich');
                 
@@ -29,9 +30,9 @@ define(["backbone", "d3"],
                   middle: 0
                 };
                 
-                var width = this.el.clientWidth - margin.left - margin.right,
-                    height = this.el.clientHeight - margin.top - margin.bottom;
-
+                var width = this.width - margin.left - margin.right,
+                    height = this.height - margin.top - margin.bottom;
+            
                 var regionWidth = width/2 - margin.middle;
                 var pointA = regionWidth,
                     pointB = width - regionWidth;

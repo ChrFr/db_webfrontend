@@ -54,14 +54,15 @@ define(["backbone", "text!templates/test.html", "models/AgeModel",
                     yearSelector.removeChild(yearSelector.firstChild);
                 };
                 ageColl.fetch({success: function(){
-                    new OptionView({el: yearSelector, name: 'Bitte wählen', value: null});    
+                    new OptionView({el: yearSelector, name: 'Bitte wählen', value: -1});    
                     ageColl.each(function(ageModel){                        
                         new OptionView({el: yearSelector,
                             name: ageModel.get('jahr'), 
                             value: ageModel.get('jahr')})
                     });
-                    yearSelector.onchange = function(bla) {                        
-                        if (bla.target.value !== null){
+                    yearSelector.onchange = function(bla) { 
+                        //value default -1 (for some reason null doesn't work)
+                        if (bla.target.value > 0){
                             _this.year = bla.target.value;       
                             _this.renderData();
                         }
@@ -72,9 +73,12 @@ define(["backbone", "text!templates/test.html", "models/AgeModel",
             renderData: function(){                
                 var ages = new AgeModel({rs: this.rs, 
                                          year: this.year});
-                this.dataView = new DemographicDevelopmentView({
-                    el: this.el.querySelector("#dataView"),
-                    model: ages});
+                var dataView = this.el.querySelector("#dataView");
+                ages.fetch({success: function(){
+                    this.dataView = new DemographicDevelopmentView({
+                        el: dataView,
+                        model: ages});     
+                }});
             },
             
             //remove the view

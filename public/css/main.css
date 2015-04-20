@@ -12,13 +12,14 @@ body {
 #mainFrame{
 }
 
+/*
 .visualization {
     width: 90%;
     height: 600px;
     border-color: black;
     border-width: 2px;
     border-style: solid;
-}
+}*/
 
 select {
     width: 100px;

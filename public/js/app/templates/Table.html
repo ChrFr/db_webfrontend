@@ -1,0 +1,14 @@
+<table id="table">
+    <h2>
+        <%- title %>
+    </h2>
+    <thead>
+        <tr>
+            <% _.each( columns, function( column ){ %>
+                <th data-field="<%- column.name %>">
+                    <%- column.description %>
+                </th>
+            <% }); %>
+        </tr>
+    </thead>
+</table>

@@ -21,6 +21,10 @@ body {
     border-style: solid;
 }*/
 
+.tab-content{
+    width: 500px;
+}
+
 select {
     width: 100px;
 }

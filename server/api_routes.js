@@ -66,7 +66,7 @@ module.exports = function(){
     
     var bevoelkerungsprognose = {
         list: function(req, res){
-          pgQuery('SELECT jahr FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(result){
+          pgQuery('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(result){
               //var ret = [];
               //result.forEach(function(entry){
               //    ret.push(entry.jahr);

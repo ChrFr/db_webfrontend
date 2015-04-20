@@ -49,19 +49,20 @@ define(["backbone", "text!templates/test.html", "models/AgeModel",
             renderYears: function(){
                 var _this = this;
                 var ageColl = new AgeCollection({rs: this.rs});
+                this.ageColl = ageColl;
                 var yearSelector = this.el.querySelector("#yearSelect");
                 while (yearSelector.firstChild) {
                     yearSelector.removeChild(yearSelector.firstChild);
                 };
                 ageColl.fetch({success: function(){
-                    new OptionView({el: yearSelector, name: 'Bitte wählen', value: -1});    
+                    new OptionView({el: yearSelector, name: 'Bitte wählen', value: -2}); 
+                    new OptionView({el: yearSelector, name: 'alle anzeigen', value: -1}); 
                     ageColl.each(function(ageModel){                        
                         new OptionView({el: yearSelector,
                             name: ageModel.get('jahr'), 
                             value: ageModel.get('jahr')})
                     });
                     yearSelector.onchange = function(bla) { 
-                        //value default -1 (for some reason null doesn't work)
                         if (bla.target.value > 0){
                             _this.year = bla.target.value;       
                             _this.renderData();
@@ -70,15 +71,15 @@ define(["backbone", "text!templates/test.html", "models/AgeModel",
                 }});
             },
             
-            renderData: function(){                
-                var ages = new AgeModel({rs: this.rs, 
-                                         year: this.year});
+            renderData: function(){          
+                var _this = this;
+                var ages = this.ageColl.find(function(item){
+                    return item.get('jahr') == _this.year;
+                });
                 var dataView = this.el.querySelector("#dataView");
-                ages.fetch({success: function(){
-                    this.dataView = new DemographicDevelopmentView({
-                        el: dataView,
-                        model: ages});     
-                }});
+                this.dataView = new DemographicDevelopmentView({
+                    el: dataView,
+                    model: ages});     
             },
             
             //remove the view

@@ -131,8 +131,67 @@ module.exports = function(){
         }
         
     };
+    
+    var session = {
+        
+        getToken: function(req, res){
+            return res.status(200).send({csrf: req.csrfToken()});
+        },
+        
+        getStatus: function(req, res){
+            if(req.session.user){
+              res.send(200, {
+                  auth : true,
+                  user : req.session.user
+                });
+            }else{
+                res.send(401, {
+                    auth : false,
+                    csrf : req.session._csrf
+                });
+            }
+        },
+
+        login: function(req, res){
+            var name = req.body.name;
+            var password = req.body.password;
+            pgQuery("SELECT * from users WHERE name=$1", [name],
+            function(result){
+                for (var i=0; i < result.length; i++) {
+                    if(result[i].password === password){    
+                        res.statusCode = 200;
+                        req.session.user = {name: result[i].name,
+                                            email: result[i].email,
+                                            id: result[i].id,
+                                            superuser: result[i].superuser};
+                        return res.json({
+                            auth : true,
+                            user : req.session.user
+                        });
+                    }
+                }; 
+                req.session.user = null;
+                res.statusCode = 400;
+                return res.end('invalid user or password');             
+            });
+        },
+
+        logout: function(req, res){ 
+            req.session.user = null;
+            res.send(200);
+        }
+    };
    
     app.map({
+        
+        '/session': {
+            get: session.getToken,
+            delete: session.logout, 
+            '/login': {
+                get: session.getStatus,  
+                post: session.login,      
+            },
+        },
         '/gemeinden': {
             get: gemeinden.list,
             '/:rs': {

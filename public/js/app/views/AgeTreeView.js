@@ -140,7 +140,33 @@ define(["backbone", "d3"],
                   .attr('class', 'axis x right')
                   .attr('transform', translation(pointB, height))
                   .call(xAxisRight);
+          
+                // LEGEND
+                
+                svg.append("rect")
+                    .attr('class', 'female')
+                    .attr("x", 10)
+                    .attr("y", 0)
+                    .attr("width", 10)
+                    .attr("height", 10);            
             
+                svg.append("text")
+                    .attr("x", 30)             
+                    .attr("y", 10 )
+                    .text('weiblich');
+                
+                svg.append("rect")
+                    .attr('class', 'male')
+                    .attr("x", 10)
+                    .attr("y", 30)
+                    .attr("width", 10)
+                    .attr("height", 10);
+            
+                svg.append("text")
+                    .attr("x", 30)             
+                    .attr("y", 40 )
+                    .text('männlich');
+                  
                 function translation(x,y) {
                   return 'translate(' + x + ',' + y + ')';
                 }

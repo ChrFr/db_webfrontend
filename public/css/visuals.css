@@ -30,12 +30,14 @@ svg {
   stroke-dasharray: 2,2;
 }
 
-.male rect {
+.male rect,
+rect.male{
   fill-opacity: 1;
   fill: #5EDAFF;
 }
 
-.female rect {
+.female rect,
+rect.female{
   fill-opacity: 1;
   fill: #FFE573;
 }

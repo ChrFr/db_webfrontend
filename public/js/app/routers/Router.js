@@ -1,8 +1,9 @@
 // Router.js
 // ----------------
-define(["backbone", "views/HomeView", "views/TestView"],
+define(["backbone", "views/NavbarView", "views/HomeView", "views/TestView", 
+    "views/LoginView", "models/LoginModel"],
 
-    function(Backbone, Home, Test) {
+    function(Backbone, Navbar, Home, Test, Login, Session) {
 
         /**
         * Routes the applications URL's when using hash tags. 
@@ -12,12 +13,15 @@ define(["backbone", "views/HomeView", "views/TestView"],
         var Router = Backbone.Router.extend({
             
             initialize: function() {
+                this.navbar = new Navbar({session: this.session});
+                this.session = new Session();
                 Backbone.history.start();
             },
 
             routes: {
                 "": "home",
-                "test": "test"
+                "test": "test",
+                "login": "login"
             },
 
             home: function() {   
@@ -26,6 +30,11 @@ define(["backbone", "views/HomeView", "views/TestView"],
             
             test: function() {   
                 this.view = new Test({el: document.getElementById('mainFrame')});
+            },
+            
+            login: function() {   
+                this.view = new Login({el: document.getElementById('mainFrame'),
+                                       session: this.session});
             }
 
         });

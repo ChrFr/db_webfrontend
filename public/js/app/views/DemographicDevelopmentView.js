@@ -1,8 +1,8 @@
 
-define(["backbone", "text!templates/DemographicDevelopment.html",  
+define(["backbone", "text!templates/DemographicDevelopment.html", "views/OptionView",  
     "views/AgeTreeView", "views/TableView", "bootstrap"],
 
-    function(Backbone, template, AgeTreeView, TableView){
+    function(Backbone, template, OptionView, AgeTreeView, TableView){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
             el: document,
@@ -18,26 +18,61 @@ define(["backbone", "text!templates/DemographicDevelopment.html",
             },
 
             render: function() {
+                var _this = this;
                 this.template = _.template(template, {});
                 
                 this.el.innerHTML = this.template;    
+                
+                var yearSelector = this.el.querySelector("#yearSelect");
+                while (yearSelector.firstChild) {
+                    yearSelector.removeChild(yearSelector.firstChild);
+                };
+                
+                new OptionView({el: yearSelector, name: 'Bitte wählen', value: -2}); 
+                new OptionView({el: yearSelector, name: 'alle anzeigen', value: -1}); 
+                this.collection.each(function(ageModel){                        
+                    new OptionView({el: yearSelector,
+                        name: ageModel.get('jahr'), 
+                        value: ageModel.get('jahr')})
+                });
+                                
+                yearSelector.onchange = function(bla) { 
+                    if (bla.target.value > 0){
+                        _this.renderSingleYear(bla.target.value);
+                    }
+                }
+                /*
+                    var ages = ageColl.find(function(item){
+                        return item.get('jahr') == _this.year;
+                    });*/
+                
+                return this;
+            },            
+            
+            renderSingleYear: function(year){
+                var vis = this.el.getElementsByClassName("visualization")[0];
+                while (vis.firstChild) {
+                    vis.removeChild(vis.firstChild);
+                };
+                var ageModel = this.collection.find(function(item){
+                    return item.get('jahr') == year;
+                });
                 var width = document.getElementsByTagName('body')[0].clientWidth;
-                this.agetree = new AgeTreeView({el: this.el.getElementsByClassName("visualization"),
-                                                model: this.model,
+                this.agetree = new AgeTreeView({el: vis,
+                                                model: ageModel,
                                                 width: 0.9 * width,
                                                 height: 600});
                 var columns = [];
                 
-                var region = this.model.get('rs');
-                var year = this.model.get('jahr');
+                var region = ageModel.get('rs');
                 var title = "Bevölkerungsentwicklung " + region + " " + year;                
                 
-                columns.push({name: "year", description: "Jahr"});
+                columns.push({name: "year", description: "Alter"});
                 columns.push({name: "female", description: "Anzahl weiblich"});                
                 columns.push({name: "male", description: "Anzahl männlich"});
                 
-                var femaleAges = this.model.get('alter_weiblich');
-                var maleAges = this.model.get('alter_maennlich');
+                var femaleAges = ageModel.get('alter_weiblich');
+                var maleAges = ageModel.get('alter_maennlich');
                 var data = [];
                 for (var i = 0; i < femaleAges.length; i++) { 
                     data.push({
@@ -46,13 +81,13 @@ define(["backbone", "text!templates/DemographicDevelopment.html",
                         male: maleAges[i]
                     });
                 }
-                this.table = new TableView({el: this.el.getElementsByClassName("table"),
-                                            columns: columns,
-                                            title: title,
-                                            data: data
-                                        });
-                return this;
-            },                   
+                this.table = new TableView({
+                    el: this.el.getElementsByClassName("table"),
+                    columns: columns,
+                    title: title,
+                    data: data
+                });
+            },
             
             //remove the view
             close: function () {

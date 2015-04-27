@@ -72,7 +72,7 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
             
             //display the login status in the form
             displayStatus: function(){            
-                var user = this.session.get('user');                
+                var user = app.session.get('user');                
                 $('#loginStatus').find('#name').val(user.name);
                 $('#loginStatus').find('#email').val(user.email);
                 $('#loginStatus').find('#password').val(user.password);

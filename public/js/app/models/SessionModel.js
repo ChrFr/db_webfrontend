@@ -25,12 +25,7 @@ define(["jquery", "backbone"],
                         'X-CSRF-Token' : csrf
                     }}
                 );    
-            },
-            
-            check: function(){
-                this.fetch();
-                console.log(this);
-            },
+            },            
             
             //authenticate by sending the data wit the user information
             //to the server

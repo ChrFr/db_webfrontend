@@ -1,9 +1,10 @@
 require(["app", "router", "models/SessionModel", "views/NavbarView"],
 
 function(app, Router, SessionModel, Navbar) {
-    //before anything else happens, check if already logged in
+    //before anything else happens, check if already logged in by fetching
+    //(cookies are used)
     app.session = new SessionModel();
-    app.session.check();
+    app.session.fetch();
     
     //attach navbar
     app.navbar = new Navbar();

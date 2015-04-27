@@ -134,10 +134,6 @@ module.exports = function(){
     
     var session = {
         
-        getToken: function(req, res){
-            return res.status(200).send({csrf: req.csrfToken()});
-        },
-        
         getStatus: function(req, res){
             if(req.session.user){
               res.send(200, {
@@ -185,12 +181,9 @@ module.exports = function(){
     app.map({
         
         '/session': {
-            get: session.getToken,
-            delete: session.logout, 
-            '/login': {
-                get: session.getStatus,  
-                post: session.login,      
-            },
+            get: session.getStatus,
+            delete: session.logout,   
+            post: session.login
         },
         '/gemeinden': {
             get: gemeinden.list,

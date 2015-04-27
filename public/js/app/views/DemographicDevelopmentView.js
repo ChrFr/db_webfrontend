@@ -1,6 +1,6 @@
 
 define(["backbone", "text!templates/DemographicDevelopment.html",  
-    "views/AgeTreeView", "views/TableView"],
+    "views/AgeTreeView", "views/TableView", "bootstrap"],
 
     function(Backbone, template, AgeTreeView, TableView){
         var DemographicDevelopmentView = Backbone.View.extend({

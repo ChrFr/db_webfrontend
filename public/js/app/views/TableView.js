@@ -24,7 +24,6 @@ define(["backbone", "jquery", "text!templates/Table.html", "bootstraptable"],
                     columns: this.columns});
                 
                 this.el.innerHTML = this.template;   
-                console.log($('#table'));
                 $('#table').bootstrapTable({
                     data: this.data
                 });

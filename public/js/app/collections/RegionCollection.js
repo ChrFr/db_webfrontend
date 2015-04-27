@@ -8,7 +8,7 @@ define(["backbone","models/RegionModel"],
             // Tells the Backbone Collection that all of it's models will be of type Model (listed up top as a dependency)
             model: AgeModel,
             
-            url: 'db/gemeinden/',
+            url: 'api/gemeinden/',
 
             initialize: function(options){   
             },    

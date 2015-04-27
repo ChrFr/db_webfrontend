@@ -1,7 +1,7 @@
 // Router.js
 // ----------------
 define(["backbone", "views/NavbarView", "views/HomeView", "views/TestView", 
-    "views/LoginView", "models/LoginModel"],
+    "views/LoginView", "models/SessionModel"],
 
     function(Backbone, Navbar, Home, Test, Login, Session) {
 

@@ -1,6 +1,6 @@
 // LoginView.js
 // -------
-define(["jquery", "backbone", "text!templates/login.html"],
+define(["app","jquery", "backbone", "text!templates/login.html"],
 
     /**
     * A View that renders a login and registration form onto the screen. 
@@ -11,7 +11,7 @@ define(["jquery", "backbone", "text!templates/login.html"],
     * @return                   the LoginView class
     * @see                      a login and registration form
     */
-    function($, Backbone, template){
+    function(app, $, Backbone, template){
 
         var LoginView = Backbone.View.extend({
 
@@ -19,12 +19,12 @@ define(["jquery", "backbone", "text!templates/login.html"],
             el: "#mainFrame",
 
             //constructor
-            initialize: function(options) {
+            initialize: function() {
                 var _this = this;
-                var options = options || {};
-                this.session = options.session;
-                if (this.session) 
-                    this.session.bind("change:user", function() {_this.render()});
+                
+                //render view, each time user changes (to show login status)
+                if (app.session) 
+                    app.session.bind("change:user", function() {_this.render()});
                 this.render();      
             },            
 
@@ -41,7 +41,7 @@ define(["jquery", "backbone", "text!templates/login.html"],
                 
                 // Dynamically updates the UI with the view's template
                 this.$el.html(this.template); 
-                if (this.session.get('authenticated')){
+                if (app.session.get('authenticated')){
                     $('#loginForm').hide();
                     $('#loginStatus').show();
                     this.displayStatus();
@@ -59,7 +59,7 @@ define(["jquery", "backbone", "text!templates/login.html"],
             login: function() {
                 var name = $('#loginForm').find('#name').val() || '';      
                 var password = $('#loginForm').find('#password').val() || '';
-                this.session.login({
+                app.session.login({
                     name: name,
                     password: password
                 });
@@ -67,7 +67,7 @@ define(["jquery", "backbone", "text!templates/login.html"],
             
             //log out
             logout: function(){
-                this.session.logout();
+                app.session.logout();
             },            
             
             //display the login status in the form

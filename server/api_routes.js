@@ -24,13 +24,13 @@ module.exports = function(){
     
     var pg = require("pg");
     
-    var config = require('./config').dbconfig;
+    var config = require('./config');
 
     //var client = new pg.Client(conString);
     //client.connect();
     
     function pgQuery(queryString, parameters, callback){
-        pg.connect(config, function(err, client, done) {
+        pg.connect(config.dbconfig, function(err, client, done) {
             if(err) {
                 return callback([]);
             }
@@ -135,36 +135,53 @@ module.exports = function(){
     var session = {
         
         getStatus: function(req, res){
-            if(req.session.user){
-              res.send(200, {
-                  auth : true,
-                  user : req.session.user
-                });
-            }else{
-                res.send(401, {
-                    auth : false,
-                    csrf : req.session._csrf
-                });
-            }
+            var name = req.signedCookies.user;
+            var password = req.signedCookies.auth_token;
+            
+            pgQuery("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
+            function(result){
+                if (result.length > 0) {
+                    res.statusCode = 200;
+
+                    var user = {name: result[0].name,
+                                email: result[0].email,
+                                id: result[0].id,
+                                auth_token: password,
+                                superuser: result[0].superuser};
+                            
+                    return res.json({
+                        authenticated : true,
+                        user : user
+                    });                    
+                }; 
+                req.session.user = null;
+                res.statusCode = 401;
+                return res.end('not logged in');             
+            });
         },
 
         login: function(req, res){
             var name = req.body.name;
             var password = req.body.password;
-            pgQuery("SELECT * from users WHERE name=$1", [name],
+            pgQuery("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
             function(result){
-                for (var i=0; i < result.length; i++) {
-                    if(result[i].password === password){    
-                        res.statusCode = 200;
-                        req.session.user = {name: result[i].name,
-                                            email: result[i].email,
-                                            id: result[i].id,
-                                            superuser: result[i].superuser};
-                        return res.json({
-                            auth : true,
-                            user : req.session.user
-                        });
-                    }
+                if (result.length > 0) {
+                    res.statusCode = 200;
+
+                    var user = {name: result[0].name,
+                                email: result[0].email,
+                                id: result[0].id,
+                                auth_token: password,
+                                superuser: result[0].superuser};
+                            
+                    var maxAge = config.serverconfig.maxCookieAge; 
+                    res.cookie('user', user.name, { signed: true, maxAge:  maxAge});
+                    res.cookie('auth_token', user.auth_token, { signed: true, maxAge:  maxAge});
+
+                    return res.json({
+                        authenticated : true,
+                        user : user
+                    });                    
                 }; 
                 req.session.user = null;
                 res.statusCode = 400;
@@ -173,7 +190,8 @@ module.exports = function(){
         },
 
         logout: function(req, res){ 
-            req.session.user = null;
+            res.clearCookie('user');
+            res.clearCookie('auth_token');
             res.send(200);
         }
     };

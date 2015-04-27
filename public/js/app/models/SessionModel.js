@@ -19,21 +19,17 @@ define(["jquery", "backbone"],
             },
 
             initialize : function(){
-                var _this = this;
-                //on change of csrf
-                this.bind('change:csrf', function(){
-                    var csrf = _this.get('csrf');
-                    //always send csrf with request header
-                    $.ajaxSetup({                    
-                        headers : {
-                            'X-CSRF-Token' : _this.get('csrf')
-                        }}
-                    );                            
-                });
+                var csrf = $('meta[name="csrf-token"]').attr('content');
+                $.ajaxSetup({                    
+                    headers : {
+                        'X-CSRF-Token' : csrf
+                    }}
+                );    
             },
             
             check: function(){
-                
+                this.fetch();
+                console.log(this);
             },
             
             //authenticate by sending the data wit the user information

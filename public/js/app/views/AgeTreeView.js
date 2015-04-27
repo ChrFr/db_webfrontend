@@ -11,9 +11,6 @@ define(["backbone", "d3"],
                                 
             },
 
-            events: {
-            },
-
             render: function() {
                 var femaleAges = this.model.get('alter_weiblich');
                 var maleAges = this.model.get('alter_maennlich');

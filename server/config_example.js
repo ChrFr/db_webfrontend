@@ -2,7 +2,10 @@
 module.exports = function(){
     var config = {
         serverconfig: {
-            port: "port the service will listen to"
+            port: "port the service will listen to",
+            sessionSecret: "some secret",
+            cookieSecret: "another secret",
+            maxCookieAge: 1000 * 60 * 60 //in ms
         },
         dbconfig: {
             user: "username",

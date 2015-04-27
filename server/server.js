@@ -4,7 +4,7 @@ var express = require("express"),
     config = require('./config').serverconfig,
     http = require("http"),
     port = (process.env.PORT || config.port),
-    server = module.exports = express(),
+    app = module.exports = express(),
     bodyParser = require('body-parser'),
     cookieParser = require('cookie-parser'),
     session = require('express-session'),
@@ -14,28 +14,28 @@ var express = require("express"),
 // SERVER CONFIGURATION
 // ====================
     
-server.use(cookieParser());
-server.use(bodyParser.urlencoded({ extended: false }))
-server.use(bodyParser.json());
-server.use(session({secret: 'some_secret', 
-                    saveUninitialized: true,
-                    resave: true,
-                    cookie: {
-                        httpOnly: true,
-                        secure: false
-                    }
-                }));
+app.use(cookieParser(config.cookieSecret));
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json());
+app.use(session({secret: config.sessionSecret, 
+                saveUninitialized: true,
+                resave: true,
+                cookie: {
+                    httpOnly: true,
+                    secure: false
+                }
+        }));
 
-server.use(csrf());
+app.use(csrf());
 
-server.use(express["static"](__dirname + "/../public"));
-server.set('views', __dirname + '/../views');
-server.engine('html', require('ejs').renderFile);
-server.set('view engine', 'html');
-server.get("/", function(req, res){
+app.use(express["static"](__dirname + "/../public"));
+app.set('views', __dirname + '/../views');
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+app.get("/", function(req, res){
     res.render('index.html', { csrfToken: req.csrfToken() });
 });    
-server.use('/api', require('./api_routes')); 
+app.use('/api', require('./api_routes')); 
     
 //};
 
@@ -44,4 +44,4 @@ server.use('/api', require('./api_routes'));
 // ======
 
 // Start Node.js Server
-http.createServer(server).listen(port);
+http.createServer(app).listen(port);

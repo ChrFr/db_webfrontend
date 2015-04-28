@@ -118,28 +118,29 @@ module.exports = function(){
     var session = {
         
         getStatus: function(req, res){
-            var name = req.signedCookies.user;
-            var password = req.signedCookies.auth_token;
+            var name = req.signedCookies.user,
+                token = req.signedCookies.auth_token,
+                errMsg = 'nicht angemeldet';
             
-            query("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
+            query("SELECT * from users WHERE name=$1", [name],
             function(err, result){
-                if (!err && result.length !== 0) {
-                    res.statusCode = 200;
+                if(err || result.length === 0){
+                    req.session.user = null;
+                    return res.status(401).send(errMsg);
+                }
+                
+                if(token !== pbkdf2Hash.getSalt(result[0].password))
+                    return res.status(401).send(errMsg);
 
-                    var user = {name: result[0].name,
-                                email: result[0].email,
-                                id: result[0].id,
-                                auth_token: password,
-                                superuser: result[0].superuser};
-                            
-                    return res.json({
-                        authenticated : true,
-                        user : user
-                    });                    
-                }; 
-                req.session.user = null;
-                res.statusCode = 401;
-                return res.end('not logged in');             
+                var user = {name: result[0].name,
+                            email: result[0].email,
+                            superuser: result[0].superuser};
+
+                res.statusCode = 200;                           
+                return res.json({
+                    authenticated : true,
+                    user : user
+                });         
             });
         },
 

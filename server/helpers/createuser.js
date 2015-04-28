@@ -15,15 +15,21 @@ pbkdf2Hash.hash({plainPass: plainPass}, function(err, hashedPass){
         //TODO: only admin allowed
 
         pbkdf2Hash.hash({plainPass: plainPass}, function(err, hashedPass){
-            if(err)
-                return res.status(500).send('Interner Fehler bei Registrierung. Bitte versuchen Sie es erneut.');
+            if(err){
+                console.log('Interner Fehler bei Registrierung. Bitte versuchen Sie es erneut.');
+                process.exit(code=1);
+            }
             query("INSERT INTO users (name, password, superuser) VALUES ($1, $2, $3);", 
                 [user, hashedPass, superuser],
                 function(err, result){
-                    if(err)
-                        return console.log(err);
-                    else
-                        return console.log('User "' + user + '" erfolgreich hinzugefügt');
+                    if(err){
+                        console.log(err);
+                        process.exit(code=1);
+                    }
+                    else{                       
+                        console.log('User "' + user + '" erfolgreich hinzugefügt'); 
+                        process.exit(code=0);
+                    }
                 });
         });
 });

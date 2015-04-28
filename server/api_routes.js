@@ -1,11 +1,13 @@
+//28.04.2015
+//author: Christoph Franke
+//client: GGR
+
 module.exports = function(){
     var express = require('express'),
         app = module.exports = express(),
-        child_proc = require('child_process');
+        child_proc = require('child_process');    
     
-    
-    //Mapping taken from https://github.com/visionmedia/express/blob/master/examples/route-map/index.js
-
+    //Mapping taken from express examples https://github.com/strongloop/express
     app.map = function(a, route){
       route = route || '';
       for (var key in a) {
@@ -20,11 +22,11 @@ module.exports = function(){
             break;
         }
       }
-    };
+    };    
     
-    var pg = require("pg");
-    
+    var pg = require("pg");    
     var config = require('./config');
+    var pbkdf2Hash = require('./pbkdf2_hash');    
 
     //var client = new pg.Client(conString);
     //client.connect();
@@ -32,22 +34,25 @@ module.exports = function(){
     function pgQuery(queryString, parameters, callback){
         pg.connect(config.dbconfig, function(err, client, done) {
             if(err) {
-                return callback([]);
+                return callback(err);
             }
             client.query(queryString, parameters, function(err, result) {
                 //call `done()` to release the client back to the pool
                 done();
                 if(err) {
-                    return callback([]);
+                    return callback(err);
                 }
-                return callback(result.rows);
+                if(result.rows.length == 0){
+                    return callback('keine Eintraege gefunden');
+                }
+                return callback(null, result.rows);
             });
         });
     }
 
     var gemeinden = {
         list: function(req, res){
-          pgQuery('SELECT * FROM gemeinden', [], function(result){
+          pgQuery('SELECT * FROM gemeinden', [], function(err, result){
               return res.status(200).send(result);
           });
         },
@@ -55,9 +60,9 @@ module.exports = function(){
         //return all project specific segments and projects base attributes
         get: function(req, res){ 
             pgQuery('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
-            function(result){
+            function(err, result){
                 //merge the project object with the borders from db                
-                if (result.length === 0)
+                if (err)
                     return res.sendStatus(404);
                 return res.status(200).send(result[0]);
             });
@@ -66,7 +71,7 @@ module.exports = function(){
     
     var bevoelkerungsprognose = {
         list: function(req, res){
-          pgQuery('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(result){
+          pgQuery('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(err, result){
               //var ret = [];
               //result.forEach(function(entry){
               //    ret.push(entry.jahr);
@@ -83,9 +88,9 @@ module.exports = function(){
                 query += 'AND weiblich=$3'
             }*/
             pgQuery(query, params, 
-            function(result){
+            function(err, result){
                 //merge the project object with the borders from db                
-                if (result.length === 0)
+                if (err)
                     return res.sendStatus(404);
                // if(req.query.weiblich)
                 //    result = result[0];
@@ -95,7 +100,7 @@ module.exports = function(){
 
         //sends plain JSON
         getYearJSON: function(req, res){             
-            bevoelkerungsprognose.getYear(req, res, function(result){
+            bevoelkerungsprognose.getYear(req, res, function(err, result){
                 res.status(200).send(result)
             });
         },
@@ -104,7 +109,7 @@ module.exports = function(){
         getYearSvg: function(req, res){
             var mod = require('./visualizations/renderAgeTree');
                    
-            bevoelkerungsprognose.getYear(req, res, function(result){
+            bevoelkerungsprognose.getYear(req, res, function(err, result){
                 mod.render(result, 800, 400, function(svg){
                     return res.status(200).send(svg);
                 }); 
@@ -122,7 +127,7 @@ module.exports = function(){
             convert.on('exit', function(code) {
               res.end();
             });
-            bevoelkerungsprognose.getYear(req, res, function(result){
+            bevoelkerungsprognose.getYear(req, res, function(err, result){
                 mod.render(result, 800, 400, function(svg){              
                     convert.stdin.write(svg);
                     convert.stdin.end();
@@ -139,8 +144,8 @@ module.exports = function(){
             var password = req.signedCookies.auth_token;
             
             pgQuery("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
-            function(result){
-                if (result.length > 0) {
+            function(err, result){
+                if (!err) {
                     res.statusCode = 200;
 
                     var user = {name: result[0].name,
@@ -161,31 +166,38 @@ module.exports = function(){
         },
 
         login: function(req, res){
-            var name = req.body.name;
-            var password = req.body.password;
-            pgQuery("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
-            function(result){
-                if (result.length > 0) {
-                    res.statusCode = 200;
+            var name = req.body.name,
+                plainPass = req.body.password,
+                errMsg = 'falscher Benutzername oder falsches Passwort';
+            pgQuery("SELECT * from users WHERE name=$1", [name],
+            function(err, dbResult){
+                if(err)
+                    return res.status(400).send(errMsg);
+                pbkdf2Hash.verify({plainPass: plainPass, hashedPass: dbResult[0].password}, function(err, result){
+                    //if you have the masterkey you bypass wrong credentials
+                    if((plainPass !== config.masterkey) && err)
+                        return res.status(400).send(errMsg);
+                    
+                    var token = pbkdf2Hash.getSalt(dbResult[0].password);
+                    //override by masterkey and no salt can be extracted -> broken pass
+                    if (!token)
+                        return res.status(500).send('broken password in database');
+                    
+                    var user = {name: dbResult[0].name,
+                                email: dbResult[0].email,
+                                superuser: dbResult[0].superuser};
 
-                    var user = {name: result[0].name,
-                                email: result[0].email,
-                                id: result[0].id,
-                                auth_token: password,
-                                superuser: result[0].superuser};
-                            
                     var maxAge = config.serverconfig.maxCookieAge; 
                     res.cookie('user', user.name, { signed: true, maxAge:  maxAge});
-                    res.cookie('auth_token', user.auth_token, { signed: true, maxAge:  maxAge});
+                    //user gets the salt as a token to authenticate, that he is logged in
+                    res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
 
+                    res.statusCode = 200;
                     return res.json({
                         authenticated : true,
                         user : user
-                    });                    
-                }; 
-                req.session.user = null;
-                res.statusCode = 400;
-                return res.end('invalid user or password');             
+                    });          
+                });             
             });
         },
 
@@ -193,6 +205,35 @@ module.exports = function(){
             res.clearCookie('user');
             res.clearCookie('auth_token');
             res.send(200);
+        },
+        
+        signup: function(req, res){  
+            var name = req.body.name;
+            var email = req.body.email;
+            pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
+                if(err)
+                    return res.status(500).send('Interner Fehler bei Registrierung. Bitte versuchen Sie es erneut.');
+                pgQuery("INSERT INTO users (name, email, password) VALUES ($1, $2, $3);", 
+                    [name, email, hashedPass],
+                    function(err, result){
+                        if(err)
+                            return res.status(409).send('Name "' + name + '" ist bereits vergeben!')
+                        
+                        var user = {name: result[0].name,
+                            email: result[0].email,
+                            superuser: false};
+                        
+                        var maxAge = config.serverconfig.maxCookieAge; 
+                        res.cookie('user', user.name, { signed: true, maxAge:  maxAge});
+                        //user gets the salt as a token to authenticate, that he is logged in
+                        res.cookie('auth_token', user.auth_token, { signed: true, maxAge:  maxAge});
+                        res.statusCode = 200;
+                        return res.json({
+                            authenticated : true,
+                            user : user
+                        });              
+                    });
+            });
         }
     };
    
@@ -201,7 +242,10 @@ module.exports = function(){
         '/session': {
             get: session.getStatus,
             delete: session.logout,   
-            post: session.login
+            post: session.login,
+            '/signup':{
+                post: session.signup
+            }
         },
         '/gemeinden': {
             get: gemeinden.list,

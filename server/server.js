@@ -1,3 +1,6 @@
+//author: Christoph Franke
+//client: GGR
+
 // DEPENDENCIES
 // ============
 var express = require("express"),
@@ -37,9 +40,6 @@ app.get("/", function(req, res){
 });    
 app.use('/api', require('./api_routes')); 
     
-//};
-
-
 // SERVER
 // ======
 

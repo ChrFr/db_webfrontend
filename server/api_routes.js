@@ -4,65 +4,43 @@
 
 module.exports = function(){
     var express = require('express'),
-        app = module.exports = express(),
+        routes = module.exports = express(),
         child_proc = require('child_process');    
     
     //Mapping taken from express examples https://github.com/strongloop/express
-    app.map = function(a, route){
+    routes.map = function(a, route){
       route = route || '';
       for (var key in a) {
         switch (typeof a[key]) {
           // { '/path': { ... }}
           case 'object':
-            app.map(a[key], route + key);
+            routes.map(a[key], route + key);
             break;
           // get: function(){ ... }
           case 'function':
-            app[key](route, a[key]);
+            routes[key](route, a[key]);
             break;
         }
       }
     };    
     
-    var pg = require("pg");    
-    var config = require('./config');
+    var query = require('./pgquery').pgQuery;   
     var pbkdf2Hash = require('./pbkdf2_hash');    
-
-    //var client = new pg.Client(conString);
-    //client.connect();
-    
-    function pgQuery(queryString, parameters, callback){
-        pg.connect(config.dbconfig, function(err, client, done) {
-            if(err) {
-                return callback(err);
-            }
-            client.query(queryString, parameters, function(err, result) {
-                //call `done()` to release the client back to the pool
-                done();
-                if(err) {
-                    return callback(err);
-                }
-                if(result.rows.length == 0){
-                    return callback('keine Eintraege gefunden');
-                }
-                return callback(null, result.rows);
-            });
-        });
-    }
+    var config = require('./config');
 
     var gemeinden = {
         list: function(req, res){
-          pgQuery('SELECT * FROM gemeinden', [], function(err, result){
+          query('SELECT * FROM gemeinden', [], function(err, result){
               return res.status(200).send(result);
           });
         },
 
         //return all project specific segments and projects base attributes
         get: function(req, res){ 
-            pgQuery('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
+            query('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
             function(err, result){
                 //merge the project object with the borders from db                
-                if (err)
+                if (err || result.length === 0)
                     return res.sendStatus(404);
                 return res.status(200).send(result[0]);
             });
@@ -71,7 +49,7 @@ module.exports = function(){
     
     var bevoelkerungsprognose = {
         list: function(req, res){
-          pgQuery('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(err, result){
+          query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(err, result){
               //var ret = [];
               //result.forEach(function(entry){
               //    ret.push(entry.jahr);
@@ -87,10 +65,10 @@ module.exports = function(){
                 params.push(req.query.weiblich);
                 query += 'AND weiblich=$3'
             }*/
-            pgQuery(query, params, 
+            query(query, params, 
             function(err, result){
                 //merge the project object with the borders from db                
-                if (err)
+                if (err || result.length === 0)
                     return res.sendStatus(404);
                // if(req.query.weiblich)
                 //    result = result[0];
@@ -143,9 +121,9 @@ module.exports = function(){
             var name = req.signedCookies.user;
             var password = req.signedCookies.auth_token;
             
-            pgQuery("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
+            query("SELECT * from users WHERE name=$1 AND password=$2", [name, password],
             function(err, result){
-                if (!err) {
+                if (!err && result.length !== 0) {
                     res.statusCode = 200;
 
                     var user = {name: result[0].name,
@@ -169,19 +147,19 @@ module.exports = function(){
             var name = req.body.name,
                 plainPass = req.body.password,
                 errMsg = 'falscher Benutzername oder falsches Passwort';
-            pgQuery("SELECT * from users WHERE name=$1", [name],
+            query("SELECT * from users WHERE name=$1", [name],
             function(err, dbResult){
-                if(err)
+                if(err || dbResult.length === 0)
                     return res.status(400).send(errMsg);
                 pbkdf2Hash.verify({plainPass: plainPass, hashedPass: dbResult[0].password}, function(err, result){
                     //if you have the masterkey you bypass wrong credentials
-                    if((plainPass !== config.masterkey) && err)
+                    if((plainPass !== config.masterkey) && (err || result.length === 0))
                         return res.status(400).send(errMsg);
                     
                     var token = pbkdf2Hash.getSalt(dbResult[0].password);
                     //override by masterkey and no salt can be extracted -> broken pass
                     if (!token)
-                        return res.status(500).send('broken password in database');
+                        return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
                     
                     var user = {name: dbResult[0].name,
                                 email: dbResult[0].email,
@@ -207,13 +185,16 @@ module.exports = function(){
             res.send(200);
         },
         
-        signup: function(req, res){  
+        register: function(req, res){  
             var name = req.body.name;
             var email = req.body.email;
+            
+            //TODO: only admin allowed
+            
             pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
                 if(err)
                     return res.status(500).send('Interner Fehler bei Registrierung. Bitte versuchen Sie es erneut.');
-                pgQuery("INSERT INTO users (name, email, password) VALUES ($1, $2, $3);", 
+                query("INSERT INTO users (name, email, password) VALUES ($1, $2, $3);", 
                     [name, email, hashedPass],
                     function(err, result){
                         if(err)
@@ -227,24 +208,20 @@ module.exports = function(){
                         res.cookie('user', user.name, { signed: true, maxAge:  maxAge});
                         //user gets the salt as a token to authenticate, that he is logged in
                         res.cookie('auth_token', user.auth_token, { signed: true, maxAge:  maxAge});
-                        res.statusCode = 200;
-                        return res.json({
-                            authenticated : true,
-                            user : user
-                        });              
+                        return res.status(200).send(user);            
                     });
             });
         }
     };
    
-    app.map({
+    routes.map({
         
         '/session': {
             get: session.getStatus,
             delete: session.logout,   
             post: session.login,
-            '/signup':{
-                post: session.signup
+            '/register':{
+                post: session.register
             }
         },
         '/gemeinden': {
@@ -267,5 +244,5 @@ module.exports = function(){
         }
     });
     
-    return app;
+    return routes;
 }();

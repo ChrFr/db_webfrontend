@@ -4,8 +4,6 @@
 
 var crypto = require('crypto');
 
-//base64 encoded password hashes
-//pattern: <hashed salted password>$<nr of iterations used>$<salt hash>
 var pbkdf2Hash = {
     createSalt: function(){
         return crypto.randomBytes(64).toString('base64');
@@ -23,6 +21,14 @@ var pbkdf2Hash = {
             callback(null, result);
       });
     },
+    
+    getIterations: function(hashedPass){
+        return parseInt(hashedPass.split('$')[1]);
+    },
+    getSalt: function(hashedPass){
+        return hashedPass.split('$')[2];
+    },
+    
     //callback(error, hashedPass) 
     verify: function(options, callback){
         var iterations = this.getIterations(options.hashedPass),
@@ -39,12 +45,6 @@ var pbkdf2Hash = {
                 else
                     return callback("Passwords don't match");
         });
-    },
-    getIterations: function(hashedPass){
-        return parseInt(hashedPass.split('$')[1]);
-    },
-    getSalt: function(hashedPass){
-        return hashedPass.split('$')[2];
     }
 }
 

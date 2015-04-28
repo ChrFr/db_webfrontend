@@ -5,7 +5,7 @@ var user = process.argv[2],
     plainPass = process.argv[3],
     superuser = false;
 
-if(process.argv[4] == 'true')
+if(process.argv[4] === 'true')
     superuser = true;
 
 pbkdf2Hash.hash({plainPass: plainPass}, function(err, hashedPass){

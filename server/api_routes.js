@@ -60,26 +60,26 @@ module.exports = function(){
         
         getYear: function(req, res, onSuccess){            
             var params = [req.params.rs, req.params.jahr];
-            var query = 'SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1 AND jahr=$2';    
+            var q = 'SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1 AND jahr=$2';    
             /**if(req.query.weiblich){  
                 params.push(req.query.weiblich);
                 query += 'AND weiblich=$3'
             }*/
-            query(query, params, 
-            function(err, result){
-                //merge the project object with the borders from db                
-                if (err || result.length === 0)
-                    return res.sendStatus(404);
-               // if(req.query.weiblich)
-                //    result = result[0];
-                return onSuccess(result[0]);
-            });
+            query(q, params, 
+                function(err, result){
+                    //merge the project object with the borders from db                
+                    if (err || result.length === 0)
+                        return res.sendStatus(404);
+                   // if(req.query.weiblich)
+                    //    result = result[0];
+                    return onSuccess(result[0]);
+                });
         },
 
         //sends plain JSON
         getYearJSON: function(req, res){             
             bevoelkerungsprognose.getYear(req, res, function(err, result){
-                res.status(200).send(result)
+                res.status(200).send(result);
             });
         },
         
@@ -132,15 +132,23 @@ module.exports = function(){
                 if(token !== pbkdf2Hash.getSalt(result[0].password))
                     return res.status(401).send(errMsg);
 
-                var user = {name: result[0].name,
-                            email: result[0].email,
-                            superuser: result[0].superuser};
+                query("SELECT id FROM prognosen WHERE $1 = ANY(users);", [result[0].id],
+                function(err, permissions){
+                    var progIds = [];
+                    permissions.forEach(function(permission){
+                        progIds.push(permission.id);
+                    });
+                    req.session.user  = {name: result[0].name,
+                                        email: result[0].email,
+                                        permissions: progIds,
+                                        superuser: result[0].superuser};
 
-                res.statusCode = 200;                           
-                return res.json({
-                    authenticated : true,
-                    user : user
-                });         
+                    res.statusCode = 200;                           
+                    return res.json({
+                        authenticated : true,
+                        user : req.session.user 
+                    });         
+                });
             });
         },
 
@@ -162,20 +170,28 @@ module.exports = function(){
                     if (!token)
                         return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
                     
-                    var user = {name: dbResult[0].name,
-                                email: dbResult[0].email,
-                                superuser: dbResult[0].superuser};
+                    query("SELECT id FROM prognosen WHERE $1 = ANY(users);", [dbResult[0].id],
+                    function(err, permissions){
+                        var progIds = [];
+                        permissions.forEach(function(permission){
+                            progIds.push(permission.id);
+                        });
+                        req.session.user  = {name: dbResult[0].name,
+                                            email: dbResult[0].email,
+                                            permissions: progIds,
+                                            superuser: dbResult[0].superuser};                       
 
-                    var maxAge = config.serverconfig.maxCookieAge; 
-                    res.cookie('user', user.name, { signed: true, maxAge:  maxAge});
-                    //user gets the salt as a token to authenticate, that he is logged in
-                    res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
+                        var maxAge = config.serverconfig.maxCookieAge; 
+                        res.cookie('user', req.session.user.name, { signed: true, maxAge:  maxAge});
+                        //user gets the salt as a token to authenticate, that he is logged in
+                        res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
 
-                    res.statusCode = 200;
-                    return res.json({
-                        authenticated : true,
-                        user : user
-                    });          
+                        res.statusCode = 200;
+                        return res.json({
+                            authenticated : true,
+                            user : req.session.user 
+                        });            
+                    });    
                 });             
             });
         },
@@ -183,7 +199,7 @@ module.exports = function(){
         logout: function(req, res){ 
             res.clearCookie('user');
             res.clearCookie('auth_token');
-            res.send(200);
+            res.sendStatus(200);
         },
         
         register: function(req, res){  
@@ -199,7 +215,7 @@ module.exports = function(){
                     [name, email, hashedPass],
                     function(err, result){
                         if(err)
-                            return res.status(409).send('Name "' + name + '" ist bereits vergeben!')
+                            return res.status(409).send('Name "' + name + '" ist bereits vergeben!');
                         
                         var user = {name: result[0].name,
                             email: result[0].email,

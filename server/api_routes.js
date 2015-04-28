@@ -47,6 +47,21 @@ module.exports = function(){
         }
     };
     
+    var prognosen = {
+        list: function(req, res){
+            //TODO session or cookie (check every time auth_token?) ?
+            if(!req.session.user)
+                res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
+            console.log()
+            query("SELECT * FROM prognosen WHERE $1 = ANY(users);", [req.session.user.id],
+            function(err, result){
+                if (err || result.length === 0)
+                    return res.sendStatus(404);
+                return res.status(200).send(result);      
+            });
+        },
+    };
+    
     var bevoelkerungsprognose = {
         list: function(req, res){
           query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(err, result){
@@ -118,11 +133,11 @@ module.exports = function(){
     var session = {
         
         getStatus: function(req, res){
-            var name = req.signedCookies.user,
+            var id = req.signedCookies.id,
                 token = req.signedCookies.auth_token,
                 errMsg = 'nicht angemeldet';
             
-            query("SELECT * from users WHERE name=$1", [name],
+            query("SELECT * from users WHERE id=$1", [id],
             function(err, result){
                 if(err || result.length === 0){
                     req.session.user = null;
@@ -138,15 +153,15 @@ module.exports = function(){
                     permissions.forEach(function(permission){
                         progIds.push(permission.id);
                     });
-                    req.session.user  = {name: result[0].name,
-                                        email: result[0].email,
-                                        permissions: progIds,
-                                        superuser: result[0].superuser};
+                    var user  = {name: result[0].name,
+                                email: result[0].email,
+                                permissions: progIds,
+                                superuser: result[0].superuser};
 
                     res.statusCode = 200;                           
                     return res.json({
                         authenticated : true,
-                        user : req.session.user 
+                        user : user 
                     });         
                 });
             });
@@ -176,20 +191,20 @@ module.exports = function(){
                         permissions.forEach(function(permission){
                             progIds.push(permission.id);
                         });
-                        req.session.user  = {name: dbResult[0].name,
-                                            email: dbResult[0].email,
-                                            permissions: progIds,
-                                            superuser: dbResult[0].superuser};                       
+                        var user  = {name: dbResult[0].name,
+                                    email: dbResult[0].email,
+                                    permissions: progIds,
+                                    superuser: dbResult[0].superuser};                       
 
                         var maxAge = config.serverconfig.maxCookieAge; 
-                        res.cookie('user', req.session.user.name, { signed: true, maxAge:  maxAge});
+                        res.cookie('user', dbResult[0].id, { signed: true, maxAge:  maxAge});
                         //user gets the salt as a token to authenticate, that he is logged in
                         res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
 
                         res.statusCode = 200;
                         return res.json({
                             authenticated : true,
-                            user : req.session.user 
+                            user : user 
                         });            
                     });    
                 });             
@@ -241,19 +256,22 @@ module.exports = function(){
                 post: session.register
             }
         },
-        '/gemeinden': {
-            get: gemeinden.list,
-            '/:rs': {
-                get: gemeinden.get,
-                '/bevoelkerungsprognose': {
-                    get: bevoelkerungsprognose.list,
-                    '/:jahr': {
-                        get: bevoelkerungsprognose.getYearJSON,
-                        '/svg': {
-                            get: bevoelkerungsprognose.getYearSvg
-                        },
-                        '/png': {
-                            get: bevoelkerungsprognose.getYearPng
+        '/prognosen': {
+            get: prognosen.list,        
+            '/gemeinden': {
+                get: gemeinden.list,
+                '/:rs': {
+                    get: gemeinden.get,
+                    '/bevoelkerungsprognose': {
+                        get: bevoelkerungsprognose.list,
+                        '/:jahr': {
+                            get: bevoelkerungsprognose.getYearJSON,
+                            '/svg': {
+                                get: bevoelkerungsprognose.getYearSvg
+                            },
+                            '/png': {
+                                get: bevoelkerungsprognose.getYearPng
+                            }
                         }
                     }
                 }

@@ -4,21 +4,21 @@
 
 module.exports = function(){
     var express = require('express'),
-        routes = module.exports = express(),
+        api = express(),
         child_proc = require('child_process');    
     
     //Mapping taken from express examples https://github.com/strongloop/express
-    routes.map = function(a, route){
+    api.map = function(a, route){
       route = route || '';
       for (var key in a) {
         switch (typeof a[key]) {
           // { '/path': { ... }}
           case 'object':
-            routes.map(a[key], route + key);
+            api.map(a[key], route + key);
             break;
           // get: function(){ ... }
           case 'function':
-            routes[key](route, a[key]);
+            api[key](route, a[key]);
             break;
         }
       }
@@ -28,6 +28,7 @@ module.exports = function(){
     var pbkdf2Hash = require('./pbkdf2_hash');    
     var config = require('./config');
 
+    /*
     var gemeinden = {
         list: function(req, res){
           query('SELECT * FROM gemeinden', [], function(err, result){
@@ -45,41 +46,57 @@ module.exports = function(){
                 return res.status(200).send(result[0]);
             });
         }
-    };
+    };*/
     
     var prognosen = {
         list: function(req, res){
             //TODO session or cookie (check every time auth_token?) ?
             if(!req.session.user)
-                res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
-            console.log()
-            query("SELECT * FROM prognosen WHERE $1 = ANY(users);", [req.session.user.id],
+                return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
+            
+            query("SELECT id, name, description FROM prognosen WHERE $1 = ANY(users);", [req.session.user.id],
             function(err, result){
                 if (err || result.length === 0)
                     return res.sendStatus(404);
                 return res.status(200).send(result);      
             });
         },
+        
+        get: function(req, res){ 
+            if(!req.session.user)
+                return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
+            query('SELECT * FROM prognosen WHERE id=$1', [req.params.id], 
+            function(err, result){
+                if (err || result.length === 0)
+                    return res.sendStatus(404);
+                if (result[0].users.indexOf(req.session.user.id) < 0)
+                    return res.status(403).send('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.');
+                //don't send the permissions
+                delete result[0].users;
+                return res.status(200).send(result[0]);
+            });
+        }
     };
     
-    var bevoelkerungsprognose = {
-        list: function(req, res){
-          query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1', [req.params.rs], function(err, result){
-              //var ret = [];
-              //result.forEach(function(entry){
-              //    ret.push(entry.jahr);
-              //});
-              return res.status(200).send(result);
-          });
+    var demodevelop = {
+        get: function(req, res){
+            if(!req.session.user)
+                return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
+            query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1', [req.params.id], function(err, result){
+                //var ret = [];
+                //result.forEach(function(entry){
+                //    ret.push(entry.jahr);
+                //});
+                return res.status(200).send(result);
+            });
         },
-        
+        /*
         getYear: function(req, res, onSuccess){            
             var params = [req.params.rs, req.params.jahr];
             var q = 'SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1 AND jahr=$2';    
-            /**if(req.query.weiblich){  
-                params.push(req.query.weiblich);
-                query += 'AND weiblich=$3'
-            }*/
+            //if(req.query.weiblich){  
+            //    params.push(req.query.weiblich);
+            //    query += 'AND weiblich=$3'}
             query(q, params, 
                 function(err, result){
                     //merge the project object with the borders from db                
@@ -91,6 +108,7 @@ module.exports = function(){
                 });
         },
 
+        
         //sends plain JSON
         getYearJSON: function(req, res){             
             bevoelkerungsprognose.getYear(req, res, function(err, result){
@@ -126,14 +144,14 @@ module.exports = function(){
                     convert.stdin.end();
                 }); 
             });
-        }
+        }*/
         
     };
     
     var session = {
         
         getStatus: function(req, res){
-            var id = req.signedCookies.id,
+            var id = req.signedCookies.user_id,
                 token = req.signedCookies.auth_token,
                 errMsg = 'nicht angemeldet';
             
@@ -147,23 +165,16 @@ module.exports = function(){
                 if(token !== pbkdf2Hash.getSalt(result[0].password))
                     return res.status(401).send(errMsg);
 
-                query("SELECT id FROM prognosen WHERE $1 = ANY(users);", [result[0].id],
-                function(err, permissions){
-                    var progIds = [];
-                    permissions.forEach(function(permission){
-                        progIds.push(permission.id);
-                    });
-                    var user  = {name: result[0].name,
-                                email: result[0].email,
-                                permissions: progIds,
-                                superuser: result[0].superuser};
+                req.session.user  = {id: result[0].id,
+                                    name: result[0].name,
+                                    email: result[0].email,
+                                    superuser: result[0].superuser};
 
-                    res.statusCode = 200;                           
-                    return res.json({
-                        authenticated : true,
-                        user : user 
-                    });         
-                });
+                res.statusCode = 200;                           
+                return res.json({
+                    authenticated : true,
+                    user : req.session.user 
+                });       
             });
         },
 
@@ -185,43 +196,59 @@ module.exports = function(){
                     if (!token)
                         return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
                     
-                    query("SELECT id FROM prognosen WHERE $1 = ANY(users);", [dbResult[0].id],
-                    function(err, permissions){
-                        var progIds = [];
-                        permissions.forEach(function(permission){
-                            progIds.push(permission.id);
-                        });
-                        var user  = {name: dbResult[0].name,
-                                    email: dbResult[0].email,
-                                    permissions: progIds,
-                                    superuser: dbResult[0].superuser};                       
+                    req.session.user  = {id: dbResult[0].id,
+                                        name: dbResult[0].name,
+                                        email: dbResult[0].email,
+                                        superuser: dbResult[0].superuser};                       
+                                    console.log()
+                                    
+                    //COOKIES (only used for status check, if page is refreshed)
+                    var maxAge = config.serverconfig.maxCookieAge; 
+                    res.cookie('user_id', req.session.user.id, { signed: true, maxAge:  maxAge});
+                    //user gets the salt as a token to authenticate, that he is logged in
+                    res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
 
-                        var maxAge = config.serverconfig.maxCookieAge; 
-                        res.cookie('user', dbResult[0].id, { signed: true, maxAge:  maxAge});
-                        //user gets the salt as a token to authenticate, that he is logged in
-                        res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
-
-                        res.statusCode = 200;
-                        return res.json({
-                            authenticated : true,
-                            user : user 
-                        });            
-                    });    
-                });             
+                    res.statusCode = 200;
+                    return res.json({
+                        authenticated : true,
+                        user : req.session.user 
+                    });            
+                });            
             });
         },
 
         logout: function(req, res){ 
-            res.clearCookie('user');
+            res.clearCookie('user_id');
             res.clearCookie('auth_token');
+            req.session.user = null;
             res.sendStatus(200);
+        }
+        
+    };
+    
+    var users = {
+        list: function(req, res){
+            //admin only
+            if(!req.session.user || !req.session.user.superuser)
+                return res.sendStatus(403);
+            query("SELECT id, name, email, superuser from users", [],
+            function(err, result){
+                if(err)
+                    return res.sendStatus(500);
+                return res.status(200).send(result);
+                
+            });
+        },        
+        
+        get: function(req, res){
+            
         },
         
-        register: function(req, res){  
+        post: function(req, res){
+            //TODO: only admin allowed to create
+            //TODO: check, if already exists, else update
             var name = req.body.name;
             var email = req.body.email;
-            
-            //TODO: only admin allowed
             
             pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
                 if(err)
@@ -243,10 +270,14 @@ module.exports = function(){
                         return res.status(200).send(user);            
                     });
             });
-        }
-    };
+        },
+        
+        delete: function(req, res){
+            
+        },
+    }
    
-    routes.map({
+    api.map({
         
         '/session': {
             get: session.getStatus,
@@ -258,26 +289,22 @@ module.exports = function(){
         },
         '/prognosen': {
             get: prognosen.list,        
-            '/gemeinden': {
-                get: gemeinden.list,
-                '/:rs': {
-                    get: gemeinden.get,
-                    '/bevoelkerungsprognose': {
-                        get: bevoelkerungsprognose.list,
-                        '/:jahr': {
-                            get: bevoelkerungsprognose.getYearJSON,
-                            '/svg': {
-                                get: bevoelkerungsprognose.getYearSvg
-                            },
-                            '/png': {
-                                get: bevoelkerungsprognose.getYearPng
-                            }
-                        }
-                    }
+            '/:id': {                
+                get: prognosen.get,
+                '/bevoelkerungsprognose': {
+                    get: demodevelop.get
                 }
+            }
+        },
+        '/users': {
+            get: users.list,
+            '/:id':{
+                get: users.get,
+                post: users.post,
+                delete: users.delete
             }
         }
     });
     
-    return routes;
+    return api;
 }();

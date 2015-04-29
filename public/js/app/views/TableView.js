@@ -1,5 +1,5 @@
 
-define(["backbone", "jquery", "text!templates/Table.html", "bootstraptable"],
+define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
 
     function(Backbone, $, template){
         var DemographicDevelopmentView = Backbone.View.extend({

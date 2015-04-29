@@ -38,7 +38,7 @@ app.set('view engine', 'html');
 app.get("/", function(req, res){
     res.render('index.html', { csrfToken: req.csrfToken() });
 });    
-app.use('/api', require('./api_routes')); 
+app.use('/api', require('./api')); 
     
 // SERVER
 // ======

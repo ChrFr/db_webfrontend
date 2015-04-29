@@ -1,5 +1,4 @@
-
-define(["backbone", "text!templates/DemographicDevelopment.html", "views/OptionView",  
+define(["backbone", "text!templates/demodevelop.html", "views/OptionView",  
     "views/AgeTreeView", "views/TableView", "bootstrap"],
 
     function(Backbone, template, OptionView, AgeTreeView, TableView){
@@ -38,7 +37,7 @@ define(["backbone", "text!templates/DemographicDevelopment.html", "views/OptionV
                                 
                 yearSelector.onchange = function(bla) { 
                     if (bla.target.value > 0){
-                        _this.renderSingleYear(bla.target.value);
+                        _this.renderData(bla.target.value);
                     }
                 }
                 /*
@@ -49,7 +48,7 @@ define(["backbone", "text!templates/DemographicDevelopment.html", "views/OptionV
                 return this;
             },            
             
-            renderSingleYear: function(year){
+            renderData: function(year){
                 var vis = this.el.getElementsByClassName("visualization")[0];
                 while (vis.firstChild) {
                     vis.removeChild(vis.firstChild);

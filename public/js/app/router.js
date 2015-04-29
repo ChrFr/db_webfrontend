@@ -1,9 +1,9 @@
 // Router.js
 // ----------------
-define(["app", "backbone", "views/HomeView", "views/TestView", 
-    "views/LoginView"],
+define(["app", "backbone", "views/HomeView", 
+    "views/LoginView", "views/PrognosisView"],
 
-    function(app, Backbone, Home, Test, Login) {
+    function(app, Backbone, Home, Login, Prognosis) {
 
         /**
         * Routes the applications URL's when using hash tags. 
@@ -18,7 +18,7 @@ define(["app", "backbone", "views/HomeView", "views/TestView",
 
             routes: {
                 "": "home",
-                "test": "test",
+                "prognosen": "prognoses",
                 "login": "login"
             },
 
@@ -26,8 +26,8 @@ define(["app", "backbone", "views/HomeView", "views/TestView",
                 this.view = new Home({el: document.getElementById('mainFrame')});
             },
             
-            test: function() {   
-                this.view = new Test({el: document.getElementById('mainFrame')});
+            prognoses: function() {   
+                this.view = new Prognosis({el: document.getElementById('mainFrame')});
             },
             
             login: function() {   

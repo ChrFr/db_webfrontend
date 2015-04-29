@@ -91,7 +91,7 @@ module.exports = function(){
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose', [], function(err, result){
+                query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1', [req.params.id], function(err, result){
                     return res.status(200).send(result);
             })});
         },

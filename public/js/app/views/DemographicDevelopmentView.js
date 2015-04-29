@@ -54,9 +54,6 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                 
                 this.regionData = this.collection.where({rs: rs});
                 
-                new OptionView({el: yearSelector, name: 'Bitte wählen', value: -2}); 
-                new OptionView({el: yearSelector, name: 'alle anzeigen', value: -1}); 
-                
                 //TODO: sort years
                 _.each(this.regionData, (function(data){                        
                     new OptionView({el: yearSelector,
@@ -69,6 +66,9 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                         _this.renderTable(parseInt(e.target.value));
                     }
                 };
+                
+                //draw first year
+                this.renderTable(parseInt(yearSelector.options[0].value));
             },
             
             renderTable: function(year){

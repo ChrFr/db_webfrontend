@@ -16,7 +16,6 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
             },
 
             events: {
-                'onchange #rsSelect': 'renderRegion'
             },
 
             render: function() {

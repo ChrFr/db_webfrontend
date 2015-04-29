@@ -28,25 +28,33 @@ module.exports = function(){
     var pbkdf2Hash = require('./pbkdf2_hash');    
     var config = require('./config');
 
-    /*
+    var checkPermission = function(prognoseId, user, callback){           
+        if(!user)
+            return callback('Nur angemeldete Nutzer haben Zugriff!', 403);
+        query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], 
+        function(err, result){
+            if (err)
+                return callback(err, 500); 
+            if (result.length === 0)
+                return callback('not found', 404)
+            if (!user.superuser && result[0].users.indexOf(user.id) < 0)
+                return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
+            //don't send the permissions
+            delete result[0].users;
+            return callback(null, 200, result[0]);
+        });
+    }
+    
     var gemeinden = {
-        list: function(req, res){
-          query('SELECT * FROM gemeinden', [], function(err, result){
-              return res.status(200).send(result);
-          });
-        },
-
-        //return all project specific segments and projects base attributes
-        get: function(req, res){ 
-            query('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
-            function(err, result){
-                //merge the project object with the borders from db                
-                if (err || result.length === 0)
-                    return res.sendStatus(404);
-                return res.status(200).send(result[0]);
-            });
+        list: function(req, res){            
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if (err)
+                    return res.status(status).send(err);
+                query("SELECT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
+                    return res.status(200).send(result);
+            })});
         }
-    };*/
+    };
     
     var prognosen = {
         list: function(req, res){
@@ -54,41 +62,38 @@ module.exports = function(){
             if(!req.session.user)
                 return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
             
-            query("SELECT id, name, description FROM prognosen WHERE $1 = ANY(users);", [req.session.user.id],
+            var q = "SELECT id, name, description FROM prognosen";
+            var params = [];
+            //only admin can access all prognoses
+            if(!req.session.user.superuser){
+                q+= " WHERE $1 = ANY(users)";
+                params.push(req.session.user.id);
+            }
+            query(q+";", params,
             function(err, result){
-                if (err || result.length === 0)
-                    return res.sendStatus(404);
+                if (err)
+                    return res.sendStatus(500);
                 return res.status(200).send(result);      
             });
         },
         
         get: function(req, res){ 
-            if(!req.session.user)
-                return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
-            query('SELECT * FROM prognosen WHERE id=$1', [req.params.id], 
-            function(err, result){
-                if (err || result.length === 0)
-                    return res.sendStatus(404);
-                if (result[0].users.indexOf(req.session.user.id) < 0)
-                    return res.status(403).send('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.');
-                //don't send the permissions
-                delete result[0].users;
-                return res.status(200).send(result[0]);
-            });
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if(err)
+                    return res.status(status).send(err);
+                return res.status(status).send(result);
+            }, true);
         }
     };
     
     var demodevelop = {
-        get: function(req, res){
-            if(!req.session.user)
-                return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
-            query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1', [req.params.id], function(err, result){
-                //var ret = [];
-                //result.forEach(function(entry){
-                //    ret.push(entry.jahr);
-                //});
-                return res.status(200).send(result);
-            });
+        get: function(req, res){           
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if (err)
+                    return res.status(status).send(err);
+                query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose', [], function(err, result){
+                    return res.status(200).send(result);
+            })});
         },
         /*
         getYear: function(req, res, onSuccess){            
@@ -241,7 +246,15 @@ module.exports = function(){
         },        
         
         get: function(req, res){
-            
+            //admin only
+            if(!req.session.user || !req.session.user.superuser)
+                return res.sendStatus(403);
+            query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
+            function(err, result){
+                if (err || result.length === 0)
+                    return res.sendStatus(404);
+                return res.status(200).send(result[0]);
+            });
         },
         
         post: function(req, res){
@@ -292,7 +305,13 @@ module.exports = function(){
             '/:id': {                
                 get: prognosen.get,
                 '/bevoelkerungsprognose': {
-                    get: demodevelop.get
+                    get: demodevelop.get,
+                    '/gemeinden': {
+                        get: gemeinden.list,        
+                        '/:id': {                
+                            get: gemeinden.get
+                        }
+                    }
                 }
             }
         },

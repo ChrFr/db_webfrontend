@@ -1,16 +1,17 @@
 define(["backbone","models/RegionModel"],
 
-    function(Backbone, AgeModel) {
+    function(Backbone, RegionModel) {
 
         // Creates a new Backbone Collection class object
         var RegionCollection = Backbone.Collection.extend({
 
             // Tells the Backbone Collection that all of it's models will be of type Model (listed up top as a dependency)
-            model: AgeModel,
+            model: RegionModel,
             
-            url: 'api/gemeinden/',
+            url: 'api/prognosen/{progId}/bevoelkerungsprognose/gemeinden/',
 
             initialize: function(options){   
+                this.url = this.url.replace('{progId}', options.progId);
             },    
         });
         return RegionCollection;

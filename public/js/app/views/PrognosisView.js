@@ -1,10 +1,10 @@
 
 define(["backbone", "text!templates/prognosis.html",  
-    "collections/AgeCollection", "collections/RegionCollection", 
+    "collections/DemographicDevelopmentCollection",  
     "collections/PrognosisCollection", "views/OptionView", 
     "views/DemographicDevelopmentView"],
 
-    function(Backbone, template, AgeCollection, RegionCollection, 
+    function(Backbone, template, DemographicDevelopmentCollection,
             PrognosisCollection, OptionView, DemographicDevelopmentView){
         var PrognosisView = Backbone.View.extend({
             // The DOM Element associated with this view
@@ -24,10 +24,7 @@ define(["backbone", "text!templates/prognosis.html",
                 var _this = this;
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;   
-                
-                var regions = new RegionCollection();
                 var progSelector = this.el.querySelector("#progSelect");
-                var regionSelector = this.el.querySelector("#rsSelect");
                 
                 this.collection.fetch({success: function(){
                     new OptionView({el: progSelector, name: 'Bitte wählen', value: -1}); 
@@ -56,19 +53,13 @@ define(["backbone", "text!templates/prognosis.html",
                 var prognosis = this.collection.find(function(item){
                     return item.get('id') == pid;
                 });
-                textarea.value = prognosis.get('description');
                 
-                var progView = new DemographicDevelopmentView({
-                    el: this.el.querySelector("#demographics")})
-                /*
-                var _this = this;
-                var ageColl = new AgeCollection({rs: this.rs});
-                ageColl.fetch({success: function(){
-                    var dataView = _this.el.querySelector("#dataView");
-                    _this.dataView = new DemographicDevelopmentView({
-                        el: dataView,
-                        collection: ageColl});
-                }});*/
+                textarea.value = prognosis.get('description');
+                var progData = new DemographicDevelopmentCollection({progId: pid});
+                new DemographicDevelopmentView({
+                    el: this.el.querySelector("#demographics"),
+                    collection: progData
+                });
             },
             
             //remove the view

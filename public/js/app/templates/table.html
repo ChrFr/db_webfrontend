@@ -4,6 +4,7 @@
     </h2>
     <thead>
         <tr>
+            <th id="checkboxes" data-field="state" data-checkbox="true"></th>
             <% _.each( columns, function( column ){ %>
                 <th data-field="<%- column.name %>">
                     <%- column.description %>

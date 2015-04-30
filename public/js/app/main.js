@@ -4,11 +4,13 @@ function(app, Router, SessionModel, Navbar) {
     //before anything else happens, check if already logged in by fetching
     //(cookies are used)
     app.session = new SessionModel();
-    app.session.fetch();
+    app.session.fetch({
+        success: render,
+        error: render
+    });
     
-    //attach navbar
-    app.navbar = new Navbar();
-    
-    //start backbone routing
-    app.router = new Router();
+    function render(){
+        app.router = new Router();
+        app.navbar = new Navbar();        
+    }
 });

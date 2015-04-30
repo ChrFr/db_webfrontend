@@ -1,6 +1,6 @@
 // NavbarView.js
 // -------
-define(["jquery", "backbone", "text!templates/navbar.html"],
+define(["app", "jquery", "backbone", "text!templates/navbar.html"],
 
     /**
     * A View that renders the Main Navigation Bar
@@ -10,7 +10,7 @@ define(["jquery", "backbone", "text!templates/navbar.html"],
     * @return                 the NavbarView class
     * @see                    the main navigation bar
     */
-    function($, Backbone, template){
+    function(app, $, Backbone, template){
 
         var NavbarView = Backbone.View.extend({
 
@@ -18,19 +18,16 @@ define(["jquery", "backbone", "text!templates/navbar.html"],
             el: ".navbar.navbar-default",
 
             // constructor
-            initialize: function(options) {
+            initialize: function() {
                 var _this = this;
-                var options = options || {};
-                this.session = options.session;
-                // Calls the view's render method
-                this.render();                
+                this.render();      
+                if (app.session) 
+                    app.session.bind("change:user", function() {_this.displayLogin()});
                 //change active item if navbar item is clicked
                 $('ul.nav > li').click(function (e) {
                     $('ul.nav > li').removeClass('active');
                     $(this).addClass('active');                
-                });     
-                if (this.session) 
-                    this.session.bind("change:user", function(){_this.displayLogin()});
+                });               
             },
 
             events: {
@@ -39,18 +36,25 @@ define(["jquery", "backbone", "text!templates/navbar.html"],
             // Renders the view's template to the UI
             render: function() {         
                 this.template = _.template(template, {});
-                this.$el.html(this.template);      
+                this.el.innerHTML = this.template;  
+                this.displayLogin();
                 return this;
 
             },
             
             //change the text of the menu item, to show, that the user is logged in
             displayLogin: function(){
-                if (this.session.get('authenticated')){
-                    var user = this.session.get('user');
-                    this.$el.find('#login').text('Eingeloggt als ' + user.name);   
+                if (app.session.get('authenticated')){
+                    var user = app.session.get('user');
+                    this.$el.find('#login').text('Eingeloggt als ' + user.name);  
+                    if (user.superuser){
+                        this.el.querySelector("#admin").style.display = 'block';
+                    }
+                    else
+                        this.el.querySelector("#admin").style.display = 'none';
                 }
                 else{
+                    this.el.querySelector("#admin").style.display = 'none';
                     this.$el.find('#login').text('Einloggen'); 
                 }
             }

@@ -34,6 +34,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
                 }
                 else                    
                     table.find('#checkboxes').attr('data-visible', 'false');
+                
                 table.bootstrapTable({
                     data: this.data
                 });

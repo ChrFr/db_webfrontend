@@ -84,7 +84,6 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                     if(data.jahr == year) 
                         yearData = data;
                 }));                
-                console.log(yearData)
                 
                 columns.push({name: "year", description: "Alter"});
                 columns.push({name: "female", description: "Anzahl weiblich"});                
@@ -115,10 +114,12 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                     vis.removeChild(vis.firstChild);
                 };
                 var width = document.getElementsByTagName('body')[0].clientWidth;
-                this.agetree = new AgeTreeView({el: vis,
-                                                model: model,
-                                                width: 0.9 * width,
-                                                height: 600});                
+                this.agetree = new AgeTreeView({
+                    el: vis,
+                    data: model.get('data'),
+                    width: 500,
+                    height: 600
+                });                
             },
             
             //remove the view

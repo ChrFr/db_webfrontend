@@ -92,7 +92,8 @@ module.exports = function(){
                 query('SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2', [req.params.id, req.params.rs], function(err, result){
                     res.statusCode = 200;                           
                     return res.json({
-                        data : result
+                        rs: req.params.rs,
+                        data: result
                     });       
             })});
         },

@@ -1,26 +1,27 @@
 define(["backbone", "d3", "d3slider"],
 
-    function(Backbone, d3){
+    function(Backbone, d3, d3slider){
         var AgeTreeView = Backbone.View.extend({
             el: "mainFrame",
             
             initialize: function(options) { 
                 this.width = options.width;
                 this.height = options.height;
+                this.data = options.data;
                 this.render();
                                 
             },
 
             render: function() {
-                var slider = d3.slider().axis(true).min(2000).max(2100).step(5);
+                var slider = d3slider().axis(true).min(2000).max(2100).step(5);
                 d3.select('#slider').call(slider);
                 
-                var femaleAges = this.model.get('alter_weiblich');
-                var maleAges = this.model.get('alter_maennlich');
+                var femaleAges = this.data[0].alter_weiblich;
+                var maleAges = this.data[0].alter_maennlich;
                 
-                var region = this.model.get('rs');
-                var year = this.model.get('jahr');
-                var title = "Bevölkerungsentwicklung " + region + " " + year;
+                //var region = this.model.get('rs');
+                var year = this.data[0].jahr;
+                var title = "Bevölkerungsentwicklung " + year;
                 
                 var margin = {
                   top: 30,

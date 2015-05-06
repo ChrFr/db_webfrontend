@@ -18,6 +18,8 @@ require.config({
       "backbone": "../libs/backbone",
       
       "d3": "../libs/d3.min",
+      
+      "d3slider": "../libs/d3.slider",
 
       // Plugins
       // -------
@@ -47,7 +49,9 @@ require.config({
       "backbone.validateAll": ["backbone"],
 
       // Jasmine-jQuery plugin
-      "jasminejquery": ["jquery"]
+      "jasminejquery": ["jquery"],
+      
+      "d3slider": ["d3"]
 
   }
 

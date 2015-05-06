@@ -43,20 +43,9 @@ module.exports = function(){
             delete result[0].users;
             return callback(null, 200, result[0]);
         });
-    }
+    }    
     
-    var gemeinden = {
-        list: function(req, res){            
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
-                if (err)
-                    return res.status(status).send(err);
-                query("SELECT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
-                    return res.status(200).send(result);
-            })});
-        }
-    };
-    
-    var prognosen = {
+    var prognosen = {   
         list: function(req, res){
             //TODO session or cookie (check every time auth_token?) ?
             if(!req.session.user)
@@ -87,12 +76,24 @@ module.exports = function(){
     };
     
     var demodevelop = {
+        list: function(req, res){            
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if (err)
+                    return res.status(status).send(err);
+                query("SELECT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
+                    return res.status(200).send(result);
+            })});
+        },
+        
         get: function(req, res){           
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                query('SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1', [req.params.id], function(err, result){
-                    return res.status(200).send(result);
+                query('SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2', [req.params.id, req.params.rs], function(err, result){
+                    res.statusCode = 200;                           
+                    return res.json({
+                        data : result
+                    });       
             })});
         },
         /*
@@ -305,13 +306,10 @@ module.exports = function(){
             '/:id': {                
                 get: prognosen.get,
                 '/bevoelkerungsprognose': {
-                    get: demodevelop.get,
-                    '/gemeinden': {
-                        get: gemeinden.list,        
-                        '/:id': {                
-                            get: gemeinden.get
-                        }
-                    }
+                    get: demodevelop.list,        
+                        '/:rs': {                
+                            get: demodevelop.get
+                        }                    
                 }
             }
         },

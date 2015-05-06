@@ -46,48 +46,53 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
             changeRegion: function(rs){
                 var _this = this;
                 
-                var yearSelector = this.el.querySelector("#yearSelect");
-                while (yearSelector.firstChild) {
-                    yearSelector.removeChild(yearSelector.firstChild);
-                };
-                
-                this.regionData = this.collection.where({rs: rs});
-                
-                //TODO: sort years
-                _.each(this.regionData, (function(data){                        
-                    new OptionView({el: yearSelector,
-                        name: data.get('jahr'), 
-                        value: data.get('jahr')});
-                }));
-                               
-                yearSelector.onchange = function(e) { 
-                    if (e.target.value > 0){
-                        _this.renderTable(parseInt(e.target.value));
-                    }
-                };
-                
-                //draw first year
-                this.renderTable(parseInt(yearSelector.options[0].value));
+                this.collection.fetchDetails({rs: rs, success: function(model){  
+                    var yearSelector = _this.el.querySelector("#yearSelect");
+                    while (yearSelector.firstChild) {
+                        yearSelector.removeChild(yearSelector.firstChild);
+                    };
+
+                    //TODO: sort years
+                    _.each(model.get('data'), (function(data){  
+                        new OptionView({
+                            el: yearSelector,
+                            name: data.jahr, 
+                            value: data.jahr});
+                    }));
+
+                    yearSelector.onchange = function(e) { 
+                        if (e.target.value > 0){
+                            _this.renderTable(model, parseInt(e.target.value));
+                        }
+                    };
+
+                    //draw first year
+                    _this.renderTable(model, yearSelector.options[0].value);
+                    
+                    _this.renderTree(model);
+                }});
             },
             
-            renderTable: function(year){
-                var columns = [],
-                    yearData;
-            
-                _.each(this.regionData, (function(data){   
-                    if(data.get('jahr')===year) 
-                        yearData = data;
-                }));
+            renderTable: function(model, year){
+                var rs = model.get('rs'),
+                    title = "Bevölkerungsentwicklung " + rs + " " + year,
+                    columns = [],
+                    yearData;                
                 
-                var rs = yearData.get('rs');
-                var title = "Bevölkerungsentwicklung " + rs + " " + year;                
+                
+                _.each(model.get('data'), (function(data){                     
+                    if(data.jahr == year) 
+                        yearData = data;
+                }));                
+                console.log(yearData)
                 
                 columns.push({name: "year", description: "Alter"});
                 columns.push({name: "female", description: "Anzahl weiblich"});                
                 columns.push({name: "male", description: "Anzahl männlich"});
                 
-                var femaleAges = yearData.get('alter_weiblich');
-                var maleAges = yearData.get('alter_maennlich');
+                var femaleAges = yearData.alter_weiblich;
+                var maleAges = yearData.alter_maennlich;
+                
                 var data = [];
                 for (var i = 0; i < femaleAges.length; i++) { 
                     data.push({
@@ -97,24 +102,21 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                     });
                 }
                 this.table = new TableView({
-                    el: this.el.getElementsByClassName("table"),
+                    el: this.el.querySelector("#datatable"),
                     columns: columns,
                     title: title,
                     data: data
                 });
             },
             
-            renderTree: function(){
-                var vis = this.el.getElementsByClassName("visualization")[0];
+            renderTree: function(model){
+                var vis = this.el.querySelector("#agetree");
                 while (vis.firstChild) {
                     vis.removeChild(vis.firstChild);
                 };
-                var ageModel = this.collection.find(function(item){
-                    return item.get('jahr') === year;
-                });
                 var width = document.getElementsByTagName('body')[0].clientWidth;
                 this.agetree = new AgeTreeView({el: vis,
-                                                model: ageModel,
+                                                model: model,
                                                 width: 0.9 * width,
                                                 height: 600});                
             },

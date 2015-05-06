@@ -1,4 +1,4 @@
-define(["backbone", "d3"],
+define(["backbone", "d3", "d3slider"],
 
     function(Backbone, d3){
         var AgeTreeView = Backbone.View.extend({
@@ -12,6 +12,9 @@ define(["backbone", "d3"],
             },
 
             render: function() {
+                var slider = d3.slider().axis(true).min(2000).max(2100).step(5);
+                d3.select('#slider').call(slider);
+                
                 var femaleAges = this.model.get('alter_weiblich');
                 var maleAges = this.model.get('alter_maennlich');
                 

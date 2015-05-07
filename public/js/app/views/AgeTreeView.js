@@ -4,17 +4,51 @@ define(["backbone", "d3", "d3slider"],
         var AgeTreeView = Backbone.View.extend({
             el: "mainFrame",
             
-            initialize: function(options) { 
+            initialize: function(options) {      
+                var _this = this;
+                
                 this.width = options.width;
                 this.height = options.height;
                 this.data = options.data;
+                
+                //get minima and maxima
+                this.maxAge = this.maxNumber = 0;     
+                this.minYear = this.data[0].jahr;
+                this.maxYear = this.data[this.data.length-1].jahr;
+
+                _.each(options.data, function(item){
+                    var femaleAges = item.alter_weiblich,
+                        maleAges = item.alter_maennlich;
+                    var max = Math.max(femaleAges.length, maleAges.length);
+                    if (_this.maxAge < max) _this.maxAge = max;
+                    max = Math.max(d3.max(femaleAges), d3.max(maleAges))
+                    if (_this.maxNumber < max) _this.maxNumber = max;
+                });
+                
                 this.render();
                                 
             },
 
             render: function() {
-                var slider = d3slider().axis(true).min(2000).max(2100).step(5);
-                d3.select('#slider').call(slider);
+                
+                var yearStep = Math.floor((this.maxYear - this.minYear) / 4);
+                var _this = this;
+                
+                var slider = d3slider()
+                    .axis(
+                        d3.svg.axis().orient("down")
+                        .tickValues([_this.minYear, _this.minYear + yearStep, _this.minYear + yearStep * 2, _this.minYear + yearStep * 3, _this.maxYear])
+                        .tickFormat(d3.format("d"))
+                        .ticks(_this.maxYear - _this.minYear)
+                        )
+                    .min(_this.minYear)
+                    .max(_this.maxYear)
+                    .step(1);
+                
+                var sliderDiv = document.createElement("div");
+                sliderDiv.setAttribute("id", "slider");
+                sliderDiv.style.width = this.width+"px";  
+                
                 
                 var femaleAges = this.data[0].alter_weiblich;
                 var maleAges = this.data[0].alter_maennlich;
@@ -38,21 +72,22 @@ define(["backbone", "d3", "d3slider"],
                 var pointA = regionWidth,
                     pointB = width - regionWidth;
             
-            
-                var maxAge = Math.max(femaleAges.length, maleAges.length);
-                var barHeight = (height-margin.bottom)/maxAge
+                var barHeight = (height-margin.bottom)/this.maxAge;
             
                 // CREATE SVG
                 var svg = d3.select(this.el).append('svg')
                   .attr('width', margin.left + width + margin.right)
                   .attr('height', margin.top + height + margin.bottom)
                   .append('g')
-                  .attr('transform', translation(margin.left, margin.top));
-
-                var maxValue = Math.max(
-                  d3.max(femaleAges),
-                  d3.max(maleAges)
-                );
+                  .attr('transform', translation(margin.left, margin.top));          
+                  
+                this.el.appendChild(sliderDiv);
+                d3.select('#slider').call(slider);
+                
+                slider.on("slide", function(evt, value) {
+                    evt.stopPropagation();
+                    _this.changeYear(value);
+    		});
         
                 // TITLE
                 
@@ -64,13 +99,13 @@ define(["backbone", "d3", "d3slider"],
                     .text(title);
                 // SET UP SCALES
 
-                var xScale = d3.scale.linear()
-                  .domain([0, maxValue])
+                this.xScale = d3.scale.linear()
+                  .domain([0, _this.maxNumber])
                   .range([0, regionWidth])
                   .nice();
 
-                var yScale = d3.scale.linear()
-                  .domain([0, maxAge])
+                this.yScale = d3.scale.linear()
+                  .domain([0, _this.maxAge])
                   .range([height-margin.bottom, 0]);
           
                 // BARS                
@@ -82,31 +117,31 @@ define(["backbone", "d3", "d3slider"],
                 var rightBarGroup = svg.append('g')
                   .attr('class', 'male')
                   .attr('transform', translation(pointB, 0));
-
+          
                 var rightBars = rightBarGroup.selectAll("g")
                     .data(femaleAges)
                     .enter().append("g")
-                    .attr("transform", function(d, i) { return translation(0, (maxAge - i) * barHeight - barHeight/2); });
+                    .attr("transform", function(d, i) { return translation(0, (_this.maxAge - i) * barHeight - barHeight/2); });
             
                 rightBars.append("rect")
-                    .attr("width", xScale)
+                    .attr("width", this.xScale)
                     .attr("height", barHeight - 1);            
                 
                 var leftBars = leftBarGroup.selectAll("g")
                     .data(maleAges)
                     .enter().append("g")
-                    .attr("transform", function(d, i) { return translation(0, (maxAge - i) * barHeight - barHeight/2); });
+                    .attr("transform", function(d, i) { return translation(0, (_this.maxAge - i) * barHeight - barHeight/2); });
             
                 leftBars.append("rect")
-                    .attr("width", xScale)
+                    .attr("width", _this.xScale)
                     .attr("height", barHeight - 1);
             
                 
                 // SET UP AXES
                 var yAxis = d3.svg.axis()
-                  .scale(yScale)
+                  .scale(_this.yScale)
                   .orient('left')
-                  .ticks(maxAge)
+                  .ticks(_this.maxAge)
                   .tickSize(2,0)
                   .tickPadding(margin.middle);
           
@@ -115,13 +150,15 @@ define(["backbone", "d3", "d3slider"],
                 });
 
                 var xAxisRight = d3.svg.axis()
-                  .scale(xScale)
+                  .scale(_this.xScale)
                   .orient('bottom')
+                  .ticks(5)
                   .tickSize(-height);
 
                 var xAxisLeft = d3.svg.axis()
-                  .scale(xScale.copy().range([pointA, 0]))
+                  .scale(_this.xScale.copy().range([pointA, 0]))
                   .orient('bottom')
+                  .ticks(5)
                   .tickSize(-height);
 
                 // AXES
@@ -172,7 +209,25 @@ define(["backbone", "d3", "d3slider"],
                   return 'translate(' + x + ',' + y + ')';
                 }
                 return this;
-            },        
+            },
+            
+            changeYear: function(year){           
+                var _this = this;
+                
+                var title = "Bevölkerungsentwicklung " + year;
+                d3.select('.title').text(title);
+                var yearData = this.data[this.data.length - (this.maxYear - year -1)];
+
+                //update bars
+                d3.select('.female').selectAll("g")
+                    .data(yearData.alter_weiblich)
+                    .select("rect").attr("width", _this.xScale);    
+            
+                d3.select('.male').selectAll("g")
+                    .data(yearData.alter_maennlich)
+                    .select("rect").attr("width", _this.xScale);      
+                
+            },
             
             close: function () {
                 this.unbind();
@@ -180,10 +235,10 @@ define(["backbone", "d3", "d3slider"],
             }
 
         });
-
+        
         // Returns the View class
         return AgeTreeView;
-
+        
     }
 
 );

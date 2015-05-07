@@ -25,37 +25,26 @@ define(["backbone", "d3", "d3slider"],
                     if (_this.maxNumber < max) _this.maxNumber = max;
                 });
                 
+                this.playing = false;
+                
                 this.render();
                                 
+            },
+            
+            events: {
+                'click #play': 'play'
             },
 
             render: function() {
                 
                 var yearStep = Math.floor((this.maxYear - this.minYear) / 4);
-                var _this = this;
-                
-                var slider = d3slider()
-                    .axis(
-                        d3.svg.axis().orient("down")
-                        .tickValues([_this.minYear, _this.minYear + yearStep, _this.minYear + yearStep * 2, _this.minYear + yearStep * 3, _this.maxYear])
-                        .tickFormat(d3.format("d"))
-                        .ticks(_this.maxYear - _this.minYear)
-                        )
-                    .min(_this.minYear)
-                    .max(_this.maxYear)
-                    .step(1);
-                
-                var sliderDiv = document.createElement("div");
-                sliderDiv.setAttribute("id", "slider");
-                sliderDiv.style.width = this.width+"px";  
-                
+                var _this = this;                                
                 
                 var femaleAges = this.data[0].alter_weiblich;
                 var maleAges = this.data[0].alter_maennlich;
                 
-                //var region = this.model.get('rs');
                 var year = this.data[0].jahr;
-                var title = "Bevölkerungsentwicklung " + year;
+                var title = year;
                 
                 var margin = {
                   top: 30,
@@ -72,22 +61,44 @@ define(["backbone", "d3", "d3slider"],
                 var pointA = regionWidth,
                     pointB = width - regionWidth;
             
-                var barHeight = (height-margin.bottom)/this.maxAge;
-            
-                // CREATE SVG
+                var barHeight = (height-margin.bottom)/this.maxAge;            
+                
+                // PLAY BUTTON
+                var playBtn = document.createElement("button");
+                playBtn.setAttribute("id", "play"); 
+                playBtn.innerHTML = "Play";
+                this.el.appendChild(playBtn);
+                
+                // create svg
                 var svg = d3.select(this.el).append('svg')
                   .attr('width', margin.left + width + margin.right)
                   .attr('height', margin.top + height + margin.bottom)
                   .append('g')
-                  .attr('transform', translation(margin.left, margin.top));          
+                  .attr('transform', translation(margin.left, margin.top));     
                   
+                // SLIDER                
+                this.slider = d3slider()
+                    .axis(
+                        d3.svg.axis().orient("down")
+                        .tickValues([_this.minYear, _this.minYear + yearStep, _this.minYear + yearStep * 2, _this.minYear + yearStep * 3, _this.maxYear])
+                        .tickFormat(d3.format("d"))
+                        .ticks(_this.maxYear - _this.minYear)
+                        )
+                    .min(_this.minYear)
+                    .max(_this.maxYear)
+                    .step(1);         
+                var sliderDiv = document.createElement("div");
+                sliderDiv.setAttribute("id", "slider");
+                sliderDiv.style.width = this.width+"px";         
                 this.el.appendChild(sliderDiv);
-                d3.select('#slider').call(slider);
+                d3.select('#slider').call(this.slider);
                 
-                slider.on("slide", function(evt, value) {
+                // update svg on slide
+                this.slider.on("slide", function(evt, value) {
                     evt.stopPropagation();
                     _this.changeYear(value);
     		});
+        
         
                 // TITLE
                 
@@ -97,7 +108,8 @@ define(["backbone", "d3", "d3slider"],
                     .attr("y", 0 - (margin.top / 2))
                     .attr("text-anchor", "middle")  
                     .text(title);
-                // SET UP SCALES
+            
+                // SCALES
 
                 this.xScale = d3.scale.linear()
                   .domain([0, _this.maxNumber])
@@ -137,7 +149,8 @@ define(["backbone", "d3", "d3slider"],
                     .attr("height", barHeight - 1);
             
                 
-                // SET UP AXES
+                // AXES
+                
                 var yAxis = d3.svg.axis()
                   .scale(_this.yScale)
                   .orient('left')
@@ -160,8 +173,6 @@ define(["backbone", "d3", "d3slider"],
                   .orient('bottom')
                   .ticks(5)
                   .tickSize(-height);
-
-                // AXES
                 
                 svg.append('g')
                   .attr('class', 'axis y left')
@@ -213,10 +224,9 @@ define(["backbone", "d3", "d3slider"],
             
             changeYear: function(year){           
                 var _this = this;
-                
-                var title = "Bevölkerungsentwicklung " + year;
+                var title = year;
                 d3.select('.title').text(title);
-                var yearData = this.data[this.data.length - (this.maxYear - year -1)];
+                var yearData = this.data[this.data.length - 1 - (this.maxYear - year)];
 
                 //update bars
                 d3.select('.female').selectAll("g")
@@ -228,6 +238,32 @@ define(["backbone", "d3", "d3slider"],
                     .select("rect").attr("width", _this.xScale);      
                 
             },
+            
+            play: function(event){
+                var _this = this;
+                
+                var stop = function(){                    
+                    event.target.innerHTML = 'Play';
+                    clearInterval(_this.timerId);
+                }
+                
+                this.playing = !this.playing;
+                if(this.playing){
+                    event.target.innerHTML = 'Stop';
+                    this.timerId = setInterval(function(){
+                        var currentYear = _this.slider.value();
+                        if(currentYear == _this.maxYear){ 
+                            stop();
+                        }
+                        else{
+                            _this.slider.value(currentYear + 1);
+                            _this.changeYear(currentYear + 1);
+                        }
+                    }, 1000);
+                }
+                else
+                    stop()
+            },            
             
             close: function () {
                 this.unbind();

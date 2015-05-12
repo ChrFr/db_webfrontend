@@ -5,7 +5,11 @@
 module.exports = function(){
     var express = require('express'),
         api = express(),
-        child_proc = require('child_process');    
+        child_proc = require('child_process'),  
+        csv = require('csv'),
+        query = require('./pgquery').pgQuery,   
+        pbkdf2Hash = require('./pbkdf2_hash'),    
+        config = require('./config');
     
     //Mapping taken from express examples https://github.com/strongloop/express
     api.map = function(a, route){
@@ -24,9 +28,57 @@ module.exports = function(){
       }
     };    
     
-    var query = require('./pgquery').pgQuery;   
-    var pbkdf2Hash = require('./pbkdf2_hash');    
-    var config = require('./config');
+    // transform json object by splitting array fields e.g. 
+    function expandJsonToCsv(options){
+        var data = options.data || {},
+            renameFields = options.renameFields || {},
+            countName = options.countName || 'count',
+            countStart = options.countStart || 0,
+            countPos = options.countPos || 0,
+            fillValue = options.fillValue || 0,
+            writeHead = options.writeHead || true;  
+    
+        var csv = [];
+        if (writeHead){
+            var keys = Object.keys(data);
+            keys.splice(countPos, 0, countName);
+            csv.push(keys.join(";"));  
+            //rename fields
+            for (var key in renameFields)
+                csv[0] = csv[0].replace(key, renameFields[key]);
+        }
+        
+        var maxLength = 0;        
+        
+        //get max array length
+        Object.keys(data).forEach(function(key){
+            if(data[key] instanceof Array){
+                if(data[key].length > maxLength)
+                    maxLength = data[key].length;
+            }
+        });
+        
+        //expand the arrays
+        for(var i = 0; i < maxLength; i++){
+            var row = [];        
+            Object.keys(data).forEach(function(key){   
+                var value;
+                if(!(data[key] instanceof Array))
+                    value = data[key];
+                else if (data[key].length < maxLength )
+                    value = fillValue;
+                else
+                    value = data[key][i];
+                //escape chars and adapt floats to german csv
+                value = value.toString().replace( /[",\n\r]/gi, '' ).replace('.', ',');
+                row.push(value);
+            });
+            row.splice(countPos, 0, countStart + i);
+            csv.push(row.join(';'));
+        };
+        
+        return csv.join("\n");
+    }
 
     var checkPermission = function(prognoseId, user, callback){           
         if(!user)
@@ -36,14 +88,14 @@ module.exports = function(){
             if (err)
                 return callback(err, 500); 
             if (result.length === 0)
-                return callback('not found', 404)
+                return callback('not found', 404);
             if (!user.superuser && result[0].users.indexOf(user.id) < 0)
                 return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
             //don't send the permissions
             delete result[0].users;
             return callback(null, 200, result[0]);
         });
-    }    
+    };    
     
     var prognosen = {   
         list: function(req, res){
@@ -82,7 +134,8 @@ module.exports = function(){
                     return res.status(status).send(err);
                 query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
                     return res.status(200).send(result);
-            })});
+                });
+            });
         },
         
         get: function(req, res){           
@@ -90,13 +143,82 @@ module.exports = function(){
                 if (err)
                     return res.status(status).send(err);
                 query('SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr', [req.params.id, req.params.rs], function(err, result){
-                    res.statusCode = 200;                           
+                    res.statusCode = 200;                  
                     return res.json({
                         rs: req.params.rs,
                         data: result
-                    });       
-            })});
+                    });
+                    
+                });
+            });
         },
+        
+        csv: function(req, res){
+                     
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if (err)
+                    return res.status(status).send(err);
+                
+                var year = req.query.year,
+                    queryString = "",
+                    params = [];
+                
+                //query parameter?    
+                if (year){
+                    queryString = 'SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 AND jahr=$3';
+                    params = [req.params.id, req.params.rs, year];
+                }
+                else{
+                    queryString = 'SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr';
+                    params = [req.params.id, req.params.rs];                    
+                }
+                    
+                query(queryString, params, function(err, result){
+                    res.statusCode = 200;    
+                    
+                    //MIME Type and filename
+                    res.set('Content-Type', 'text/csv');
+                    var filename = req.params.rs + '-bevoelkerungsprognose';                    
+                    if(year)
+                        filename += '-' + year;                                         
+                    filename += '.csv';
+                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);  
+                    
+                    var expanded = "";
+                    for(var i = 0; i < result.length; i++){
+                        if(year)                            
+                            delete result[i]['jahr'];
+                        
+                        expanded += expandJsonToCsv({
+                            data: result[i],
+                            renameFields: {'alter_weiblich': 'Anzahl weiblich', 
+                                           'alter_maennlich': 'Anzahl maennlich'},     
+                            countName: 'Alter',
+                            countPos: (year) ? 0: 1,
+                            writeHead: (i == 0) ? true: false
+                        });
+                           
+                    }
+                    
+                    res.send(expanded);                      
+                });
+            });
+        },
+        
+        svg: function(req, res){
+                     
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                var year = 'bla';
+                if (err)
+                    return res.status(status).send(err);
+                query('SELECT jahr, ROUND(alter_weiblich,decimals), ROUND(alter_maennlich,decimals) FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr', [req.params.id, req.params.rs], function(err, result){
+                    res.statusCode = 200;    
+                    res.set('Content-Type', 'text/csv');
+                    res.setHeader('Content-disposition', 'attachment; filename=' + req.params.rs + '-' + year + '-bevoelkerungsprognose.csv');
+                    res.send(jsonToCsv(result));                      
+                });
+            });
+        }
         /*
         getYear: function(req, res, onSuccess){            
             var params = [req.params.rs, req.params.jahr];
@@ -206,8 +328,7 @@ module.exports = function(){
                     req.session.user  = {id: dbResult[0].id,
                                         name: dbResult[0].name,
                                         email: dbResult[0].email,
-                                        superuser: dbResult[0].superuser};                       
-                                    console.log()
+                                        superuser: dbResult[0].superuser};    
                                     
                     //COOKIES (only used for status check, if page is refreshed)
                     var maxAge = config.serverconfig.maxCookieAge; 
@@ -289,8 +410,8 @@ module.exports = function(){
         
         delete: function(req, res){
             
-        },
-    }
+        }
+    };
    
     api.map({
         
@@ -309,7 +430,13 @@ module.exports = function(){
                 '/bevoelkerungsprognose': {
                     get: demodevelop.list,        
                         '/:rs': {                
-                            get: demodevelop.get
+                            get: demodevelop.get,
+                            '/svg':{
+                                get: demodevelop.svg
+                            },
+                            '/csv':{
+                                get: demodevelop.csv
+                            }
                         }                    
                 }
             }

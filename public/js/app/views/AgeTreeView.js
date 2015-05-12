@@ -33,7 +33,8 @@ define(["backbone", "d3", "d3slider"],
             
             events: {
                 'click #play': 'play',
-                'click #csv': 'openCsvTab'
+                'click #csvAll': 'openAllYearsCsvTab',
+                'click #csvCurrent': 'openCurrentYearCsvTab'
             },
 
             render: function() {
@@ -72,9 +73,14 @@ define(["backbone", "d3", "d3slider"],
                 
                 // DOWNLOAD BUTTON
                 var csvBtn = document.createElement("button");
-                csvBtn.setAttribute("id", "csv"); 
-                csvBtn.innerHTML = "Csv";
+                csvBtn.setAttribute("id", "csvAll"); 
+                csvBtn.innerHTML = "Csv Alle";
                 this.el.appendChild(csvBtn);
+                
+                var csvCBtn = document.createElement("button");
+                csvCBtn.setAttribute("id", "csvCurrent"); 
+                csvCBtn.innerHTML = "Csv Jahr";
+                this.el.appendChild(csvCBtn);
                 
                 // create svg
                 var svg = d3.select(this.el).append('svg')
@@ -272,8 +278,14 @@ define(["backbone", "d3", "d3slider"],
                     stop()
             },            
             
-            openCsvTab: function OpenInNewTab() {
+            openAllYearsCsvTab: function OpenInNewTab() {
                 var win = window.open(this.model.csvUrl(), '_blank');
+                win.focus();
+            },
+            
+            openCurrentYearCsvTab: function OpenInNewTab() {
+                var currentYear = this.slider.value();
+                var win = window.open(this.model.csvUrl(currentYear), '_blank');
                 win.focus();
             },
             

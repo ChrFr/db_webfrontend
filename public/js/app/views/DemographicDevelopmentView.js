@@ -27,6 +27,8 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                 var regionSelector = this.el.querySelector("#rsSelect");
                 
                 new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2}); 
+                this.regions.comparator = 'name';
+                this.regions.sort();
                 this.regions.each(function(region){                        
                     new OptionView({
                         el: regionSelector,

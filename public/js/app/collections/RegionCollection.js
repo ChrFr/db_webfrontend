@@ -13,6 +13,11 @@ define(["backbone","models/RegionModel"],
             initialize: function(options){   
                 this.url = this.url.replace('{progId}', options.progId);
             },    
+            
+            //order function
+            comparator: function(model) {
+                return model.get('rs');
+            },
         });
         return RegionCollection;
     }

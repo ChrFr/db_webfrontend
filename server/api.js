@@ -80,7 +80,7 @@ module.exports = function(){
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                query("SELECT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
+                query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
                     return res.status(200).send(result);
             })});
         },
@@ -89,7 +89,7 @@ module.exports = function(){
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                query('SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2', [req.params.id, req.params.rs], function(err, result){
+                query('SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr', [req.params.id, req.params.rs], function(err, result){
                     res.statusCode = 200;                           
                     return res.json({
                         rs: req.params.rs,

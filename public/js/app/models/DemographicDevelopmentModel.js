@@ -15,6 +15,13 @@ define(["backbone"],
                     this.url = this.url.replace('{progId}', progId);
                 if(rs)
                     this.url = this.url.replace('{rs}', rs);
+            },
+            
+            csvUrl: function(year){
+                var url = this.url + '/csv'
+                if(year)
+                    url += '?year=' + year;
+                return url
             }
         });
         return DemographicDevelopmentModel;

@@ -6,7 +6,6 @@ module.exports = function(){
     var express = require('express'),
         api = express(),
         child_proc = require('child_process'),  
-        csv = require('csv'),
         query = require('./pgquery').pgQuery,   
         pbkdf2Hash = require('./pbkdf2_hash'),    
         config = require('./config');
@@ -36,9 +35,10 @@ module.exports = function(){
             countStart = options.countStart || 0,
             countPos = options.countPos || 0,
             fillValue = options.fillValue || 0,
-            writeHead = options.writeHead || true;  
+            writeHead = options.writeHead;  
     
         var csv = [];
+        
         if (writeHead){
             var keys = Object.keys(data);
             keys.splice(countPos, 0, countName);
@@ -163,7 +163,7 @@ module.exports = function(){
                     queryString = "",
                     params = [];
                 
-                //query parameter?    
+                //specific year queried or all years?   
                 if (year){
                     queryString = 'SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 AND jahr=$3';
                     params = [req.params.id, req.params.rs, year];
@@ -195,8 +195,8 @@ module.exports = function(){
                                            'alter_maennlich': 'Anzahl maennlich'},     
                             countName: 'Alter',
                             countPos: (year) ? 0: 1,
-                            writeHead: (i == 0) ? true: false
-                        });
+                            writeHead: (i === 0) ? true: false
+                        }) + '\n';
                            
                     }
                     

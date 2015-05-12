@@ -118,7 +118,7 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
                 var width = document.getElementsByTagName('body')[0].clientWidth;
                 this.agetree = new AgeTreeView({
                     el: vis,
-                    data: model.get('data'),
+                    model: model,
                     width: 500,
                     height: 600
                 });                

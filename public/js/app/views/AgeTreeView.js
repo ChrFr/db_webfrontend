@@ -9,14 +9,14 @@ define(["backbone", "d3", "d3slider"],
                 
                 this.width = options.width;
                 this.height = options.height;
-                this.data = options.data;
+                this.data = this.model.get('data');
                 
                 //get minima and maxima
                 this.maxAge = this.maxNumber = 0;     
                 this.minYear = this.data[0].jahr;
                 this.maxYear = this.data[this.data.length-1].jahr;
 
-                _.each(options.data, function(item){
+                _.each(this.data, function(item){
                     var femaleAges = item.alter_weiblich,
                         maleAges = item.alter_maennlich;
                     var max = Math.max(femaleAges.length, maleAges.length);
@@ -32,7 +32,8 @@ define(["backbone", "d3", "d3slider"],
             },
             
             events: {
-                'click #play': 'play'
+                'click #play': 'play',
+                'click #csv': 'openCsvTab'
             },
 
             render: function() {
@@ -68,6 +69,12 @@ define(["backbone", "d3", "d3slider"],
                 playBtn.setAttribute("id", "play"); 
                 playBtn.innerHTML = "Play";
                 this.el.appendChild(playBtn);
+                
+                // DOWNLOAD BUTTON
+                var csvBtn = document.createElement("button");
+                csvBtn.setAttribute("id", "csv"); 
+                csvBtn.innerHTML = "Csv";
+                this.el.appendChild(csvBtn);
                 
                 // create svg
                 var svg = d3.select(this.el).append('svg')
@@ -264,6 +271,11 @@ define(["backbone", "d3", "d3slider"],
                 else
                     stop()
             },            
+            
+            openCsvTab: function OpenInNewTab() {
+                var win = window.open(this.model.csvUrl(), '_blank');
+                win.focus();
+            },
             
             close: function () {
                 this.unbind();

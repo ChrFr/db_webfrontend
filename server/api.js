@@ -220,21 +220,6 @@ module.exports = function(){
             });
         },
         
-        svg: function(req, res){
-                     
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
-                var year = 'bla';
-                if (err)
-                    return res.status(status).send(err);
-                query('SELECT jahr, ROUND(alter_weiblich,decimals), ROUND(alter_maennlich,decimals) FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr', [req.params.id, req.params.rs], function(err, result){
-                    res.statusCode = 200;    
-                    res.set('Content-Type', 'text/csv');
-                    res.setHeader('Content-disposition', 'attachment; filename=' + req.params.rs + '-' + year + '-bevoelkerungsprognose.csv');
-                    res.send(jsonToCsv(result));                      
-                });
-            });
-        },        
-        
         //converts to SVG
         svg: function(req, res){
             var Render = require('./render');
@@ -243,33 +228,48 @@ module.exports = function(){
             else
                 demodevelop.getYears(req, res, function(result){
                     Render.renderAgeTree({
-                            data: result[0],
-                            width: 400,
-                            height: 600
-                        }, function(svg){
-                            return res.status(200).send(svg);
-                    }); 
-                });
+                        data: result[0],
+                        width: 400,
+                        height: 600
+                    }, function(svg){
+                        //MIME Type and filename
+                        res.set('Content-Type', 'image/svg+xml' );
+                        var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".svg";
+                        res.setHeader('Content-disposition', 'attachment; filename=' + filename); 
+                        return res.status(200).send(svg);
+                }); 
+            });
         },
         
         //converts to PNG
         png: function(req, res){
-            var AgeTree = require('./render');
-            AgeTree.renderAgeTree();
-            var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
-            res.writeHeader(200, {'Content-Type': 'image/png'});
-            convert.stdout.on('data', function (data) {
-              res.write(data);
-            });
-            convert.on('exit', function(code) {
-              res.end();
-            });
-            demodevelop.getYear(req, res, function(err, result){
-                AgeTree.renderAgeTree(result, 800, 400, function(svg){              
-                    convert.stdin.write(svg);
-                    convert.stdin.end();
-                }); 
-            });
+            var Render = require('./render');
+            if(!req.query.year)       
+                res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.')
+            else{
+                demodevelop.getYears(req, res, function(result){
+                    Render.renderAgeTree({
+                        data: result[0],
+                        width: 400,
+                        height: 600
+                    }, function(svg){
+                        //MIME Type and filename
+                        res.set('Content-Type', 'image/png' );
+                        var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".png";
+                        res.setHeader('Content-disposition', 'attachment; filename=' + filename);                         
+                    
+                        var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
+                        convert.stdout.on('data', function (data) {
+                          res.write(data);
+                        });
+                        convert.on('exit', function(code) {
+                          return res.end();
+                        });                                   
+                        convert.stdin.write(svg);
+                        convert.stdin.end();
+                    }); 
+                });
+            };
         }
         
     };

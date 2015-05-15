@@ -7,6 +7,7 @@ var AgeTree = function(options){
     this.height = options.height;
     this.maxX = options.maxX || 100;
     this.maxY = options.maxY || 1000;
+    this.css = options.css;
     
     this.render = function(callback){
         var _this = this;                                
@@ -29,14 +30,25 @@ var AgeTree = function(options){
         var pointA = regionWidth,
             pointB = this.width - regionWidth;
 
-        var barHeight = (this.height-margin.bottom)/this.maxX;        
+        var barHeight = (this.height-margin.bottom)/this.maxX;  
+        
+        
+        var top = d3.select(this.el).append('svg')
+            .attr('width', margin.left + this.width + margin.right)
+            .attr('height', margin.top + this.height + margin.bottom);  
+    
+        if(this.css){
+            var defs = top.append('defs');
+            var style = defs.append('style');  
+            //style.type = 'text/css';                
+            style.attr("type", "text/css");     
+            style.html(this.css);  
+        }
 
         // create svg
-        var svg = d3.select(this.el).append('svg')
-          .attr('width', margin.left + this.width + margin.right)
-          .attr('height', margin.top + this.height + margin.bottom)
-          .append('g')
-          .attr('transform', translation(margin.left, margin.top));     
+        var svg = top.append('svg')
+              .append('g')
+              .attr('transform', translation(margin.left, margin.top));   
 
         // TITLE
 
@@ -178,5 +190,6 @@ var AgeTree = function(options){
             .select("rect").attr("width", _this.xScale);    
     }    
 };
-
-exports.a = AgeTree;
+//supress warning on client side, exports only needed serverside
+if (typeof exports !== 'undefined') 
+    exports.init = AgeTree;

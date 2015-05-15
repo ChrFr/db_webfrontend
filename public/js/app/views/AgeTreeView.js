@@ -1,4 +1,4 @@
-define(["backbone", "d3", "d3slider"],
+define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
 
     function(Backbone, d3, d3slider){
         var AgeTreeView = Backbone.View.extend({
@@ -26,7 +26,6 @@ define(["backbone", "d3", "d3slider"],
                 });
                 
                 this.playing = false;
-                
                 this.render();
                                 
             },
@@ -40,13 +39,7 @@ define(["backbone", "d3", "d3slider"],
             render: function() {
                 
                 var yearStep = Math.floor((this.maxYear - this.minYear) / 4);
-                var _this = this;                                
-                
-                var femaleAges = this.data[0].alter_weiblich;
-                var maleAges = this.data[0].alter_maennlich;
-                
-                var year = this.data[0].jahr;
-                var title = year;
+                var _this = this;              
                 
                 var margin = {
                   top: 30,
@@ -57,13 +50,17 @@ define(["backbone", "d3", "d3slider"],
                 };
                 
                 var width = this.width - margin.left - margin.right,
-                    height = this.height - margin.top - margin.bottom;
-            
-                var regionWidth = width/2 - margin.middle;
-                var pointA = regionWidth,
-                    pointB = width - regionWidth;
-            
-                var barHeight = (height-margin.bottom)/this.maxAge;            
+                    height = this.height - margin.top - margin.bottom;            
+                
+                this.ageTree = new AgeTree({
+                    el: this.el,
+                    data: this.data[0], 
+                    width: width, 
+                    height: height,
+                    maxX: this.maxAge,
+                    maxY: this.maxNumber
+                });
+                this.ageTree.render();                       
                 
                 // PLAY BUTTON
                 var playBtn = document.createElement("button");
@@ -80,14 +77,7 @@ define(["backbone", "d3", "d3slider"],
                 var csvCBtn = document.createElement("button");
                 csvCBtn.setAttribute("id", "csvCurrent"); 
                 csvCBtn.innerHTML = "Csv Jahr";
-                this.el.appendChild(csvCBtn);
-                
-                // create svg
-                var svg = d3.select(this.el).append('svg')
-                  .attr('width', margin.left + width + margin.right)
-                  .attr('height', margin.top + height + margin.bottom)
-                  .append('g')
-                  .attr('transform', translation(margin.left, margin.top));     
+                this.el.appendChild(csvCBtn);   
                   
                 // SLIDER                
                 this.slider = d3slider()
@@ -111,145 +101,12 @@ define(["backbone", "d3", "d3slider"],
                     evt.stopPropagation();
                     _this.changeYear(value);
     		});
-        
-        
-                // TITLE
-                
-                svg.append("text")
-                    .attr('class', 'title')
-                    .attr("x", (width / 2))             
-                    .attr("y", 0 - (margin.top / 2))
-                    .attr("text-anchor", "middle")  
-                    .text(title);
-            
-                // SCALES
-
-                this.xScale = d3.scale.linear()
-                  .domain([0, _this.maxNumber])
-                  .range([0, regionWidth])
-                  .nice();
-
-                this.yScale = d3.scale.linear()
-                  .domain([0, _this.maxAge])
-                  .range([height-margin.bottom, 0]);
-          
-                // BARS                
-                
-                var leftBarGroup = svg.append('g')
-                  .attr('class', 'female')
-                  .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
-          
-                var rightBarGroup = svg.append('g')
-                  .attr('class', 'male')
-                  .attr('transform', translation(pointB, 0));
-          
-                var rightBars = rightBarGroup.selectAll("g")
-                    .data(femaleAges)
-                    .enter().append("g")
-                    .attr("transform", function(d, i) { return translation(0, (_this.maxAge - i) * barHeight - barHeight/2); });
-            
-                rightBars.append("rect")
-                    .attr("width", this.xScale)
-                    .attr("height", barHeight - 1);            
-                
-                var leftBars = leftBarGroup.selectAll("g")
-                    .data(maleAges)
-                    .enter().append("g")
-                    .attr("transform", function(d, i) { return translation(0, (_this.maxAge - i) * barHeight - barHeight/2); });
-            
-                leftBars.append("rect")
-                    .attr("width", _this.xScale)
-                    .attr("height", barHeight - 1);
-            
-                
-                // AXES
-                
-                var yAxis = d3.svg.axis()
-                  .scale(_this.yScale)
-                  .orient('left')
-                  .ticks(_this.maxAge)
-                  .tickSize(2,0)
-                  .tickPadding(margin.middle);
-          
-                yAxis.tickFormat(function(d) {
-                    return (d % 5 !== 0) ? '': d;
-                });
-
-                var xAxisRight = d3.svg.axis()
-                  .scale(_this.xScale)
-                  .orient('bottom')
-                  .ticks(5)
-                  .tickSize(-height);
-
-                var xAxisLeft = d3.svg.axis()
-                  .scale(_this.xScale.copy().range([pointA, 0]))
-                  .orient('bottom')
-                  .ticks(5)
-                  .tickSize(-height);
-                
-                svg.append('g')
-                  .attr('class', 'axis y left')
-                  .attr('transform', translation(pointA, 0))
-                  .call(yAxis);
-
-
-                svg.append('g')
-                  .attr('class', 'axis x left')
-                  .attr('transform', translation(0, height))
-                  .call(xAxisLeft);
-
-                svg.append('g')
-                  .attr('class', 'axis x right')
-                  .attr('transform', translation(pointB, height))
-                  .call(xAxisRight);
-          
-                // LEGEND
-                
-                svg.append("rect")
-                    .attr('class', 'female')
-                    .attr("x", 10)
-                    .attr("y", 0)
-                    .attr("width", 10)
-                    .attr("height", 10);            
-            
-                svg.append("text")
-                    .attr("x", 30)             
-                    .attr("y", 10 )
-                    .text('weiblich');
-                
-                svg.append("rect")
-                    .attr('class', 'male')
-                    .attr("x", 10)
-                    .attr("y", 30)
-                    .attr("width", 10)
-                    .attr("height", 10);
-            
-                svg.append("text")
-                    .attr("x", 30)             
-                    .attr("y", 40 )
-                    .text('männlich');
-                  
-                function translation(x,y) {
-                  return 'translate(' + x + ',' + y + ')';
-                }
                 return this;
             },
             
-            changeYear: function(year){           
-                var _this = this;
-                var title = year;
-                d3.select('.title').text(title);
-                var yearData = this.data[this.data.length - 1 - (this.maxYear - year)];
-
-                //update bars
-                d3.select('.female').selectAll("g")
-                    .data(yearData.alter_weiblich)
-                    .select("rect").attr("width", _this.xScale);    
-            
-                d3.select('.male').selectAll("g")
-                    .data(yearData.alter_maennlich)
-                    .select("rect").attr("width", _this.xScale);      
-                
+            changeYear: function(year){    
+                var yearData = this.data[this.data.length - 1 - (this.maxYear - year)];       
+                this.ageTree.changeData(yearData);
             },
             
             play: function(event){

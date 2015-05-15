@@ -138,23 +138,18 @@ module.exports = function(){
             });
         },
         
-        get: function(req, res){           
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
-                if (err)
-                    return res.status(status).send(err);
-                query('SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr', [req.params.id, req.params.rs], function(err, result){
-                    res.statusCode = 200;                  
-                    return res.json({
-                        rs: req.params.rs,
-                        data: result
-                    });
-                    
+        getJSON: function(req, res){       
+            demodevelop.getYears(req, res, function(result){                
+                if(req.query.year)
+                    result = result[0];
+                return res.json({
+                    rs: req.params.rs,
+                    data: result
                 });
             });
         },
         
-        csv: function(req, res){
-                     
+        getYears: function(req, res, onSuccess){       
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
@@ -173,23 +168,43 @@ module.exports = function(){
                     params = [req.params.id, req.params.rs];                    
                 }
                     
-                query(queryString, params, function(err, result){
+                query(queryString, params, function(err, result){                                
+                    if (err || result.length === 0)
+                        return res.sendStatus(404);
+                   // if(req.query.weiblich)
+                    //    result = result[0];
+                    return onSuccess(result);                     
+                });
+            });     
+        },
+        
+        csv: function(req, res){
+                     
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if (err)
+                    return res.status(status).send(err);
+                
+                var year = req.query.year;
+                    
+                demodevelop.getYears(req, res, function(result){
                     res.statusCode = 200;    
                     
                     //MIME Type and filename
                     res.set('Content-Type', 'text/csv');
-                    var filename = req.params.rs + '-bevoelkerungsprognose';                    
-                    if(year)
-                        filename += '-' + year;                                         
-                    filename += '.csv';
-                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);  
+                    var filename = req.params.rs + '-bevoelkerungsprognose'; 
                     
-                    var expanded = "";
+                    var expanded = "Bevoelkerungsprognose " + req.params.rs;
+                    if(year){
+                        filename += '-' + year; 
+                        expanded += " " + year;
+                    }
+                    res.setHeader('Content-disposition', 'attachment; filename=' + filename + ".csv");                      
+                    
                     for(var i = 0; i < result.length; i++){
                         if(year)                            
                             delete result[i]['jahr'];
                         
-                        expanded += expandJsonToCsv({
+                        expanded += "\n" + expandJsonToCsv({
                             data: result[i],
                             renameFields: {'alter_weiblich': 'Anzahl weiblich', 
                                            'alter_maennlich': 'Anzahl maennlich'},     
@@ -218,47 +233,29 @@ module.exports = function(){
                     res.send(jsonToCsv(result));                      
                 });
             });
-        }
-        /*
-        getYear: function(req, res, onSuccess){            
-            var params = [req.params.rs, req.params.jahr];
-            var q = 'SELECT rs, jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE rs=$1 AND jahr=$2';    
-            //if(req.query.weiblich){  
-            //    params.push(req.query.weiblich);
-            //    query += 'AND weiblich=$3'}
-            query(q, params, 
-                function(err, result){
-                    //merge the project object with the borders from db                
-                    if (err || result.length === 0)
-                        return res.sendStatus(404);
-                   // if(req.query.weiblich)
-                    //    result = result[0];
-                    return onSuccess(result[0]);
-                });
-        },
-
-        
-        //sends plain JSON
-        getYearJSON: function(req, res){             
-            bevoelkerungsprognose.getYear(req, res, function(err, result){
-                res.status(200).send(result);
-            });
-        },
+        },        
         
         //converts to SVG
-        getYearSvg: function(req, res){
-            var mod = require('./visualizations/renderAgeTree');
-                   
-            bevoelkerungsprognose.getYear(req, res, function(err, result){
-                mod.render(result, 800, 400, function(svg){
-                    return res.status(200).send(svg);
-                }); 
-            });
+        svg: function(req, res){
+            var Render = require('./render');
+            if(!req.query.year)       
+                res.status(400).send('SVGs können nur für spezifische Jahre angezeigt werden.')
+            else
+                demodevelop.getYears(req, res, function(result){
+                    Render.renderAgeTree({
+                            data: result[0],
+                            width: 400,
+                            height: 600
+                        }, function(svg){
+                            return res.status(200).send(svg);
+                    }); 
+                });
         },
         
         //converts to PNG
-        getYearPng: function(req, res){
-            var mod = require('./visualizations/renderAgeTree');       
+        png: function(req, res){
+            var AgeTree = require('./render');
+            AgeTree.renderAgeTree();
             var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
             res.writeHeader(200, {'Content-Type': 'image/png'});
             convert.stdout.on('data', function (data) {
@@ -267,13 +264,13 @@ module.exports = function(){
             convert.on('exit', function(code) {
               res.end();
             });
-            bevoelkerungsprognose.getYear(req, res, function(err, result){
-                mod.render(result, 800, 400, function(svg){              
+            demodevelop.getYear(req, res, function(err, result){
+                AgeTree.renderAgeTree(result, 800, 400, function(svg){              
                     convert.stdin.write(svg);
                     convert.stdin.end();
                 }); 
             });
-        }*/
+        }
         
     };
     
@@ -430,12 +427,15 @@ module.exports = function(){
                 '/bevoelkerungsprognose': {
                     get: demodevelop.list,        
                         '/:rs': {                
-                            get: demodevelop.get,
+                            get: demodevelop.getJSON,
                             '/svg':{
                                 get: demodevelop.svg
                             },
                             '/csv':{
                                 get: demodevelop.csv
+                            },                            
+                            '/png':{
+                                get: demodevelop.png
                             }
                         }                    
                 }

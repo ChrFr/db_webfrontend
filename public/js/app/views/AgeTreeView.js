@@ -98,7 +98,8 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                     .step(1);         
                 var sliderDiv = document.createElement("div");
                 sliderDiv.setAttribute("id", "slider");
-                sliderDiv.style.width = this.width+"px";         
+                sliderDiv.style.width = this.width - 20 + "px";   
+                sliderDiv.style.left = 10 + "px";       
                 this.el.appendChild(sliderDiv);
                 d3.select('#slider').call(this.slider);
                 

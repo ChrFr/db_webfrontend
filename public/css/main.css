@@ -23,7 +23,33 @@ body {
 }*/
 
 .tab-content{
-    width: 500px;
+    min-height: 100px;
+    width: 600px;
+    transition: height 1s;
+    border-color: black;
+    border: solid 1px;
+}
+
+.tab-content{
+    z-index: 1;
+    margin-top: -1px;
+}
+
+.nav-pills > li > a{
+    z-index: 0;
+    background-color: #ddd;
+    color: black;
+    border: solid 1px;
+    border-bottom: 0px;
+    border-radius: 5px 5px 0px 0px;
+}
+
+.nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus{
+    background-color: white;
+    color: black;
+    border: solid 1px;
+    border-bottom: 0px;    
+    z-index: 10;
 }
 
 select {

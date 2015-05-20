@@ -67,10 +67,17 @@
 }
 
 @media (min-width: 768px) {
-    #main-menu .menu-link{    
+    
+    #main-menu ul{
+        padding-left: 100px;
+    }
+
+    #main-menu .menu-link{            
+        border-radius: 5px 5px 0px 0px;
         height: 20px;
         margin-top: 20px;
-        transition: margin 0.2s;
+        transition: margin 0.1s;
+        transition-timing-function: ease-out;
     }
 
     #main-menu .active a{    
@@ -82,7 +89,8 @@
         position: absolute;
         width: 100%;
         top: 0px;
-        transition: all 0.2s;
+        transition: all 0.1s;
+        transition-timing-function: ease-out;
         display: block;
     }
 

@@ -31,6 +31,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html"],
             },
 
             events: {
+                'click .menu-link': 'openSubMenu'
             },
 
             // Renders the view's template to the UI
@@ -57,7 +58,19 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html"],
                     this.el.querySelector("#admin").style.display = 'none';
                     this.$el.find('#login').text('Einloggen'); 
                 }
+            },
+            
+            openSubMenu: function(event){
+                $('.submenu').removeClass('active');
+                var id = event.target.id;
+                if(id === 'prognosis')
+                    $('#prognosis-menu').addClass('active');
+                else if(id === 'login')
+                    $('#login-menu').addClass('active');
+                else if(id === 'admin')
+                    $('#admin-menu').addClass('active');
             }
+         
 
         });
 

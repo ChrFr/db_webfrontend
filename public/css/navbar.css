@@ -1,0 +1,93 @@
+/*
+    Author: Christoph Franke
+    Publisher: GGR
+*/
+#main-menu{    
+    z-index: 10;
+    height: 50px;
+    background-color: white;
+    position: relative;
+}
+
+#main-menu .navbar-brand img{
+    height: 30px;
+}
+
+#main-menu a{
+    color: white;
+}
+
+#main-menu #prognosis{    
+    background-color: lightsalmon;
+}
+
+#main-menu #admin{    
+    background-color: lightcoral;
+}
+
+#main-menu #login{    
+    background-color: gold;
+}
+
+/* SUBMENUS*/
+.submenu{
+    position: relative;
+    width: 100%;
+    min-height: 20px;
+    z-index: 1;
+    display: none;
+}
+
+.submenu.active{
+    display: block;
+}
+
+.submenu .navbar-header{
+    padding: 15px 15px;
+}
+
+#prognosis-menu{
+    background-color: lightsalmon;
+}
+
+#admin-menu{
+    background-color: lightcoral;
+}
+
+#login-menu{
+    background-color: gold;
+}
+
+#prognosis-menu a, #prognosis-menu .navbar-header{
+    color: white;
+}
+
+#prognosis-menu .active a{
+    background-color: darksalmon;
+}
+
+@media (min-width: 768px) {
+    #main-menu .menu-link{    
+        height: 20px;
+        margin-top: 20px;
+        transition: margin 0.2s;
+    }
+
+    #main-menu .active a{    
+        height: 40px;
+        margin-top: 10px;
+    }    
+    
+    .submenu{
+        position: absolute;
+        width: 100%;
+        top: 0px;
+        transition: all 0.2s;
+        display: block;
+    }
+
+    .submenu.active{
+        top: 50px;
+        display: block;
+    }
+}

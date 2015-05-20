@@ -1,3 +1,8 @@
+/*
+    Author: Christoph Franke
+    Publisher: GGR
+*/
+
 var d3 = require('d3');
 
 var AgeTree = function(options){
@@ -192,6 +197,6 @@ var AgeTree = function(options){
             .select("rect").attr("width", _this.xScale);    
     }    
 };
-
+//suppress client-side error (different ways to import on client and server)
 if (typeof exports !== 'undefined') 
     exports.init = AgeTree;

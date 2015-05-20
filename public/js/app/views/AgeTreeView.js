@@ -33,7 +33,8 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
             events: {
                 'click #play': 'play',
                 'click #csvAll': 'openAllYearsCsvTab',
-                'click #csvCurrent': 'openCurrentYearCsvTab'
+                'click #csvCurrent': 'openCurrentYearCsvTab',
+                'click #pngCurrent': 'openCurrentYearPngTab'
             },
 
             render: function() {
@@ -57,8 +58,8 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                     data: this.data[0], 
                     width: width, 
                     height: height,
-                    maxX: this.maxAge,
-                    maxY: this.maxNumber
+                    maxY: this.maxAge,
+                    maxX: this.maxNumber
                 });
                 this.ageTree.render();                       
                 
@@ -68,7 +69,7 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                 playBtn.innerHTML = "Play";
                 this.el.appendChild(playBtn);
                 
-                // DOWNLOAD BUTTON
+                // DOWNLOAD BUTTONS
                 var csvBtn = document.createElement("button");
                 csvBtn.setAttribute("id", "csvAll"); 
                 csvBtn.innerHTML = "Csv Alle";
@@ -77,7 +78,12 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                 var csvCBtn = document.createElement("button");
                 csvCBtn.setAttribute("id", "csvCurrent"); 
                 csvCBtn.innerHTML = "Csv Jahr";
-                this.el.appendChild(csvCBtn);   
+                this.el.appendChild(csvCBtn);                   
+                
+                var pngBtn = document.createElement("button");
+                pngBtn.setAttribute("id", "pngCurrent"); 
+                pngBtn.innerHTML = "PNG Jahr";
+                this.el.appendChild(pngBtn);   
                   
                 // SLIDER                
                 this.slider = d3slider()
@@ -135,14 +141,20 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                     stop()
             },            
             
-            openAllYearsCsvTab: function OpenInNewTab() {
+            openAllYearsCsvTab: function() {
                 var win = window.open(this.model.csvUrl(), '_blank');
                 win.focus();
             },
             
-            openCurrentYearCsvTab: function OpenInNewTab() {
+            openCurrentYearCsvTab: function() {
                 var currentYear = this.slider.value();
                 var win = window.open(this.model.csvUrl(currentYear), '_blank');
+                win.focus();
+            },
+            
+            openCurrentYearPngTab: function() {
+                var currentYear = this.slider.value();
+                var win = window.open(this.model.pngUrl(currentYear), '_blank');
                 win.focus();
             },
             

@@ -1,18 +1,6 @@
-/*
-    Created on : 17.03.2015, 13:12:07
-    Author     : GGR
-*/
-
-
 svg {
   font: 10px sans-serif;
 }
-
-/*
-.y.axis path, 
-.y.axis line {
-  display: none;
-}*/
 
 .title{    
     font-size: 1.5em;
@@ -30,16 +18,14 @@ svg {
   stroke-dasharray: 2,2;
 }
 
-.male rect,
 rect.male{
   fill-opacity: 1;
-  fill: #5EDAFF;
+  fill: #0066FF;
 }
 
-.female rect,
 rect.female{
   fill-opacity: 1;
-  fill: #FFE573;
+  fill: #CC3399;
 }
 
 .d3-slider {
@@ -127,4 +113,10 @@ rect.female{
     left: -.25em;
     margin-left: 0;
     margin-bottom: -.6em;      
+}
+
+/*hide path, else its rendered as black box by some svg viewers like inkscape and imageMagick*/
+path {
+    display: none;
+    visibility: hidden;
 }

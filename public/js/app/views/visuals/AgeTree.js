@@ -5,8 +5,8 @@ var AgeTree = function(options){
     this.data = options.data;
     this.width = options.width;
     this.height = options.height;
-    this.maxX = options.maxX || 100;
-    this.maxY = options.maxY || 1000;
+    this.maxX = options.maxX || 1000;
+    this.maxY = options.maxY || 100;
     this.css = options.css;
     
     this.render = function(callback){
@@ -23,17 +23,16 @@ var AgeTree = function(options){
           right: 20,
           bottom: 24,
           left: 20,
-          middle: 0
+          middle: 10
         };
 
         var regionWidth = this.width/2 - margin.middle;
         var pointA = regionWidth,
-            pointB = this.width - regionWidth;
-
-        var barHeight = (this.height-margin.bottom)/this.maxX;  
-        
+            pointB = this.width - regionWidth;       
         
         var top = d3.select(this.el).append('svg')
+            .attr('xmlns', "http://www.w3.org/2000/svg")
+            .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
             .attr('width', margin.left + this.width + margin.right)
             .attr('height', margin.top + this.height + margin.bottom);  
     
@@ -62,39 +61,42 @@ var AgeTree = function(options){
         // SCALES
 
         this.xScale = d3.scale.linear()
-          .domain([0, _this.maxY])
+          .domain([0, _this.maxX])
           .range([0, regionWidth])
           .nice();
 
         this.yScale = d3.scale.linear()
-          .domain([0, _this.maxX])
-          .range([this.height-margin.bottom, 0]);
+          .domain([0, _this.maxY])
+          .range([this.height, 0]);
 
         // BARS                
-
-        var leftBarGroup = svg.append('g')
-          .attr('class', 'female')
+        var barHeight = this.height/this.maxY;   
+        
+        var maleGroup = svg.append('g')
+          .attr('class', 'maleGroup')
           .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
 
-        var rightBarGroup = svg.append('g')
-          .attr('class', 'male')
+        var femaleGroup = svg.append('g')
+          .attr('class', 'femaleGroup')
           .attr('transform', translation(pointB, 0));
 
-        var rightBars = rightBarGroup.selectAll("g")
+        var rightBars = femaleGroup.selectAll("g")
             .data(femaleAges)
             .enter().append("g")
-            .attr("transform", function(d, i) { return translation(0, (_this.maxX - i) * barHeight - barHeight/2); });
+            .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * barHeight - barHeight/2); });
 
         rightBars.append("rect")
+            .attr('class', 'female')
             .attr("width", this.xScale)
             .attr("height", barHeight - 1);            
 
-        var leftBars = leftBarGroup.selectAll("g")
+        var leftBars = maleGroup.selectAll("g")
             .data(maleAges)
             .enter().append("g")
-            .attr("transform", function(d, i) { return translation(0, (_this.maxX - i) * barHeight - barHeight/2); });
+            .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * barHeight - barHeight/2); });
 
         leftBars.append("rect")
+            .attr('class', 'male')
             .attr("width", _this.xScale)
             .attr("height", barHeight - 1);
 
@@ -103,13 +105,13 @@ var AgeTree = function(options){
 
         var yAxis = d3.svg.axis()
           .scale(_this.yScale)
-          .orient('left')
-          .ticks(_this.maxX)
-          .tickSize(2,0)
-          .tickPadding(margin.middle);
+          .orient('right')
+          .ticks(_this.maxY)
+          .tickSize(0,0)
+          .tickPadding(1);
 
         yAxis.tickFormat(function(d) {
-            return (d % 5 !== 0) ? '': d;
+            return ((d === 0) || (d % 5 !== 0)) ? '': d;
         });
 
         var xAxisRight = d3.svg.axis()
@@ -181,15 +183,15 @@ var AgeTree = function(options){
         d3.select('.title').text(title);
 
         //update bars
-        d3.select('.female').selectAll("g")
+        d3.select('.femaleGroup').selectAll("g")
             .data(data.alter_weiblich)
             .select("rect").attr("width", _this.xScale);    
 
-        d3.select('.male').selectAll("g")
+        d3.select('.maleGroup').selectAll("g")
             .data(data.alter_maennlich)
             .select("rect").attr("width", _this.xScale);    
     }    
 };
-//supress warning on client side, exports only needed serverside
+
 if (typeof exports !== 'undefined') 
     exports.init = AgeTree;

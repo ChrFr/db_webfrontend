@@ -22,6 +22,11 @@ define(["backbone"],
                 if(year)
                     url += '?year=' + year;
                 return url
+            },
+            
+            pngUrl: function(year){
+                var url = this.url + '/png?year=' + year;
+                return url
             }
         });
         return DemographicDevelopmentModel;

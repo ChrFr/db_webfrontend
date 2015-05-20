@@ -12,7 +12,7 @@ exports.renderAgeTree = (function(options, callback){
         width = options.width,
         height = options.height,
         maxX = options.maxX || Math.max(d3.max(data.alter_weiblich), d3.max(data.alter_maennlich)),
-        maxY = options.maxY || Math.max(data.alter_weiblich.length, data.alter_maennlich.length)
+        maxY = options.maxY || Math.max(data.alter_weiblich.length, data.alter_maennlich.length);
         
     // pass the html stub to jsDom
     jsdom.env({ features : { QuerySelector : true }, html : htmlStub,

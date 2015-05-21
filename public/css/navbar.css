@@ -68,7 +68,10 @@
 }
 
 #prognosis-menu .active a{
-    background-color: darksalmon;
+    background-color: lightsalmon;
+    height: 50px;
+    box-sizing: border-box;
+    border-bottom: solid 5px #444;
 }
 
 @media (min-width: 768px) {
@@ -83,12 +86,13 @@
         margin-top: 15px;
         transition: all 0.1s;
         transition-timing-function: ease-out;
+        box-shadow: 1px -1px 2px 0px grey;
     }
-
+    
     #main-menu .active a{    
         height: 45px;
         margin-top: 5px;
-    }    
+    }  
     
     .submenu{
         
@@ -97,8 +101,8 @@
         top: 0px;
         transition: all 0.1s;
         transition-timing-function: ease-out;
-        display: block;
-        
+        display: block;        
+        //box-shadow: 1px -1px 3px 0px grey;
         //transition: all 0.1s;
         //height: 0px;
     }

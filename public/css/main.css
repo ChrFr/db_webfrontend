@@ -24,11 +24,9 @@ body {
     transition: height 1s;
     border-color: black;
     border: solid 1px;
-}
-
-.tab-content{
     z-index: 1;
     margin-top: -1px;
+    padding: 10px;
 }
 
 .nav-pills > li > a{
@@ -50,6 +48,11 @@ body {
 
 select {
     width: 100px;
+}
+
+#prognosis-data td{
+    padding: 1px 5px 1px 5px !important;
+    //line-height: 0.5;
 }
 
 

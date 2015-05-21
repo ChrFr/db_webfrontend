@@ -22,7 +22,7 @@ define(["app", "backbone", "text!templates/prognosis.html",
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;  
                 //id of active prognosis changed in navbar -> render it
-                app.onChange("activePrognosis", function(){
+                app.bind("activePrognosis", function(){
                     _this.renderPrognosis(app.get("activePrognosis"));
                 });
                 this.renderPrognosis(app.get("activePrognosis"));

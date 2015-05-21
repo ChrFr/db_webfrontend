@@ -109,7 +109,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     });
                 }
                 this.table = new TableView({
-                    el: this.el.querySelector("#datatable"),
+                    el: this.el.querySelector("#prognosis-data"),
                     columns: columns,
                     title: title,
                     data: data

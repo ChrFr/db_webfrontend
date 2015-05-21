@@ -12,7 +12,7 @@ function(Backbone) {
         attributes : {}
     };    
     
-    app.onChange = function(attribute, callback){
+    app.bind = function(attribute, callback){
         app.callbacks[attribute] = callback;
     }
     

@@ -1,6 +1,6 @@
 // NavbarView.js
 // -------
-define(["app", "jquery", "backbone", "text!templates/navbar.html"],
+define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/OptionView"],
 
     /**
     * A View that renders the Main Navigation Bar
@@ -10,7 +10,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html"],
     * @return                 the NavbarView class
     * @see                    the main navigation bar
     */
-    function(app, $, Backbone, template){
+    function(app, $, Backbone, template, OptionView){
 
         var NavbarView = Backbone.View.extend({
 
@@ -20,14 +20,18 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html"],
             // constructor
             initialize: function() {
                 var _this = this;
-                this.render();      
+                this.render();   
+                
+                //show login status and available prognoses on user change
                 if (app.session) 
-                    app.session.bind("change:user", function() {_this.displayLogin()});
+                    app.session.bind("change:user", function() {_this.displayUserContent()});                     
+                                                
                 //change active item if navbar item is clicked
                 $('ul.nav > li').click(function (e) {
                     $('ul.nav > li').removeClass('active');
                     $(this).addClass('active');                
-                });               
+                });      
+                
             },
 
             events: {
@@ -38,13 +42,13 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html"],
             render: function() {         
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;  
-                this.displayLogin();
+                this.displayUserContent();
                 return this;
 
             },
             
-            //change the text of the menu item, to show, that the user is logged in
-            displayLogin: function(){
+            displayUserContent: function(){
+                //change the text of the menu item, to show, that the user is logged in
                 if (app.session.get('authenticated')){
                     var user = app.session.get('user');
                     this.$el.find('#login').text('Eingeloggt als ' + user.name);  
@@ -58,6 +62,29 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html"],
                     this.el.querySelector("#admin").style.display = 'none';
                     this.$el.find('#login').text('Einloggen'); 
                 }
+                
+                var progSelector = this.el.querySelector("#progSelect");               
+                while (progSelector.firstChild) {
+                    progSelector.removeChild(progSelector.firstChild);
+                };
+                         
+                app.attributes.activePrognosis = null;
+                //update prognoses available for this user
+                app.prognoses.fetch({success: function(){     
+                    new OptionView({el: progSelector, name: 'Bitte wählen', value: -1}); 
+                    app.prognoses.each(function(prognosis){
+                        new OptionView({
+                            el: progSelector,
+                            name: prognosis.get('name'), 
+                            value: prognosis.get('id')
+                        })
+                    });
+                    progSelector.onchange = function(t) {
+                        var pid = t.target.value;    
+                        app.set("activePrognosis", pid);
+                        app.router.navigate("prognosen", {trigger: true});
+                    };                    
+                }});
             },
             
             openSubMenu: function(event){

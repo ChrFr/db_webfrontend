@@ -1,7 +1,9 @@
-define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollection", 
-    "views/OptionView", "views/AgeTreeView", "views/TableView", "bootstrap"],
+define(["app", "backbone", "text!templates/demodevelop.html", "collections/RegionCollection",  
+    "collections/DemographicDevelopmentCollection",  "views/OptionView", 
+    "views/AgeTreeView", "views/TableView", "bootstrap"],
 
-    function(Backbone, template, RegionCollection, OptionView, AgeTreeView, TableView){
+    function(app, Backbone, template, RegionCollection, DemographicDevelopmentCollection,
+            OptionView, AgeTreeView, TableView){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
             el: document,
@@ -9,10 +11,14 @@ define(["backbone", "text!templates/demodevelop.html", "collections/RegionCollec
             initialize: function() {       
                 _.bindAll(this, 'render');
                 var _this = this;
-                this.collection.fetch({success: function(){    
-                    _this.regions = new RegionCollection({progId: _this.collection.progId});
-                    _this.regions.fetch({success: _this.render});
-                }});
+                var progId = app.get('activePrognosis');
+                if(progId){
+                    this.collection = new DemographicDevelopmentCollection({progId: progId});
+                    this.collection.fetch({success: function(){    
+                        _this.regions = new RegionCollection({progId: progId});
+                        _this.regions.fetch({success: _this.render});
+                    }});
+                }
             },
 
             events: {

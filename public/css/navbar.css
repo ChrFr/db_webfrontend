@@ -9,8 +9,13 @@
     position: relative;
 }
 
+#main-menu .navbar-brand{
+    height: 50px;
+    padding: 10px;
+}
+
 #main-menu .navbar-brand img{
-    height: 30px;
+    height: 100%;
 }
 
 #main-menu a{
@@ -25,7 +30,7 @@
     background-color: lightcoral;
 }
 
-#main-menu #login{    
+#main-menu #login{  
     background-color: gold;
 }
 
@@ -33,7 +38,7 @@
 .submenu{
     position: relative;
     width: 100%;
-    min-height: 20px;
+    min-height: 10px;
     z-index: 1;
     display: none;
 }
@@ -74,28 +79,32 @@
 
     #main-menu .menu-link{            
         border-radius: 5px 5px 0px 0px;
-        height: 20px;
-        margin-top: 20px;
-        transition: margin 0.1s;
+        height: 35px;
+        margin-top: 15px;
+        transition: all 0.1s;
         transition-timing-function: ease-out;
     }
 
     #main-menu .active a{    
-        height: 40px;
-        margin-top: 10px;
+        height: 45px;
+        margin-top: 5px;
     }    
     
     .submenu{
+        
         position: absolute;
         width: 100%;
         top: 0px;
         transition: all 0.1s;
         transition-timing-function: ease-out;
         display: block;
+        
+        //transition: all 0.1s;
+        //height: 0px;
     }
 
-    .submenu.active{
+    .submenu.active{        
         top: 50px;
-        display: block;
+        display: block;       
     }
 }

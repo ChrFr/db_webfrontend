@@ -1,18 +1,15 @@
 
-define(["backbone", "text!templates/prognosis.html",  
-    "collections/DemographicDevelopmentCollection",  
-    "collections/PrognosisCollection", "views/OptionView", 
+define(["app", "backbone", "text!templates/prognosis.html", 
     "views/DemographicDevelopmentView"],
 
-    function(Backbone, template, DemographicDevelopmentCollection,
-            PrognosisCollection, OptionView, DemographicDevelopmentView){
+    function(app, Backbone, template, DemographicDevelopmentCollection,
+            DemographicDevelopmentView){
         var PrognosisView = Backbone.View.extend({
             // The DOM Element associated with this view
             el: document,
             // View constructor
             initialize: function() {         
                 // Calls the view's render method
-                this.collection = new PrognosisCollection();
                 this.render();  
             },
 
@@ -23,43 +20,30 @@ define(["backbone", "text!templates/prognosis.html",
             render: function() {
                 var _this = this;
                 this.template = _.template(template, {});
-                this.el.innerHTML = this.template;   
-                var progSelector = this.el.querySelector("#progSelect");
-                
-                this.collection.fetch({success: function(){
-                    new OptionView({el: progSelector, name: 'Bitte wählen', value: -1}); 
-                    _this.collection.each(function(prognosis){
-                        new OptionView({
-                            el: progSelector,
-                            name: prognosis.get('name'), 
-                            value: prognosis.get('id')
-                        })
-                    });
-                    progSelector.onchange = function(t) {
-                        var pid = t.target.value;         
-                        _this.renderPrognosis(pid);
-                    };                    
-                }});
-                                           
+                this.el.innerHTML = this.template;  
+                //id of active prognosis changed in navbar -> render it
+                app.onChange("activePrognosis", function(){
+                    _this.renderPrognosis(app.get("activePrognosis"));
+                });
+                this.renderPrognosis(app.get("activePrognosis"));
                 return this;
             },       
             
             renderPrognosis: function(pid){
                 var textarea = this.el.querySelector("#description");
-                if (pid < 0){
-                    textarea.value = '';
+                if(!textarea)
+                    return
+                if (!pid || pid < 0){
+                    textarea.value = 'Bitte eine Prognose im Menü auswählen!';
                     return;
                 }
-                var prognosis = this.collection.find(function(item){
-                    return item.get('id') == pid;
-                });
-                
-                textarea.value = prognosis.get('description');
-                var progData = new DemographicDevelopmentCollection({progId: pid});
-                new DemographicDevelopmentView({
-                    el: this.el.querySelector("#demographics"),
-                    collection: progData
-                });
+                else{
+                    var prognosis = app.prognoses.find(function(item){
+                        return item.get('id') == pid;
+                    });
+
+                    textarea.value = prognosis.get('description');
+                }
             },
             
             //remove the view

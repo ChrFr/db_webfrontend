@@ -9,10 +9,6 @@ html, body {
 body {
 }
 
-#mainFrame{
-    margin-left: 50px;
-}
-
 /*
 .visualization {
     width: 90%;
@@ -54,4 +50,14 @@ body {
 
 select {
     width: 100px;
+}
+
+
+@media (min-width: 768px) {
+    
+    #mainFrame{
+        margin-left: 50px;
+        margin-top: 60px;
+    }
+
 }

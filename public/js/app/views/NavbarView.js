@@ -28,7 +28,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                                                 
                 //change active item if navbar item is clicked
                 $('ul.nav > li').click(function (e) {
-                    $('ul.nav > li').removeClass('active');
+                    $(this).siblings().removeClass('active');
                     $(this).addClass('active');                
                 });      
                 
@@ -83,6 +83,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                         var pid = t.target.value;    
                         app.set("activePrognosis", pid);
                         app.router.navigate("prognosen", {trigger: true});
+                        $('#prognosis-menu').find('li').removeClass('active');
                     };                    
                 }});
             },

@@ -31,10 +31,7 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
             },
             
             events: {
-                'click #play': 'play',
-                'click #csvAll': 'openAllYearsCsvTab',
-                'click #csvCurrent': 'openCurrentYearCsvTab',
-                'click #pngCurrent': 'openCurrentYearPngTab'
+                'click #play': 'play'
             },
 
             render: function() {
@@ -67,23 +64,7 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                 var playBtn = document.createElement("button");
                 playBtn.setAttribute("id", "play"); 
                 playBtn.innerHTML = "Play";
-                this.el.appendChild(playBtn);
-                
-                // DOWNLOAD BUTTONS
-                var csvBtn = document.createElement("button");
-                csvBtn.setAttribute("id", "csvAll"); 
-                csvBtn.innerHTML = "Csv Alle";
-                this.el.appendChild(csvBtn);
-                
-                var csvCBtn = document.createElement("button");
-                csvCBtn.setAttribute("id", "csvCurrent"); 
-                csvCBtn.innerHTML = "Csv Jahr";
-                this.el.appendChild(csvCBtn);                   
-                
-                var pngBtn = document.createElement("button");
-                pngBtn.setAttribute("id", "pngCurrent"); 
-                pngBtn.innerHTML = "PNG Jahr";
-                this.el.appendChild(pngBtn);   
+                this.el.appendChild(playBtn);                
                   
                 // SLIDER                
                 this.slider = d3slider()
@@ -140,24 +121,7 @@ define(["backbone", "d3", "d3slider", './visuals/AgeTree'],
                 }
                 else
                     stop()
-            },            
-            
-            openAllYearsCsvTab: function() {
-                var win = window.open(this.model.csvUrl(), '_blank');
-                win.focus();
-            },
-            
-            openCurrentYearCsvTab: function() {
-                var currentYear = this.slider.value();
-                var win = window.open(this.model.csvUrl(currentYear), '_blank');
-                win.focus();
-            },
-            
-            openCurrentYearPngTab: function() {
-                var currentYear = this.slider.value();
-                var win = window.open(this.model.pngUrl(currentYear), '_blank');
-                win.focus();
-            },
+            },                       
             
             close: function () {
                 this.unbind();

@@ -23,7 +23,7 @@
 }
 
 #main-menu #prognosis{    
-    background-color: lightsalmon;
+    background-color: #454545;
 }
 
 #main-menu #admin{    
@@ -31,7 +31,7 @@
 }
 
 #main-menu #login{  
-    background-color: gold;
+    background-color: #408080;
 }
 
 /* SUBMENUS*/
@@ -52,7 +52,7 @@
 }
 
 #prognosis-menu{
-    background-color: lightsalmon;
+    background-color: #454545;
 }
 
 #admin-menu{
@@ -60,18 +60,19 @@
 }
 
 #login-menu{
-    background-color: gold;
+    background-color: #408080;
 }
 
 #prognosis-menu a, #prognosis-menu .navbar-header{
     color: white;
+    box-sizing: border-box;
 }
 
-#prognosis-menu .active a{
-    background-color: lightsalmon;
+#prognosis-menu .active a, #prognosis-menu a:hover{
+    background-color: #454545;
     height: 50px;
     box-sizing: border-box;
-    border-bottom: solid 5px #444;
+    border-bottom: solid 5px gold;
 }
 
 @media (min-width: 768px) {
@@ -89,7 +90,7 @@
         box-shadow: 1px -1px 2px 0px grey;
     }
     
-    #main-menu .active a{    
+    #main-menu .active a, #main-menu a:hover{    
         height: 45px;
         margin-top: 5px;
     }  
@@ -99,7 +100,7 @@
         position: absolute;
         width: 100%;
         top: 0px;
-        transition: all 0.1s;
+        transition: all 0.2s;
         transition-timing-function: ease-out;
         display: block;        
         //box-shadow: 1px -1px 3px 0px grey;

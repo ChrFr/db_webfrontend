@@ -24,14 +24,11 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                 
                 //show login status and available prognoses on user change
                 if (app.session) 
-                    app.session.bind("change:user", function() {_this.displayUserContent()});                     
-                                                
-                //change active item if navbar item is clicked
-                $('ul.nav > li').click(function (e) {
-                    $(this).siblings().removeClass('active');
-                    $(this).addClass('active');                
-                });      
-                
+                    app.session.bind("change:user", function() {_this.displayUserContent()});  
+                //update navbar on route change
+                app.router.on("route", _this.displayRoute); 
+                //display current route (needed when entering site or reload)
+                this.displayRoute(app.router.routes[Backbone.history.getFragment()])
             },
 
             events: {
@@ -83,7 +80,6 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                         var pid = t.target.value;    
                         app.set("activePrognosis", pid);
                         app.router.navigate("prognosen", {trigger: true});
-                        $('#prognosis-menu').find('li').removeClass('active');
                     };                    
                 }});
             },
@@ -97,8 +93,39 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                     $('#login-menu').addClass('active');
                 else if(id === 'admin')
                     $('#admin-menu').addClass('active');
-            }
-         
+            },
+            
+            displayRoute: function(route, params){   
+                $('.submenu').removeClass('active');
+                var item = $('');
+                var subitem = $('');
+                if(route === 'prognoses'){
+                    item = $('#main-menu').find('#prognosis').parent();
+                    subitem = $('.submenu').find('#prognosis-content').parent();
+                    $('#prognosis-menu').addClass('active');
+                }
+                else if(route === 'login'){
+                    item = $('#main-menu').find('#login').parent();
+                    $('#login-menu').addClass('active');
+                }
+                else if(route === 'admin'){
+                    item = $('#main-menu').find('#admin').parent();
+                    $('#admin-menu').addClass('active');
+                }  
+                else if(route === 'demodevelop'){   
+                    //unsatisfying as check is both here and in router
+                    //maybe replace submenu links with pills
+                    if((app.get('activePrognosis') && app.get('activePrognosis') >= 0))
+                        subitem = $('.submenu').find('#demodevelop').parent();
+                    else
+                        subitem = $('.submenu').find('#prognosis-content').parent();
+                    $('#prognosis-menu').addClass('active');
+                }
+                item.siblings().removeClass('active');
+                item.addClass('active');  
+                subitem.siblings().removeClass('active');
+                subitem.addClass('active'); 
+            }         
 
         });
 

@@ -28,8 +28,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 
                 this.el.innerHTML = this.template;   
                 
-                //this.renderUserTable();
-                //this.renderPrognoses();
+                this.showUserTable();
                 return this;
             },            
                         

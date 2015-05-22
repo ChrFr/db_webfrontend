@@ -9,45 +9,58 @@ html, body {
 body {
 }
 
-/*
-.visualization {
-    width: 90%;
-    height: 600px;
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
-}*/
-
-.tab-content{
-    min-height: 100px;
-    width: 600px;
-    transition: height 1s;
-    border-color: black;
-    border: solid 1px;
-    z-index: 1;
-    margin-top: -1px;
+#description{
+    background-color: white;
     padding: 10px;
 }
 
+.tab-content{
+    min-height: 500px;
+    width: 100%;
+    transition: height 1s;
+    border: solid 1px grey;
+    margin-top: -1px;
+    z-index: 10;
+    padding: 10px;
+    padding-bottom: 20px; 
+    box-shadow: 1px 0px 2px 0px grey;
+}
+
 .nav-pills > li > a{
-    z-index: 0;
-    background-color: #ddd;
-    color: black;
-    border: solid 1px;
-    border-bottom: 0px;
+    z-index: 1;
+    background-color: white;
+    color: grey;
+    border: solid 1px grey;
     border-radius: 5px 5px 0px 0px;
+    border-bottom: 0px; 
+    margin-top: 15px;
+    height: 30px;
+    box-shadow: 1px 0px 1px 0px grey;
+}
+
+.nav-pills > li + li{
+    margin-left: -1px;
 }
 
 .nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus{
     background-color: white;
     color: black;
-    border: solid 1px;
-    border-bottom: 0px;    
-    z-index: 10;
+    border: solid 1px grey; 
+    z-index: 100; 
+    border-bottom: 0px; 
+    margin-top: 5px;
+    height: 41px;
+    box-shadow: 1px 0px 2px 0px grey;
 }
 
-select {
-    width: 100px;
+.nav-pills > li > a:hover{
+    background-color: white;    
+    height: 40px;
+    margin-top: 5px;
+}
+
+#rsSelect {
+    width: 100%;
 }
 
 #prognosis-data td{
@@ -55,12 +68,43 @@ select {
     //line-height: 0.5;
 }
 
+#rootwizard {
+    padding-right: 0px;
+}
+
+#controls {
+    padding-left: 0px;
+}
+
+#controls button {
+    background-color: white;
+    border: solid 1px grey;
+    width: 50px!important;
+    height: 50px;
+    box-shadow: 1px 0px 2px 0px grey;
+}
+
+#controls button img{
+    width: 100%;
+}
 
 @media (min-width: 768px) {
     
     #mainFrame{
         margin-left: 50px;
         margin-top: 60px;
+    }
+    
+    #controls button {
+        margin-top: 80px;
+        margin-right: 100%;
+        margin-left: -1px;
+        border-left: 0px;
+        z-index: 20;
+    }
+    
+    #controls button{
+        width: 80px;
     }
 
 }

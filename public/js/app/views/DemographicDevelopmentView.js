@@ -22,6 +22,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             },
 
             events: {
+                'click .download-btn#csv': 'openCurrentYearCsvTab',
+                'click .download-btn#png': 'openCurrentYearPngTab'
             },
 
             render: function() {
@@ -54,14 +56,15 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             changeRegion: function(rs){
                 var _this = this;
                 
-                this.collection.fetchDetails({rs: rs, success: function(model){  
+                this.collection.fetchDetails({rs: rs, success: function(model){ 
+                    _this.currentModel = model;
                     var yearSelector = _this.el.querySelector("#yearSelect");
                     while (yearSelector.firstChild) {
                         yearSelector.removeChild(yearSelector.firstChild);
                     };
 
                     //TODO: sort years
-                    _.each(model.get('data'), (function(data){  
+                    _.each(_this.currentModel.get('data'), (function(data){  
                         new OptionView({
                             el: yearSelector,
                             name: data.jahr, 
@@ -70,25 +73,28 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
 
                     yearSelector.onchange = function(e) { 
                         if (e.target.value > 0){
-                            _this.renderTable(model, parseInt(e.target.value));
+                            _this.renderTable(_this.currentModel, parseInt(e.target.value));
                         }
                     };
 
-                    //draw first year
-                    _this.renderTable(model, yearSelector.options[0].value);
+                    //draw first year and render it
+                    _this.currentModel.set('currentYear', yearSelector.options[0].value);
                     
-                    _this.renderTree(model);
+                    _this.renderTable();
+                    _this.renderTree();
                 }});
             },
             
-            renderTable: function(model, year){
-                var rs = model.get('rs'),
+            renderTable: function(){
+                var year = this.currentModel.get('currentYear');
+                
+                var rs = this.currentModel.get('rs'),
                     title = "Bevölkerungsentwicklung " + rs + " " + year,
                     columns = [],
                     yearData;                
                 
                 
-                _.each(model.get('data'), (function(data){                     
+                _.each(this.currentModel.get('data'), (function(data){                     
                     if(data.jahr == year) 
                         yearData = data;
                 }));                
@@ -116,18 +122,38 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 });
             },
             
-            renderTree: function(model){
+            renderTree: function(){
                 var vis = this.el.querySelector("#agetree");
                 while (vis.firstChild) {
                     vis.removeChild(vis.firstChild);
                 };
-                var width = document.getElementsByTagName('body')[0].clientWidth;
+                var tabContent = this.el.querySelector(".tab-content");                
+                var width = parseInt(tabContent.offsetWidth) - 20;
+                //width / height ratio is 1 : 1.2
+                var height = width * 1.2;
                 this.agetree = new AgeTreeView({
                     el: vis,
-                    model: model,
-                    width: 500,
-                    height: 600
+                    model: this.currentModel,
+                    width: width,
+                    height: height
                 });                
+            },           
+            
+            openAllYearsCsvTab: function() {
+                var win = window.open(this.currentModel.csvUrl(), '_blank');
+                win.focus();
+            },
+            
+            openCurrentYearCsvTab: function() {
+                var currentYear = this.currentModel.get('currentYear');
+                var win = window.open(this.currentModel.csvUrl(currentYear), '_blank');
+                win.focus();
+            },
+            
+            openCurrentYearPngTab: function() {
+                var currentYear = this.currentModel.get('currentYear');
+                var win = window.open(this.currentModel.pngUrl(currentYear), '_blank');
+                win.focus();
             },
             
             //remove the view

@@ -33,9 +33,10 @@ define(["app", "backbone", "views/HomeView",
                 this.view = new Prognosis({el: document.getElementById('mainFrame')});
             },
             
-            demodevelop: function(){
-                if(!app.get('activePrognosis'))
+            demodevelop: function(bla, blu){
+                if(!app.get('activePrognosis') || app.get('activePrognosis') < 0){
                     this.navigate("prognosen", {trigger: true});
+                }
                 else
                     this.view = new DemographicDevelopmentView({el: document.getElementById('mainFrame')});
             },

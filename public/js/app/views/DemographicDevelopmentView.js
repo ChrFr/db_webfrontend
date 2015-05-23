@@ -66,7 +66,10 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     var tabContent = _this.el.querySelector(".tab-content");                  
                     var width = parseInt(tabContent.offsetWidth) - 90;
                     _this.el.querySelector("#slide-controls").style.display = 'block';
-                    var sliderDiv = _this.el.querySelector("#slider");
+                    var sliderDiv = _this.el.querySelector("#slider");                    
+                    while (sliderDiv.firstChild) 
+                        sliderDiv.removeChild(sliderDiv.firstChild);
+                    
                     sliderDiv.style.width = width + "px";  
                     var maxYear = model.get('maxYear');
                     var minYear = model.get('minYear');   
@@ -83,7 +86,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         .max(maxYear)
                         .step(1)
                         .margin(20);              
-                    
+                          
                     d3.select('#slider').call(_this.slider);
                     
                     _this.slider.on("slide", function(evt, value) {
@@ -124,11 +127,19 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         male: maleAges[i]
                     });
                 }
+                
+                //get state of prev. table to apply on new one
+                var state = (this.table) ? this.table.getState(): {};
+                
                 this.table = new TableView({
                     el: this.el.querySelector("#prognosis-data"),
                     columns: columns,
                     title: title,
-                    data: data
+                    data: data,
+                    dataHeight: 400,
+                    pagination: true,
+                    startPage: state.page,
+                    pageSize: state.size
                 });
             },
             
@@ -165,19 +176,17 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             },
             
             openCurrentYearCsvTab: function() {
-                var currentYear = this.currentModel.get('currentYear');
-                var win = window.open(this.currentModel.csvUrl(currentYear), '_blank');
+                var win = window.open(this.currentModel.csvUrl(this.currentYear), '_blank');
                 win.focus();
             },
             
             openCurrentYearPngTab: function() {
-                var currentYear = this.currentModel.get('currentYear');
-                var win = window.open(this.currentModel.pngUrl(currentYear), '_blank');
+                var win = window.open(this.currentModel.pngUrl(this.currentYear), '_blank');
                 win.focus();
             },
             
             changeYear: function(year){ 
-                this.currentModel.set('currentYear', year);
+                this.currentYear = year;
                 this.renderTable(year);
                 var data = this.currentModel.get('data');
                 var yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)];       
@@ -197,7 +206,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     event.target.innerHTML = 'Stop';
                     this.timerId = setInterval(function(){
                         var currentYear = _this.slider.value();
-                        if(currentYear == _this.maxYear){ 
+                        if(currentYear == _this.currentModel.get('maxYear')){ 
                             stop();
                         }
                         else{

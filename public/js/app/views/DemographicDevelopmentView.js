@@ -65,18 +65,24 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     _this.currentModel = model;
                     
                     //draw first year if not assigned yet
-                    if(!_this.currentYear)
+                    if(!_this.currentYear){
+                        _this.yearData = _this.currentModel.get('data')[0];
                         _this.currentYear = minYear;
+                    }
                     //keep year of previous region, if new region has data for it
                     else{
                         var found = false;
                         _.each(_this.currentModel.get('data'), (function(data){                     
-                            if(data.jahr == _this.currentYear) 
+                            if(data.jahr == _this.currentYear) {
                                 found = true;
+                                _this.yearData = data;
+                            }
                         }));
-                        if(!found)
+                        if(!found){
                             _this.currentYear = minYear;
-                    }                    
+                            _this.yearData = this.currentModel.get('data')[0];
+                        }
+                    }   
 
                     // UPDATE SLIDER    
                     var tabContent = _this.el.querySelector(".tab-content");                  
@@ -109,28 +115,23 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         _this.changeYear(value);
                     });
                     
-                    _this.renderTable(_this.currentYear);
-                    _this.renderTree(_this.currentYear);
+                    _this.renderDataTable();
+                    _this.renderTree();
+                    _this.renderSummary();
                 }});
             },
             
-            renderTable: function(year){
+            renderDataTable: function(){
                 
-                var title = year,
-                    columns = [],
-                    yearData;         
-                
-                _.each(this.currentModel.get('data'), (function(data){                     
-                    if(data.jahr == year) 
-                        yearData = data;
-                }));                
+                var title = this.currentYear,
+                    columns = [];                   
                 
                 columns.push({name: "year", description: "Alter"});
                 columns.push({name: "female", description: "Anzahl weiblich"});                
                 columns.push({name: "male", description: "Anzahl männlich"});
                 
-                var femaleAges = yearData.alter_weiblich;
-                var maleAges = yearData.alter_maennlich;
+                var femaleAges = this.yearData.alter_weiblich;
+                var maleAges = this.yearData.alter_maennlich;
                 
                 var data = [];
                 for (var i = 0; i < femaleAges.length; i++) { 
@@ -156,13 +157,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 });
             },
             
-            renderTree: function(year){
-                var yearData;
-                
-                _.each(this.currentModel.get('data'), (function(data){                     
-                    if(data.jahr == year) 
-                        yearData = data;
-                }));       
+            renderTree: function(){
                 
                 var vis = this.el.querySelector("#agetree");
                 while (vis.firstChild) 
@@ -174,14 +169,68 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 var height = width * 1.2;
                 this.ageTree = new AgeTree({
                     el: vis,
-                    data: yearData, 
+                    data: this.yearData, 
                     width: width, 
                     height: height,
                     maxY: this.currentModel.get('maxAge'),
                     maxX: this.currentModel.get('maxNumber')
                 });
                 this.ageTree.render();     
-            },           
+            },        
+            
+            renderSummary: function(){
+                var columns = [];
+                
+                columns.push({name: "ageGroup", description: "Altersgruppe"});
+                columns.push({name: "sumAll", description: "Anzahl"});
+                //columns.push({name: "percentage", description: "gesamt"});
+                //columns.push({name: "perMale", description: "männlich"});
+                //columns.push({name: "perFemale", description: "weiblich"});
+                                
+                var femaleAges = this.yearData.alter_weiblich;
+                var maleAges = this.yearData.alter_maennlich;
+                
+                var cat2 = 20;
+                var cat3 = 65;
+                
+                var cat1Fem, cat2Fem, cat3Fem, cat1Male, cat2Male, cat3Male;
+                cat1Fem = cat2Fem = cat3Fem = cat1Male = cat2Male = cat3Male = 0;
+                
+                for(var i = 0; i < femaleAges.length; i++){
+                    if(i < cat2)
+                        cat1Fem += Math.round(femaleAges[i]);
+                    else if(i < cat3)
+                        cat2Fem += Math.round(femaleAges[i]);
+                    else
+                        cat3Fem += Math.round(femaleAges[i]);
+                }
+                
+                for(var i = 0; i < maleAges.length; i++){
+                    if(i < cat2)
+                        cat1Male += Math.round(maleAges[i]);
+                    else if(i < cat3)
+                        cat2Male += Math.round(maleAges[i]);
+                    else
+                        cat3Male += Math.round(maleAges[i]);
+                }
+                
+                var ageGroup = ["0 - " + cat2, cat2 + " - " + cat3, cat3 + "+", "alle"];
+                var sumAll = [cat1Fem + cat1Male, cat1Fem + cat1Male, cat1Fem + cat1Male];
+                sumAll.push(d3.sum(sumAll));
+                
+                var data = [];                
+                for(var i = 0; i < ageGroup.length; i++){
+                    data.push({
+                        ageGroup: ageGroup[i],
+                        sumAll: sumAll[i]
+                    });
+                }
+                this.summary = new TableView({
+                    el: this.el.querySelector("#summary"),
+                    columns: columns,
+                    data: data
+                });
+            },
             
             openAllYearsCsvTab: function() {
                 var win = window.open(this.currentModel.csvUrl(), '_blank');
@@ -199,11 +248,12 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             },
             
             changeYear: function(year){ 
-                this.currentYear = year;
-                this.renderTable(year);
-                var data = this.currentModel.get('data');
-                var yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)];       
-                this.ageTree.changeData(yearData);
+                this.currentYear = year;          
+                var data = this.currentModel.get('data');          
+                this.yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)]; 
+                this.renderDataTable();
+                this.renderSummary();  
+                this.ageTree.changeData(this.yearData);
             },
             
             play: function(event){

@@ -15,7 +15,7 @@ body {
     padding: 10px;
 }
 
-.tab-content{
+.tab-content, #summary{
     background-color: white;
     min-height: 500px;
     width: 100%;
@@ -26,6 +26,10 @@ body {
     padding: 10px;
     padding-bottom: 20px; 
     box-shadow: 1px 0px 2px 0px grey;
+}
+
+#summary{
+    margin-top: 45px;
 }
 
 .nav-pills > li > a{
@@ -193,15 +197,15 @@ body {
     }
     
     #controls button {
-        margin-top: 80px;
+        margin-bottom: 20px;
         margin-right: 100%;
         margin-left: -1px;
         border-left: 0px;
         z-index: 20;
-    }
-    
-    #controls button{
         width: 80px;
     }
-
+    
+    #controls #png{
+        margin-top: 45px;
+    }
 }

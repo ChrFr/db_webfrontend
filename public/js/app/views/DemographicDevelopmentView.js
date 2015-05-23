@@ -183,7 +183,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 
                 columns.push({name: "ageGroup", description: "Altersgruppe"});
                 columns.push({name: "sumAll", description: "Anzahl"});
-                //columns.push({name: "percentage", description: "gesamt"});
+                columns.push({name: "percentage", description: "gesamt"});
                 //columns.push({name: "perMale", description: "männlich"});
                 //columns.push({name: "perFemale", description: "weiblich"});
                                 
@@ -215,14 +215,21 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 }
                 
                 var ageGroup = ["0 - " + cat2, cat2 + " - " + cat3, cat3 + "+", "alle"];
-                var sumAll = [cat1Fem + cat1Male, cat1Fem + cat1Male, cat1Fem + cat1Male];
-                sumAll.push(d3.sum(sumAll));
+                var sumAll = [cat1Fem + cat1Male, cat2Fem + cat2Male, cat3Fem + cat3Male];
+                var sum = d3.sum(sumAll);
+                sumAll.push(sum);
+                
+                var percentage = [];                
+                for(var i = 0; i < sumAll.length; i++){
+                    percentage.push(Math.round(sumAll[i] * 100 / sum));
+                }
                 
                 var data = [];                
                 for(var i = 0; i < ageGroup.length; i++){
                     data.push({
                         ageGroup: ageGroup[i],
-                        sumAll: sumAll[i]
+                        sumAll: sumAll[i],
+                        percentage: percentage[i] + '%'
                     });
                 }
                 this.summary = new TableView({

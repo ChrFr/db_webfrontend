@@ -91,13 +91,12 @@
         box-shadow: 1px -1px 2px 0px grey;
     }
     
-    #main-menu .active a, #main-menu a:hover{    
+    #main-collapse .active a, #main-collapse a:hover{    
         height: 45px;
         margin-top: 5px;
     }  
     
-    .submenu{
-        
+    .submenu{        
         position: absolute;
         width: 100%;
         top: 0px;

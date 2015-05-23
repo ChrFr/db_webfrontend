@@ -59,8 +59,24 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             changeRegion: function(rs){
                 var _this = this;
                 
-                this.collection.fetchDetails({rs: rs, success: function(model){ 
+                this.collection.fetchDetails({rs: rs, success: function(model){                     
+                    var maxYear = model.get('maxYear');
+                    var minYear = model.get('minYear');
                     _this.currentModel = model;
+                    
+                    //draw first year if not assigned yet
+                    if(!_this.currentYear)
+                        _this.currentYear = minYear;
+                    //keep year of previous region, if new region has data for it
+                    else{
+                        var found = false;
+                        _.each(_this.currentModel.get('data'), (function(data){                     
+                            if(data.jahr == _this.currentYear) 
+                                found = true;
+                        }));
+                        if(!found)
+                            _this.currentYear = minYear;
+                    }                    
 
                     // UPDATE SLIDER    
                     var tabContent = _this.el.querySelector(".tab-content");                  
@@ -71,8 +87,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         sliderDiv.removeChild(sliderDiv.firstChild);
                     
                     sliderDiv.style.width = width + "px";  
-                    var maxYear = model.get('maxYear');
-                    var minYear = model.get('minYear');   
                     var yearStep = Math.floor((maxYear - minYear) / 4);
                       
                     _this.slider = d3slider()
@@ -85,7 +99,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         .min(minYear)
                         .max(maxYear)
                         .step(1)
-                        .margin(20);              
+                        .margin(20)
+                        .value(_this.currentYear);              
                           
                     d3.select('#slider').call(_this.slider);
                     
@@ -94,8 +109,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         _this.changeYear(value);
                     });
                     
-                    //draw first year and render it
-                    _this.currentYear = minYear;
                     _this.renderTable(_this.currentYear);
                     _this.renderTree(_this.currentYear);
                 }});

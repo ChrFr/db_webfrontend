@@ -72,7 +72,8 @@
     background-color: #454545;
     height: 50px;
     box-sizing: border-box;
-    border-bottom: solid 5px gold;
+    background: linear-gradient( to top, gold 10%, #454545 25%);
+    //border-bottom: solid 5px gold;
 }
 
 @media (min-width: 768px) {

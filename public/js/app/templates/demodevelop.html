@@ -5,28 +5,32 @@
     </div>
     <div id="rootwizard" class="col-md-4">    
         <ul class="nav nav-pills">
-            <li class="active"><a href="#tab1" data-toggle="tab">Tabelle</a></li>
-            <li id="ageTreeBtn"><a href="#tab2" data-toggle="tab">Altersbaum</a></li>
+            <li id="ageTreeBtn" class="active"><a href="#tab1" data-toggle="tab">Altersbaum</a></li>
+            <li><a href="#tab2" data-toggle="tab">Tabelle</a></li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane active" id="tab1">        
-                <br>
-                Jahr <select id="yearSelect"> </select>
-                <div id="prognosis-data"></div>
-            </div>
-            <div class="tab-pane" id="tab2">            
+            <div class="tab-pane active" id="tab1">            
                 <div id="agetree"></div>
             </div>
+            <div class="tab-pane" id="tab2">    
+                <div id="prognosis-data"></div>
+            </div>
         </div>	
+        <div id="slide-controls">
+            <button id="play"> |> </button>
+            <div id="slider"></div>
+        </div>
     </div>
     <div id="controls" class="col-md-1"> 
         <button class="download-btn" id="png"> 
-            <img src="../../../img/camera-black.png"> 
+            <img src="../../../img/camera-black.png"> <br>
+            png
         </button>
         <button class="download-btn" id="csv"> 
+            csv
         </button>
     </div>
     
-    <div id="controls" class="col-md-4"> 
+    <div class="col-md-4"> 
     </div>
 </div>

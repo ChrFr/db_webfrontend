@@ -7,6 +7,7 @@ html, body {
 }
 
 body {
+    background-color: #EBEBE0;
 }
 
 #description{
@@ -15,6 +16,7 @@ body {
 }
 
 .tab-content{
+    background-color: white;
     min-height: 500px;
     width: 100%;
     transition: height 1s;
@@ -85,7 +87,102 @@ body {
 }
 
 #controls button img{
-    width: 100%;
+    height: 30%;
+}
+
+#slide-controls{
+    display: none;
+    background-color: white;
+}
+
+#play{
+    float: left;
+    width: 30px;
+}
+
+#slider{
+    float: right;
+    right: 0px;
+}
+
+.d3-slider {
+    position: relative;
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 1.1em;
+    //border: 1px solid #aaaaaa;
+    z-index: 2;
+}
+
+.d3-slider-range {
+  background:#2980b9;
+  left:0px;
+  right:0px;
+  height: 0.8em;
+  position: absolute;
+}
+
+.d3-slider-range-vertical {
+  background:#2980b9;
+  left:0px;
+  right:0px;
+  position: absolute;
+  top:0;
+}
+
+.d3-slider-vertical {
+    width: .8em;
+    height: 100px;
+}      
+
+.d3-slider-handle {
+    position: absolute;
+    height: 1.2em;
+    width: 0.5em;    
+    top: -.3em;
+    margin-left: -0.25em;
+    background-color: black;
+    border: 1px solid #d3d3d3;
+    border-radius: 4px;
+    z-index: 3;
+    //background: linear-gradient(to bottom, #eee 0%, #ddd 100%);
+}
+
+.d3-slider-handle:hover {
+    border: 1px solid #999999;
+}
+
+.d3-slider-axis {
+    position: relative;
+    z-index: 1;    
+}
+
+.d3-slider-axis-bottom {
+    top: 0em;
+}
+
+.d3-slider-axis-right {
+    left: .8em;
+}
+
+.d3-slider-axis path {
+    stroke-width: 0;
+    fill: none;
+}
+
+.d3-slider-axis line {
+    fill: none;
+    stroke: #aaa;
+    shape-rendering: crispEdges;
+}
+
+.d3-slider-axis text {
+    font-size: 11px;
+}
+
+.d3-slider-vertical .d3-slider-handle {
+    left: -.25em;
+    margin-left: 0;
+    margin-bottom: -.6em;      
 }
 
 @media (min-width: 768px) {

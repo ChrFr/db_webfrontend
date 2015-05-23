@@ -23,8 +23,31 @@ define(["backbone","models/DemographicDevelopmentModel"],
                     return item.get('rs') === options.rs;
                 });              
                 ddModel.setURL(this.progId, options.rs);
-                ddModel.fetch({success: options.success,
-                               error: options.error});
+                ddModel.fetch({
+                    success: function(model){                        
+                        var data = model.get('data');
+
+                        //preset minima and maxima for easier use in the views
+                        model.set('minYear', data[0].jahr); 
+                        model.set('maxYear', data[data.length-1].jahr); 
+                        var maxAge, maxNumber;
+                        var maxAge = maxNumber = 0;
+
+                        _.each(data, function(item){
+                            var femaleAges = item.alter_weiblich,
+                                maleAges = item.alter_maennlich;
+                            var max = Math.max(femaleAges.length, maleAges.length);
+                            if (maxAge < max) maxAge = max;
+                            max = Math.max(Math.max.apply(null, femaleAges), 
+                                           Math.max.apply(null, maleAges))
+                            if (maxNumber < max) maxNumber = max;
+                        });
+                                                
+                        model.set('maxAge', maxAge);
+                        model.set('maxNumber', maxNumber);  
+                        options.success(model);
+                    },
+                    error: options.error});
             }
         });
         return DemographicDevelopmentCollection;

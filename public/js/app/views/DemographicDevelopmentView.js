@@ -1,9 +1,9 @@
 define(["app", "backbone", "text!templates/demodevelop.html", "collections/RegionCollection",  
     "collections/DemographicDevelopmentCollection",  "views/OptionView", 
-    "views/AgeTreeView", "views/TableView", "bootstrap"],
+    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree"],
 
     function(app, Backbone, template, RegionCollection, DemographicDevelopmentCollection,
-            OptionView, AgeTreeView, TableView){
+            OptionView, TableView, d3, d3slider){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
             el: document,
@@ -18,12 +18,14 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         _this.regions = new RegionCollection({progId: progId});
                         _this.regions.fetch({success: _this.render});
                     }});
-                }
+                }                
+                this.playing = false;
             },
 
             events: {
                 'click .download-btn#csv': 'openCurrentYearCsvTab',
-                'click .download-btn#png': 'openCurrentYearPngTab'
+                'click .download-btn#png': 'openCurrentYearPngTab',
+                'click #play': 'play'
             },
 
             render: function() {
@@ -49,7 +51,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     if (e.target.value > 0){
                         _this.changeRegion(e.target.value);
                     }
-                };
+                };                
+                
                 return this;
             },            
             
@@ -58,41 +61,48 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 
                 this.collection.fetchDetails({rs: rs, success: function(model){ 
                     _this.currentModel = model;
-                    var yearSelector = _this.el.querySelector("#yearSelect");
-                    while (yearSelector.firstChild) {
-                        yearSelector.removeChild(yearSelector.firstChild);
-                    };
 
-                    //TODO: sort years
-                    _.each(_this.currentModel.get('data'), (function(data){  
-                        new OptionView({
-                            el: yearSelector,
-                            name: data.jahr, 
-                            value: data.jahr});
-                    }));
-
-                    yearSelector.onchange = function(e) { 
-                        if (e.target.value > 0){
-                            _this.renderTable(_this.currentModel, parseInt(e.target.value));
-                        }
-                    };
-
-                    //draw first year and render it
-                    _this.currentModel.set('currentYear', yearSelector.options[0].value);
+                    // UPDATE SLIDER    
+                    var tabContent = _this.el.querySelector(".tab-content");                  
+                    var width = parseInt(tabContent.offsetWidth) - 90;
+                    _this.el.querySelector("#slide-controls").style.display = 'block';
+                    var sliderDiv = _this.el.querySelector("#slider");
+                    sliderDiv.style.width = width + "px";  
+                    var maxYear = model.get('maxYear');
+                    var minYear = model.get('minYear');   
+                    var yearStep = Math.floor((maxYear - minYear) / 4);
+                      
+                    _this.slider = d3slider()
+                        .axis(
+                            d3.svg.axis().orient("down")
+                            .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
+                            .tickFormat(d3.format("d"))
+                            .ticks(maxYear - minYear)
+                        )
+                        .min(minYear)
+                        .max(maxYear)
+                        .step(1)
+                        .margin(20);              
                     
-                    _this.renderTable();
-                    _this.renderTree();
+                    d3.select('#slider').call(_this.slider);
+                    
+                    _this.slider.on("slide", function(evt, value) {
+                        evt.stopPropagation();
+                        _this.changeYear(value);
+                    });
+                    
+                    //draw first year and render it
+                    _this.currentYear = minYear;
+                    _this.renderTable(_this.currentYear);
+                    _this.renderTree(_this.currentYear);
                 }});
             },
             
-            renderTable: function(){
-                var year = this.currentModel.get('currentYear');
+            renderTable: function(year){
                 
-                var rs = this.currentModel.get('rs'),
-                    title = "Bevölkerungsentwicklung " + rs + " " + year,
+                var title = year,
                     columns = [],
-                    yearData;                
-                
+                    yearData;         
                 
                 _.each(this.currentModel.get('data'), (function(data){                     
                     if(data.jahr == year) 
@@ -122,21 +132,31 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 });
             },
             
-            renderTree: function(){
+            renderTree: function(year){
+                var yearData;
+                
+                _.each(this.currentModel.get('data'), (function(data){                     
+                    if(data.jahr == year) 
+                        yearData = data;
+                }));       
+                
                 var vis = this.el.querySelector("#agetree");
-                while (vis.firstChild) {
+                while (vis.firstChild) 
                     vis.removeChild(vis.firstChild);
-                };
+                
                 var tabContent = this.el.querySelector(".tab-content");                
-                var width = parseInt(tabContent.offsetWidth) - 20;
+                var width = parseInt(tabContent.offsetWidth) - 50;
                 //width / height ratio is 1 : 1.2
                 var height = width * 1.2;
-                this.agetree = new AgeTreeView({
+                this.ageTree = new AgeTree({
                     el: vis,
-                    model: this.currentModel,
-                    width: width,
-                    height: height
-                });                
+                    data: yearData, 
+                    width: width, 
+                    height: height,
+                    maxY: this.currentModel.get('maxAge'),
+                    maxX: this.currentModel.get('maxNumber')
+                });
+                this.ageTree.render();     
             },           
             
             openAllYearsCsvTab: function() {
@@ -154,6 +174,40 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 var currentYear = this.currentModel.get('currentYear');
                 var win = window.open(this.currentModel.pngUrl(currentYear), '_blank');
                 win.focus();
+            },
+            
+            changeYear: function(year){ 
+                this.currentModel.set('currentYear', year);
+                this.renderTable(year);
+                var data = this.currentModel.get('data');
+                var yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)];       
+                this.ageTree.changeData(yearData);
+            },
+            
+            play: function(event){
+                var _this = this;
+                
+                var stop = function(){                    
+                    event.target.innerHTML = 'Play';
+                    clearInterval(_this.timerId);
+                }
+                
+                this.playing = !this.playing;
+                if(this.playing){
+                    event.target.innerHTML = 'Stop';
+                    this.timerId = setInterval(function(){
+                        var currentYear = _this.slider.value();
+                        if(currentYear == _this.maxYear){ 
+                            stop();
+                        }
+                        else{
+                            _this.slider.value(currentYear + 1);
+                            _this.changeYear(currentYear + 1);
+                        }
+                    }, 1000);
+                }
+                else
+                    stop()
             },
             
             //remove the view

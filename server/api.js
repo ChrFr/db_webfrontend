@@ -245,7 +245,7 @@ module.exports = function(){
         png: function(req, res){
             var Render = require('./render');
             if(!req.query.year)       
-                res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.')
+                res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.');
             else{
                 demodevelop.getYears(req, res, function(result){
                     Render.renderAgeTree({

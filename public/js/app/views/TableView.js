@@ -59,6 +59,8 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
             
             //remove the view
             close: function () {
+                while (this.table.firstChild) 
+                    this.table.removeChild(this.table.firstChild);
                 this.unbind(); // Unbind all local event bindings
                 this.remove(); // Remove view from DOM
             }

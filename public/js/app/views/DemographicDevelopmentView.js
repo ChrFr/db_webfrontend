@@ -84,18 +84,18 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         }
                     }   
 
-                    // UPDATE SLIDER    
+                    // UPDATE SLIDERS    
                     var tabContent = _this.el.querySelector(".tab-content");                  
                     var width = parseInt(tabContent.offsetWidth) - 90;
                     _this.el.querySelector("#slide-controls").style.display = 'block';
-                    var sliderDiv = _this.el.querySelector("#slider");                    
+                    var sliderDiv = _this.el.querySelector("#year-slider");                    
                     while (sliderDiv.firstChild) 
                         sliderDiv.removeChild(sliderDiv.firstChild);
                     
                     sliderDiv.style.width = width + "px";  
                     var yearStep = Math.floor((maxYear - minYear) / 4);
                       
-                    _this.slider = d3slider()
+                    _this.yearSlider = d3slider()
                         .axis(
                             d3.svg.axis().orient("down")
                             .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
@@ -108,11 +108,39 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         .margin(20)
                         .value(_this.currentYear);              
                           
-                    d3.select('#slider').call(_this.slider);
+                    d3.select('#year-slider').call(_this.yearSlider);
                     
-                    _this.slider.on("slide", function(evt, value) {
+                    _this.yearSlider.on("slide", function(evt, value) {
                         evt.stopPropagation();
                         _this.changeYear(value);
+                    });
+                    
+                    sliderDiv = _this.el.querySelector("#scale-slider"); 
+                    var checked = _this.el.querySelector("#fix-scale").checked;
+                    while (sliderDiv.firstChild) 
+                        sliderDiv.removeChild(sliderDiv.firstChild);
+                    
+                    //var minScale = Math.ceil(model.get('maxNumber'));
+                    var minScale = 10;
+                    if(!_this.xScale || !checked)// || minScale > _this.xScale) 
+                        _this.xScale = Math.ceil(model.get('maxNumber'));                    
+                        
+                    var maxScale = 1000;
+                    
+                    sliderDiv.style.width = width + "px";  
+                    var scaleSlider = d3slider().value(maxScale - _this.xScale + minScale).orientation("vertical")
+				.min(minScale).max(maxScale).step(10)
+				.axis( d3.svg.axis().orient("right")
+                                        .tickValues([minScale, maxScale/4, maxScale/2, maxScale*3/4 ,maxScale])
+					.tickFormat(d3.format(""))
+					)           
+                          
+                    d3.select('#scale-slider').call(scaleSlider);
+                    
+                    scaleSlider.on("slide", function(evt, value) {
+                        evt.stopPropagation();
+                        _this.xScale = maxScale - value + minScale;
+                        _this.renderTree();
                     });
                     
                     _this.renderDataTable();
@@ -173,7 +201,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     width: width, 
                     height: height,
                     maxY: this.currentModel.get('maxAge'),
-                    maxX: this.currentModel.get('maxNumber')
+                    maxX: this.xScale
                 });
                 this.ageTree.render();     
             },        
@@ -275,12 +303,12 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 if(this.playing){
                     event.target.innerHTML = 'Stop';
                     this.timerId = setInterval(function(){
-                        var currentYear = _this.slider.value();
+                        var currentYear = _this.yearSlider.value();
                         if(currentYear == _this.currentModel.get('maxYear')){ 
                             stop();
                         }
                         else{
-                            _this.slider.value(currentYear + 1);
+                            _this.yearSlider.value(currentYear + 1);
                             _this.changeYear(currentYear + 1);
                         }
                     }, 1000);

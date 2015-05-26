@@ -12,9 +12,9 @@ module.exports = function(){
         dbconfig: {
             user: "postgres",
             password: "hallo",
-            host: "localhost",
+            host: '127.0.0.1',
             port: "5432",
-            database: "ggr_prognosen"
+            database: "db_webfrontend"
         }
     };
     return config;

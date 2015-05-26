@@ -10,7 +10,7 @@ var AgeTree = function(options){
     this.data = options.data;
     this.width = options.width;
     this.height = options.height;
-    this.maxX = options.maxX || 1000;
+    this.maxX = options.maxX;// || 1000;
     this.maxY = options.maxY || 100;
     this.css = options.css;
     

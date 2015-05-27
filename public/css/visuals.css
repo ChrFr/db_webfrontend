@@ -5,7 +5,7 @@
 
 
 svg {
-  font: 10px sans-serif;
+  font: 0.8em sans-serif;
 }
 
 .title{    
@@ -29,9 +29,17 @@ rect.male{
   fill: #0066FF;
 }
 
+text.male{
+  stroke: #0066FF;  
+}
+
 rect.female{
   fill-opacity: 1;
   fill: #CC3399;
+}
+
+text.female{
+  stroke: #CC3399;
 }
 
 

@@ -26,7 +26,7 @@ var AgeTree = function(options){
         var margin = {
           top: 30,
           right: 20,
-          bottom: 24,
+          bottom: 30,
           left: 20,
           middle: 10
         };
@@ -58,9 +58,8 @@ var AgeTree = function(options){
 
         svg.append("text")
             .attr('class', 'title')
-            .attr("x", (this.width / 2))             
+            .attr("x", margin.left)             
             .attr("y", 0 - (margin.top / 2))
-            .attr("text-anchor", "middle")  
             .text(title);
 
         // SCALES
@@ -93,7 +92,25 @@ var AgeTree = function(options){
         rightBars.append("rect")
             .attr('class', 'female')
             .attr("width", this.xScale)
-            .attr("height", barHeight - 1);            
+            .attr("height", barHeight - 1)/*
+            .on("mouseover", function(d) { 
+                d3.select(this).select("text").style("opacity", 0)
+                // no highlight of the symmetry
+                //d3.select(this).select(".males").style("fill", highlight)
+                //d3.select(this).select(".females").style("fill", highlight)
+                d3.select(this).append("text")
+                                        .attr("class", "hoverBirthYear")
+                                        .attr("x", width-10)
+                                        .attr("y", -1)
+                                        .attr("text-anchor", "end")
+                                                .text(bYearTxt[language]+" "+d);
+                d3.select(this).append("text")
+                                        .attr("class", "hoverBirthYear hoverTotals")
+                                        .attr("x", width+centerPadding+10)
+                                        .attr("y", -1)
+                                        .attr("text-anchor", "start")
+                                                .text(thsd((data[year][tmpVariant][d][0]+data[year][tmpVariant][d][1])*1000)+" "+persTxt[language]);
+            });    */        
 
         var leftBars = maleGroup.selectAll("g")
             .data(maleAges)
@@ -133,8 +150,10 @@ var AgeTree = function(options){
 
         svg.append('g')
           .attr('class', 'axis y left')
-          .attr('transform', translation(pointA, 0))
-          .call(yAxis);
+          .attr('transform', translation(this.width / 2, 0))
+          .call(yAxis)
+          .selectAll("text")
+            .style("text-anchor", "middle");
 
 
         svg.append('g')
@@ -149,29 +168,26 @@ var AgeTree = function(options){
 
         // LEGEND
 
-        svg.append("rect")
-            .attr('class', 'female')
-            .attr("x", 10)
-            .attr("y", 0)
-            .attr("width", 10)
-            .attr("height", 10);            
-
         svg.append("text")
-            .attr("x", 30)             
-            .attr("y", 10 )
-            .text('weiblich');
-
-        svg.append("rect")
+            .attr("x", (this.width / 2))             
+            .attr("y", -5)
+            .attr("font-weight", "bold")
+            .attr("text-anchor", "middle")  
+            .text('Alter');
+    
+        svg.append("text")   
             .attr('class', 'male')
-            .attr("x", 10)
-            .attr("y", 30)
-            .attr("width", 10)
-            .attr("height", 10);
+            .attr("text-anchor", "middle")
+            .text('Anzahl männlich')    
+            .attr("x", this.width / 4)             
+            .attr("y", this.height + 25);          
 
-        svg.append("text")
-            .attr("x", 30)             
-            .attr("y", 40 )
-            .text('männlich');
+        svg.append("text")   
+            .attr('class', 'female')
+            .attr("text-anchor", "middle")
+            .text('Anzahl weiblich')
+            .attr("x", 3 * this.width / 4)             
+            .attr("y", this.height + 25);
 
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';

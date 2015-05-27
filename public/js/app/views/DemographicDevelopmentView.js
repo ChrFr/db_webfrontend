@@ -18,8 +18,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         _this.regions = new RegionCollection({progId: progId});
                         _this.regions.fetch({success: _this.render});
                     }});
-                }                
-                this.playing = false;
+                }              
             },
 
             events: {
@@ -58,7 +57,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             
             changeRegion: function(rs){
                 var _this = this;
-                
+                this.stop();
                 this.collection.fetchDetails({rs: rs, success: function(model){                     
                     var maxYear = model.get('maxYear');
                     var minYear = model.get('minYear');
@@ -127,14 +126,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         
                     var maxScale = 1000;
                     
-                    sliderDiv.style.width = width + "px";  
                     var scaleSlider = d3slider().value(maxScale - _this.xScale + minScale).orientation("vertical")
 				.min(minScale).max(maxScale).step(10)
 				.axis( d3.svg.axis().orient("right")
                                         .tickValues([minScale, maxScale/4, maxScale/2, maxScale*3/4 ,maxScale])
 					.tickFormat(d3.format(""))
-					)           
-                          
+					)
+                                
                     d3.select('#scale-slider').call(scaleSlider);
                     
                     scaleSlider.on("slide", function(evt, value) {
@@ -192,7 +190,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     vis.removeChild(vis.firstChild);
                 
                 var tabContent = this.el.querySelector(".tab-content");                
-                var width = parseInt(tabContent.offsetWidth) - 50;
+                var width = parseInt(tabContent.offsetWidth) - 70;
                 //width / height ratio is 1 : 1.2
                 var height = width * 1.2;
                 this.ageTree = new AgeTree({
@@ -292,20 +290,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             },
             
             play: function(event){
-                var _this = this;
-                
-                var stop = function(){                    
-                    event.target.innerHTML = 'Play';
-                    clearInterval(_this.timerId);
-                }
-                
-                this.playing = !this.playing;
-                if(this.playing){
+                var _this = this;  
+                if(!this.timerId){
                     event.target.innerHTML = 'Stop';
                     this.timerId = setInterval(function(){
                         var currentYear = _this.yearSlider.value();
                         if(currentYear == _this.currentModel.get('maxYear')){ 
-                            stop();
+                            _this.stop();
                         }
                         else{
                             _this.yearSlider.value(currentYear + 1);
@@ -314,11 +305,20 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     }, 1000);
                 }
                 else
-                    stop()
+                    this.stop();
+            },
+            
+            stop: function(){               
+                this.el.querySelector("#play").innerHTML = 'Play';
+                if(this.timerId){
+                    clearInterval(this.timerId);
+                    this.timerId = null;
+                }
             },
             
             //remove the view
             close: function () {
+                this.stop();
                 this.unbind(); // Unbind all local event bindings
                 this.remove(); // Remove view from DOM
             }

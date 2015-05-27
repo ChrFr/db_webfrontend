@@ -23,15 +23,15 @@ require.config({
 
       // Plugins
       // -------
-      "backbone.validateAll": "../libs/plugins/Backbone.validateAll",
+      "backbone.validateAll": "../libs/Backbone.validateAll",
 
-      "bootstrap": "../libs/plugins/bootstrap",
+      "bootstrap": "../libs/bootstrap.min",
       
       "bootstraptable": "../libs/bootstrap-table.min",
 
-      "text": "../libs/plugins/text",
+      "text": "../libs/text",
 
-      "jasminejquery": "../libs/plugins/jasmine-jquery"
+      "jasminejquery": "../libs/jasmine-jquery"
   },
 
   // Sets the configuration for your third party scripts that are not AMD compatible

@@ -29,9 +29,10 @@ define(["jquery", "backbone", "text!templates/admin.html",
             },
 
             render: function() {
-                this.template = _.template(template, {});
-                
+                this.template = _.template(template, {});                
                 this.el.innerHTML = this.template;   
+                
+                $('.alert').hide();
                 
                 this.showUserTable();
                 this.showPrognoses();
@@ -123,11 +124,11 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 else if(target === 'editUser' && this.userTable){
                     var selected = this.userTable.getSelections();
                     if(selected.length === 0){
-                        alert('Sie müssen einen Nutzer auswählen!');
+                        this.alert('warning', 'Sie müssen einen Nutzer auswählen!');
                         return;
                     }
                     else if(selected.length > 1){
-                        alert('Sie können nur einen Nutzer gleichzeitig editieren!');
+                        this.alert('warning', 'Sie können nur einen Nutzer gleichzeitig editieren!');
                         return;
                     }
                     dialog = $('#editUserDialog');
@@ -137,7 +138,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 else if(target === 'deleteUser'){
                     var selected = this.userTable.getSelections();
                     if(selected.length === 0){
-                        alert('Sie müssen einen Nutzer auswählen!');
+                        this.alert('warning', 'Sie müssen einen Nutzer auswählen!');
                         return;
                     }
                     _.each(selected, function(selection){
@@ -148,6 +149,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 }
                 
                 if (dialog){
+                    $('.alert').hide();
                     //no effect for deletion, as it has no inputs
                     this.fillForm(dialog, models[0]);
                     dialog.modal('show');
@@ -187,14 +189,15 @@ define(["jquery", "backbone", "text!templates/admin.html",
                             value = input.val();
                         model.set(input.attr('name'), value);
                     });                    
-                    model.save({}, {   
-                        dataType: 'text', 
+                    model.save({}, {  
+                        dataType: 'text',
                         success: function(m, response){
+                            _this.alert('success', 'Anfrage war erfolgreich!');
                             _this.showUserTable();
                             _this.showPrognoses();
                         },
                         error: function(m, response) {
-                            alert(response.responseText);
+                            _this.alert('danger', response.responseText);
                         }
                     });
                 }
@@ -206,11 +209,12 @@ define(["jquery", "backbone", "text!templates/admin.html",
                     model.destroy({
                         dataType: 'text', 
                         success: function(m, response){
+                            _this.alert('success', 'Löschen war erfolgreich!');
                             _this.showUserTable();
                             _this.showPrognoses();
                         },
                         error: function(m, response) {
-                            alert(response.responseText);
+                            _this.alert('danger', response.responseText);
                         }
                     });
                 });
@@ -232,7 +236,14 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 if(errMsg)
                     return false;
                 return true;
-            },         
+            },     
+            
+            alert: function(type, message){
+                $('.alert').hide();
+                var alertDiv = $('.alert-' + type);
+                alertDiv.find('label').text(message);
+                alertDiv.show();
+            },
             
             //remove the view
             close: function () {

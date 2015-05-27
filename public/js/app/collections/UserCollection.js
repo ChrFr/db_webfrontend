@@ -1,16 +1,21 @@
-define(["backbone"],
+define(["backbone", "models/UserModel"],
 
-    function(Backbone) {
+    function(Backbone, UserModel) {
 
         // Creates a new Backbone Collection class object
         var UserCollection = Backbone.Collection.extend({
 
-            //model: RegionModel,
+            model: UserModel,
             
             url: 'api/users',
 
             initialize: function(){   
-            },    
+            },
+            
+            //order function
+            comparator: function(model) {
+                return model.get('name');
+            },
         });
         return UserCollection;
     }

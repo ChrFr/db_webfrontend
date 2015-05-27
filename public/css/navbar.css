@@ -2,6 +2,9 @@
     Author: Christoph Franke
     Publisher: GGR
 */
+.navbar{
+    z-index: 200;
+}
 #main-menu{    
     z-index: 10;
     height: 50px;

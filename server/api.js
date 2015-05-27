@@ -25,7 +25,7 @@ module.exports = function(){
             break;
         }
       }
-    };    
+    };        
     
     // transform json object by splitting array fields e.g. 
     function expandJsonToCsv(options){
@@ -81,8 +81,10 @@ module.exports = function(){
     }
 
     var checkPermission = function(prognoseId, user, callback){           
-        if(!user)
+        if(!user){
+            console.log(user)
             return callback('Nur angemeldete Nutzer haben Zugriff!', 403);
+        }
         query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], 
         function(err, result){
             if (err)
@@ -100,8 +102,10 @@ module.exports = function(){
     var prognosen = {   
         list: function(req, res){
             //TODO session or cookie (check every time auth_token?) ?
-            if(!req.session.user)
+            if(!req.session.user){
+                console.log(req.session)
                 return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
+            }
             
             var q = "SELECT id, name, description FROM prognosen";
             var params = [];
@@ -355,8 +359,10 @@ module.exports = function(){
     var users = {
         list: function(req, res){
             //admin only
-            if(!req.session.user || !req.session.user.superuser)
+            if(!req.session.user || !req.session.user.superuser){
+                console.log(req.session)
                 return res.sendStatus(403);
+            }
             query("SELECT id, name, email, superuser from users", [],
             function(err, result){
                 if(err)
@@ -368,8 +374,10 @@ module.exports = function(){
         
         get: function(req, res){
             //admin only
-            if(!req.session.user || !req.session.user.superuser)
+            if(!req.session.user || !req.session.user.superuser){
+                console.log(req.session)
                 return res.sendStatus(403);
+            }
             query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
             function(err, result){
                 if (err || result.length === 0)
@@ -379,38 +387,69 @@ module.exports = function(){
         },
         
         post: function(req, res){
+            if(!req.session.user || !req.session.user.superuser){
+                console.log(req.session)
+                return res.sendStatus(403);
+            }
             //TODO: only admin allowed to create
-            //TODO: check, if already exists, else update
+            //TODO: check, if already exists, else create
             var name = req.body.name;
             var email = req.body.email;
             
             pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
                 if(err)
-                    return res.status(500).send('Interner Fehler bei Registrierung. Bitte versuchen Sie es erneut.');
-                query("INSERT INTO users (name, email, password) VALUES ($1, $2, $3);", 
-                    [name, email, hashedPass],
+                    return res.status(500).send('Interner Fehler.');
+                query("INSERT INTO users (name, email, password, superuser) VALUES ($1, $2, $3, $4);", 
+                    [name, email, hashedPass, req.body.superuser],
                     function(err, result){
                         if(err)
                             return res.status(409).send('Name "' + name + '" ist bereits vergeben!');
                         
-                        var user = {name: result[0].name,
-                            email: result[0].email,
-                            superuser: false};
+                        res.set('Content-Type', 'application/json');
+                        return res.status(200).send('User erfolgreich angelegt');            
+                    });
+            });
+        },
+        
+        put: function(req, res){  
+            if(!req.session.user || !req.session.user.superuser){
+                console.log(req.session)
+                return res.sendStatus(403);
+            }          
+            pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
+                if(err)
+                    return res.status(500).send('Interner Fehler.');
+                query("UPDATE users SET name=$2, email=$3, superuser=$4, password=$5 WHERE id=$1;", 
+                    [req.params.id, req.body.name, req.body.email, req.body.superuser, hashedPass],
+                    function(err, result){
+                        if(err)
+                            return res.status(500).send('Interner Fehler.');
                         
-                        var maxAge = config.serverconfig.maxCookieAge; 
-                        res.cookie('user', user.name, { signed: true, maxAge:  maxAge});
-                        //user gets the salt as a token to authenticate, that he is logged in
-                        res.cookie('auth_token', user.auth_token, { signed: true, maxAge:  maxAge});
-                        return res.status(200).send(user);            
+                        res.set('Content-Type', 'application/json');
+                        return res.status(200).send('User erfolgreich aktualisiert');            
                     });
             });
         },
         
         delete: function(req, res){
+            if(!req.session.user || !req.session.user.superuser){
+                console.log(req.session)
+                return res.sendStatus(403);
+            }
+            query("DELETE FROM users WHERE id=$1;", [req.params.id],
+                function(err, result){
+                    if(err)
+                        return res.status(500).send('Interner Fehler.');
+                    res.set('Content-Type', 'application/json');
+                    return res.status(200).send('User erfolgreich gelöscht');            
+                });
             
         }
-    };
-   
+    };   
+    
+    
+    // MAP THE REST-ROUTES TO THE FUNCTIONS
+    
     api.map({
         
         '/session': {
@@ -444,9 +483,10 @@ module.exports = function(){
         },
         '/users': {
             get: users.list,
+            post: users.post,
             '/:id':{
                 get: users.get,
-                post: users.post,
+                put: users.put,
                 delete: users.delete
             }
         }

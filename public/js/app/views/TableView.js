@@ -25,16 +25,16 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
             },
 
             render: function() {
+                var _this = this;
                 this.template = _.template(template, {title: this.title,
                     columns: this.columns});
                 this.el.innerHTML = this.template;  
                 this.table = $(this.el).find('#table');
                 if(this.selectable){
                     this.table.attr('data-click-to-select', 'true');
-                    //table.attr('data-single-select', 'true');
+                    /*table.attr('data-single-select', 'true');
                     this.table.on('click','tr',function(e){
-                        console.log(table.bootstrapTable('getSelections'));
-                     })
+                     })*/
                 }
                 else                    
                     this.table.find('#checkboxes').attr('data-visible', 'false');
@@ -55,6 +55,10 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
                 state.page = $(this.el).find('.page-number.active > a').text();
                 state.size = $(this.el).find('.page-size').text();
                 return state;
+            },
+            
+            getSelections: function(){
+                return this.table.bootstrapTable('getSelections');
             },
             
             //remove the view

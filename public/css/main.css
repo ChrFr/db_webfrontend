@@ -200,6 +200,28 @@ body {
     margin-bottom: -.6em;      
 }
 
+.modal{
+    top: 50px;
+}
+
+/*
+form { display: table; }
+form p { display: table-row;}
+form label, form input { 
+    display: table-cell;  
+    padding-right: 10px; 
+    margin-bottom: 10px;
+}*/
+
+.form-control.invalid{
+    box-shadow: 0px 0px 3px 0px red;
+    border-color: red;
+}
+
+.modal #status{
+    color: red;
+}
+
 @media (min-width: 768px) {
     
     #mainFrame{

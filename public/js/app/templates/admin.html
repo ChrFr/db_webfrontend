@@ -4,11 +4,70 @@
         <li id="progLink"><a href="#tab2" data-toggle="tab">Prognosen</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="tab1">    
+        <div class="tab-pane active" id="tab1">   
+            <!--<div class="btn-group" role="group" aria-label="...">-->
+                <button id="deleteUser" type="button" class="btn btn-primary">Löschen</button> 
+                <button id="editUser" type="button" class="btn btn-primary">Editieren</button> 
+           <!-- </div>-->
+            <button id="newUser" type="button" class="btn btn-primary">Neu</button> 
             <div id="usertable" class="table"></div>
         </div>
         <div class="tab-pane" id="tab2">            
             <div id="prognosestable" class="table"></div>
         </div>
     </div>	
+</div>
+
+<div id="editUserDialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Nutzer bearbeiten</h4>
+            </div>
+            <div class="modal-body">
+                <!-- names of inputs have to match attributes in data models and database! -->
+                <form>
+                    <div class="form-group">
+                        <label for="username">Username&#042;</label>
+                        <input name="name" type="text" class="form-control needed" id="username" placeholder="Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">E-Mail</label>
+                        <input id="email" type="email" class="form-control" name="email" placeholder="E-Mail">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Passwort&#042;</label>
+                        <input name="password" type="password" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
+                    </div>                    
+                    <div class="checkbox">
+                      <label style="font-style: italic">
+                        Superuser
+                        <input name="superuser" type="checkbox"> 
+                      </label>
+                    </div>       
+                </form>
+                <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
+                <label id="status"></label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+                <button type="submit" class="btn btn-primary post">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="deleteDialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p style="text-align: center; font-weight: bold; vertical-align: center;">Wollen Sie die Auswahl wirklich löschen?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary delete">Löschen</button>
+            </div>
+        </div>
+    </div>
 </div>

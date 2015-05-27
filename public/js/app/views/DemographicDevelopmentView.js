@@ -131,7 +131,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
 				.axis( d3.svg.axis().orient("right")
                                         .tickValues([minScale, maxScale/4, maxScale/2, maxScale*3/4 ,maxScale])
 					.tickFormat(d3.format(""))
-					)
+					);
                                 
                     d3.select('#scale-slider').call(scaleSlider);
                     

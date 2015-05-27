@@ -247,11 +247,12 @@ module.exports = function(){
             if(!req.query.year)       
                 res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.');
             else{
-                demodevelop.getYears(req, res, function(result){
+                demodevelop.getYears(req, res, function(result){                    
                     Render.renderAgeTree({
                         data: result[0],
                         width: 400,
-                        height: 600
+                        height: 600,
+                        maxX: req.query.maxX
                     }, function(svg){
                         //MIME Type and filename
                         res.set('Content-Type', 'image/png' );

@@ -24,8 +24,10 @@ define(["backbone"],
                 return url
             },
             
-            pngUrl: function(year){
+            pngUrl: function(year, maxX){
                 var url = this.url + '/png?year=' + year;
+                if(maxX)
+                    url += '&maxX=' + maxX;
                 return url
             }
         });

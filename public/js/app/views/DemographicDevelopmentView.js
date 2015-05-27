@@ -276,7 +276,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             },
             
             openCurrentYearPngTab: function() {
-                var win = window.open(this.currentModel.pngUrl(this.currentYear), '_blank');
+                var win = window.open(this.currentModel.pngUrl(this.currentYear, this.xScale), '_blank');
                 win.focus();
             },
             

@@ -25,6 +25,15 @@
     color: white;
 }
 
+#main-menu #home{
+    background-color: navy;
+}
+
+#main-menu #home img{
+    margin-top: -5px;
+    height: 20px;
+}
+
 #main-menu #prognosis{    
     background-color: #454545;
 }
@@ -52,6 +61,10 @@
 
 .submenu .navbar-header{
     padding: 15px 15px;
+}
+
+#home-menu{
+    background-color: navy;
 }
 
 #prognosis-menu{

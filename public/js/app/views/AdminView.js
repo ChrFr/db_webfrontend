@@ -23,7 +23,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             events: {
                 //'click #userLink': 'showUserTable',
                 //'click #progLink': 'showPrognoses',
-                'click #newUser, #editUser, #deleteUser': 'showModal',
+                'click #newUser, #editUser, #deleteUser, #newPrognosis, #editPrognosis, #deletePrognosis': 'showModal',
                 'click :submit.post': 'onSubmit',                
                 'click :submit.delete': 'onDelete'
             },
@@ -117,6 +117,8 @@ define(["jquery", "backbone", "text!templates/admin.html",
                     _this = this,
                     target = event.target.id;
             
+                // USERS
+                
                 if(target === 'newUser'){
                     dialog = $('#editUserDialog');
                     models = [new UserModel()];
@@ -144,6 +146,21 @@ define(["jquery", "backbone", "text!templates/admin.html",
                     _.each(selected, function(selection){
                         var userId = selection.id
                         models.push(_this.users.get(userId));
+                    });  
+                    dialog = $('#deleteDialog');
+                }
+                
+                // PROGNOSES
+                
+                else if(target === 'deletePrognosis'){
+                    var selected = this.prognosisTable.getSelections();
+                    if(selected.length === 0){
+                        this.alert('warning', 'Sie müssen eine Prognose auswählen!');
+                        return;
+                    }
+                    _.each(selected, function(selection){
+                        var progId = selection.id
+                        models.push(_this.prognoses.get(progId));
                     });  
                     dialog = $('#deleteDialog');
                 }

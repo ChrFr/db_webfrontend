@@ -99,7 +99,12 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                 $('.submenu').removeClass('active');
                 var item = $('');
                 var subitem = $('');
-                if(route === 'prognoses'){
+                console.log(route)
+                if(route === 'home'){
+                    item = $('#main-menu').find('#home').parent();
+                    $('#home-menu').addClass('active');
+                }
+                else if(route === 'prognoses'){
                     item = $('#main-menu').find('#prognosis').parent();
                     subitem = $('.submenu').find('#prognosis-content').parent();
                     $('#prognosis-menu').addClass('active');

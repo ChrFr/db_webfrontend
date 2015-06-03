@@ -102,12 +102,15 @@ module.exports = function(){
     var prognosen = {   
         list: function(req, res){
             //TODO session or cookie (check every time auth_token?) ?
-            if(!req.session.user){
                 console.log(req.session)
+            if(!req.session.user){
                 return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
             }
             
-            var q = "SELECT id, name, description FROM prognosen";
+            var q = "SELECT id, name, description"
+            if(req.session.user.superuser)
+                q += ", users"
+            q += " FROM prognosen";
             var params = [];
             //only admin can access all prognoses
             if(!req.session.user.superuser){
@@ -359,8 +362,8 @@ module.exports = function(){
     var users = {
         list: function(req, res){
             //admin only
-            if(!req.session.user || !req.session.user.superuser){
                 console.log(req.session)
+            if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
             query("SELECT id, name, email, superuser from users", [],
@@ -374,8 +377,8 @@ module.exports = function(){
         
         get: function(req, res){
             //admin only
-            if(!req.session.user || !req.session.user.superuser){
                 console.log(req.session)
+            if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
             query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
@@ -387,8 +390,8 @@ module.exports = function(){
         },
         
         post: function(req, res){
-            if(!req.session.user || !req.session.user.superuser){
                 console.log(req.session)
+            if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
             //TODO: only admin allowed to create
@@ -412,8 +415,8 @@ module.exports = function(){
         },
         
         put: function(req, res){  
-            if(!req.session.user || !req.session.user.superuser){
                 console.log(req.session)
+            if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }          
             pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
@@ -432,8 +435,8 @@ module.exports = function(){
         },
         
         delete: function(req, res){
-            if(!req.session.user || !req.session.user.superuser){
                 console.log(req.session)
+            if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
             query("DELETE FROM users WHERE id=$1;", [req.params.id],

@@ -3,7 +3,7 @@
     Publisher: GGR
 */
 
-var d3 = require('d3');
+//var d3 = require('d3');
 
 var AgeTree = function(options){
     this.el = options.el || document;
@@ -126,45 +126,44 @@ var AgeTree = function(options){
         // AXES
 
         var yAxis = d3.svg.axis()
-          .scale(_this.yScale)
-          .orient('right')
-          .ticks(_this.maxY)
-          .tickSize(0,0)
-          .tickPadding(1);
+            .scale(_this.yScale)
+            .orient('right')
+            .ticks(_this.maxY)
+            .tickSize(0,0)
+            .tickPadding(1);
 
         yAxis.tickFormat(function(d) {
             return ((d === 0) || (d % 5 !== 0)) ? '': d;
         });
 
         var xAxisRight = d3.svg.axis()
-          .scale(_this.xScale)
-          .orient('bottom')
-          .ticks(5)
-          .tickSize(-this.height);
+            .scale(_this.xScale)
+            .orient('bottom')
+            .ticks(5)
+            .tickSize(-this.height);
 
         var xAxisLeft = d3.svg.axis()
-          .scale(_this.xScale.copy().range([pointA, 0]))
-          .orient('bottom')
-          .ticks(5)
-          .tickSize(-this.height);
+            .scale(_this.xScale.copy().range([pointA, 0]))
+            .orient('bottom')
+            .ticks(5)
+            .tickSize(-this.height);
 
         svg.append('g')
-          .attr('class', 'axis y left')
-          .attr('transform', translation(this.width / 2, 0))
-          .call(yAxis)
-          .selectAll("text")
-            .style("text-anchor", "middle");
-
-
-        svg.append('g')
-          .attr('class', 'axis x left')
-          .attr('transform', translation(0, this.height))
-          .call(xAxisLeft);
+            .attr('class', 'axis y left')
+            .attr('transform', translation(this.width / 2, 0))
+            .call(yAxis)
+            .selectAll("text")
+              .style("text-anchor", "middle");
 
         svg.append('g')
-          .attr('class', 'axis x right')
-          .attr('transform', translation(pointB, this.height))
-          .call(xAxisRight);
+            .attr('class', 'axis x left')
+            .attr('transform', translation(0, this.height))
+            .call(xAxisLeft);
+
+        svg.append('g')
+            .attr('class', 'axis x right')
+            .attr('transform', translation(pointB, this.height))
+            .call(xAxisRight);
 
         // LEGEND
 
@@ -189,6 +188,9 @@ var AgeTree = function(options){
             .attr("x", 3 * this.width / 4)             
             .attr("y", this.height + 25);
 
+        
+        svg.selectAll(".domain").style("display", "none");
+
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';
         }
@@ -201,14 +203,15 @@ var AgeTree = function(options){
         this.data = data;
         var _this = this;
         var title = data.jahr;
-        d3.select('.title').text(title);
+        var d3el = d3.select(this.el);
+        d3el.select('.title').text(title);
 
         //update bars
-        d3.select('.femaleGroup').selectAll("g")
+        d3el.select('.femaleGroup').selectAll("g")
             .data(data.alter_weiblich)
             .select("rect").attr("width", _this.xScale);    
 
-        d3.select('.maleGroup').selectAll("g")
+        d3el.select('.maleGroup').selectAll("g")
             .data(data.alter_maennlich)
             .select("rect").attr("width", _this.xScale);    
     }    

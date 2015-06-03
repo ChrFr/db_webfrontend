@@ -99,7 +99,6 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                 $('.submenu').removeClass('active');
                 var item = $('');
                 var subitem = $('');
-                console.log(route)
                 if(route === 'home'){
                     item = $('#main-menu').find('#home').parent();
                     $('#home-menu').addClass('active');

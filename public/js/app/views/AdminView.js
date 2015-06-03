@@ -1,10 +1,10 @@
 define(["jquery", "backbone", "text!templates/admin.html", 
     "collections/UserCollection", "collections/PrognosisCollection",
-    "models/UserModel",
+    "models/UserModel", "models/PrognosisModel",
     "views/TableView", "bootstrap"],
 
     function($, Backbone, template, UserCollection, PrognosisCollection, 
-            UserModel, TableView){
+            UserModel, PrognosisModel, TableView){
         var AdminView = Backbone.View.extend({
             // The DOM Element associated with this view
             el: document,
@@ -92,12 +92,20 @@ define(["jquery", "backbone", "text!templates/admin.html",
                     var data = [];       
 
                     columns.push({name: "id", description: "ID"});
-                    columns.push({name: "name", description: "Name"});    
+                    columns.push({name: "name", description: "Name"});   
+                    columns.push({name: "description", description: "Beschreibung"});  
+                    columns.push({name: "users", description: "berechtigte Nutzer"});                    
+                    
 
-                    _this.prognoses.each(function(prog){
+                    _this.prognoses.each(function(prog){                        
+                        var description = prog.get('description');
+                        if (description.length > 100)
+                            description = description.substring(0, 100) + " [...]";
                         data.push({
                             'id': prog.get('id'),
-                            'name': prog.get('name')
+                            'name': prog.get('name'),
+                            'description': description,
+                            'users': prog.get('users')
                         });
                     });
 
@@ -165,6 +173,25 @@ define(["jquery", "backbone", "text!templates/admin.html",
                     dialog = $('#deleteDialog');
                 }
                 
+                else if(target === 'newPrognosis'){
+                    dialog = $('#editPrognosisDialog');
+                    models = [new PrognosisModel()];
+                }
+                else if(target === 'editPrognosis' && this.prognosisTable){
+                    var selected = this.prognosisTable.getSelections();
+                    if(selected.length === 0){
+                        this.alert('warning', 'Sie müssen eine Prognose auswählen!');
+                        return;
+                    }
+                    else if(selected.length > 1){
+                        this.alert('warning', 'Sie können nur eine Prognose gleichzeitig editieren!');
+                        return;
+                    }
+                    dialog = $('#editPrognosisDialog');
+                    var progId = selected[0].id
+                    models = [this.prognoses.get(progId)];
+                }
+                
                 if (dialog){
                     $('.alert').hide();
                     //no effect for deletion, as it has no inputs
@@ -175,10 +202,11 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 }                    
             },
             
-            fillForm: function(dialog, model){                
-                var inputs = dialog.find('input');
+            fillForm: function(dialog, model){    
+                console.log(model)
+                var inputs = dialog.find('input, textarea');
                 _.each(inputs, function(input){
-                    var input = $(input);
+                    var input = $(input); 
                     var value = model.get(input.attr('name'));
                     if(input.attr('type') === 'checkbox') 
                         input.prop('checked', value);

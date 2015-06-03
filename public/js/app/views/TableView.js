@@ -41,10 +41,13 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
                 
                 if (this.pagination){
                     this.table.attr('data-pagination', 'true');
-                    this.table.attr('data-height', this.dataHeight);
                     this.table.attr('data-page-number', this.startPage);                    
                     this.table.attr('data-page-size', this.pageSize);
                 }
+                
+                if(this.dataHeight)
+                    this.table.attr('data-height', this.dataHeight);
+                
                 this.table.bootstrapTable({
                     data: this.data
                 });

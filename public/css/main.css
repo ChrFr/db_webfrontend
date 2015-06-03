@@ -138,28 +138,23 @@ body {
     height: 100px;
 }      
 
-.d3-slider-horizontal .d3-slider-handle {
-    position: absolute;
-    height: 1.2em;
-    width: 0.5em;    
-    top: -.3em;
-    margin-left: -0.25em;
-    background-color: black;
-    border: 1px solid #d3d3d3;
-    border-radius: 4px;
-    z-index: 3;
-    //background: linear-gradient(to bottom, #eee 0%, #ddd 100%);
-}
-
-.d3-slider-vertical .d3-slider-handle {
+.d3-slider-handle {
     position: absolute;
     width: 1.2em;
     height: 1.2em;
     border: 1px solid #d3d3d3;
     border-radius: 4px;
-    background: #eee;
     background: linear-gradient(to bottom, #eee 0%, #ddd 100%);
     z-index: 3;
+}
+
+.d3-slider-horizontal .d3-slider-axis-bottom{
+    height: 30px;
+}
+
+.d3-slider-horizontal .d3-slider-handle{
+    margin-left: -0.6em;
+    margin-top: -0.6em;
 }
 
 .d3-slider-handle:hover {

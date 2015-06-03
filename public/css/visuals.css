@@ -24,6 +24,16 @@ svg {
   stroke-dasharray: 2,2;
 }
 
+.y.axis line {
+  stroke: #777;
+  stroke-dasharray: 2,2;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2.5px;
+}
+
 rect.male{
   fill-opacity: 1;
   fill: #0066FF;
@@ -44,7 +54,7 @@ text.female{
 
 
 /*hide path, else its rendered as black box by some svg viewers like inkscape and imageMagick*/
-path {
+.x.axis path.domain, .y.axis path.domain  {
     display: none;
     visibility: hidden;
 }

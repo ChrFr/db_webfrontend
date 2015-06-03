@@ -3,16 +3,21 @@
     <div class="col-md-2"> 
         Kommune <select id="rsSelect"> </select>
     </div>
-    <div id="rootwizard" class="col-md-4">    
+    <div id="rootwizard" class="col-md-5">    
         <ul class="nav nav-pills">
-            <li id="ageTreeBtn" class="active"><a href="#tab1" data-toggle="tab">Altersbaum</a></li>
-            <li><a href="#tab2" data-toggle="tab">Tabelle</a></li>
+            <li class="active"><a href="#tab1" data-toggle="tab">Entwicklung</a></li>
+            <li id="ageTreeBtn"><a href="#tab2" data-toggle="tab">Altersbaum</a></li>
+            <li><a href="#tab3" data-toggle="tab">Tabelle</a></li>
         </ul>
-        <div class="tab-content">
+        <div class="tab-content">            
             <div class="tab-pane active" id="tab1">            
+                <div id="absolute"></div>         
+                <div id="relative"></div>
+            </div>
+            <div class="tab-pane" id="tab2">            
                 <div id="agetree"></div>
             </div>
-            <div class="tab-pane" id="tab2">    
+            <div class="tab-pane" id="tab3">    
                 <div id="prognosis-data"></div>
             </div>
         </div>	
@@ -33,7 +38,7 @@
         <input type="checkbox" id="fix-scale"> fixieren 
     </div>
     
-    <div class="col-md-3"> 
+    <div class="col-md-4"> 
         <div id="summary"></div>
     </div>
 </div>

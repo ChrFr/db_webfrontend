@@ -4,10 +4,15 @@ define(["backbone"],
 
         var PrognosisModel = Backbone.Model.extend({
             
-            url: 'api/prognosen/{prognosis}',
+            urlRoot: 'api/users',            
+            
+            defaults: {
+                name: '',
+                description: '',
+                users: []
+            },
 
-            initialize: function(options) {
-                this.url = this.url.replace('{prognosis}', options.prognosisId);
+            initialize: function() {
             },
         });
         return PrognosisModel;

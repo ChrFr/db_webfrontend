@@ -1,6 +1,6 @@
 define(["app", "backbone", "text!templates/demodevelop.html", "collections/RegionCollection",  
     "collections/DemographicDevelopmentCollection",  "views/OptionView", 
-    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree"],
+    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", "views/visuals/LineChart"],
 
     function(app, Backbone, template, RegionCollection, DemographicDevelopmentCollection,
             OptionView, TableView, d3, d3slider){
@@ -100,6 +100,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                             .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
                             .tickFormat(d3.format("d"))
                             .ticks(maxYear - minYear)
+                            .tickSize(10)
                         )
                         .min(minYear)
                         .max(maxYear)
@@ -121,8 +122,10 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     
                     //var minScale = Math.ceil(model.get('maxNumber'));
                     var minScale = 10;
-                    if(!_this.xScale || !checked)// || minScale > _this.xScale) 
-                        _this.xScale = Math.ceil(model.get('maxNumber'));                    
+                    if(!_this.xScale || !checked){// || minScale > _this.xScale) 
+                        _this.xScale = Math.ceil(model.get('maxNumber'));  
+                        _this.xScale *= 1.3;
+                    }
                         
                     var maxScale = 1000;
                     
@@ -143,6 +146,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     
                     _this.renderDataTable();
                     _this.renderTree();
+                    _this.renderDevelopment();
                     _this.renderSummary();
                 }});
             },
@@ -176,8 +180,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     columns: columns,
                     title: title,
                     data: data,
-                    dataHeight: 400,
-                    pagination: true,
+                    dataHeight: 600,
+                    pagination: false,
                     startPage: state.page,
                     pageSize: state.size
                 });
@@ -192,7 +196,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 var tabContent = this.el.querySelector(".tab-content");                
                 var width = parseInt(tabContent.offsetWidth) - 70;
                 //width / height ratio is 1 : 1.2
-                var height = width * 1.2;
+                var height = width * 0.8;
                 this.ageTree = new AgeTree({
                     el: vis,
                     data: this.yearData, 
@@ -202,7 +206,69 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     maxX: this.xScale
                 });
                 this.ageTree.render();     
-            },        
+            },       
+            
+            renderDevelopment: function(){
+                var data = this.currentModel.get('data'),
+                    total = [],
+                    years = [];
+            
+                // ABSOLUTE DATA
+                
+                _.each(data, function(d){       
+                    total.push(d.sumFemale + d.sumMale);
+                    years.push(d.jahr);
+                });
+                
+                var dataSet = { label: "",
+                                x: years,
+                                y: total
+                              };       
+                              
+                var vis = this.el.querySelector("#absolute");
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);
+                
+                var tabContent = this.el.querySelector(".tab-content");                
+                var width = parseInt(tabContent.offsetWidth) - 70;
+                var height = width * 0.5;
+                this.absoluteChart = new LineChart({
+                    el: vis,
+                    data: [dataSet], 
+                    width: width, 
+                    height: height,
+                    title: "Bevölkerungsentwicklung absolut",
+                    xlabel: "Jahr",
+                    ylabel: "Gesamtbevölkerung in absoluten Zahlen",                    
+                    minY: 0
+                });
+                this.absoluteChart.render();    
+                
+                // RELATIVE DATA (to first year)
+                
+                var relVal = dataSet.y[0];
+                
+                for(var i = 0; i < dataSet.y.length; i++){
+                    dataSet.y[i] *= 100 / relVal;
+                };
+                              
+                vis = this.el.querySelector("#relative");
+                
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);     
+                
+                this.relativeChart = new LineChart({
+                    el: vis,
+                    data: [dataSet], 
+                    width: width, 
+                    height: height,
+                    title: "Bevölkerungsentwicklung relativ",
+                    xlabel: "Jahr",
+                    ylabel: "Gesamtbevölkerung in Prozent (relativ zu " + dataSet.x[0] + ")"
+                });
+                
+                this.relativeChart.render();  
+            },
             
             renderSummary: function(){
                 var columns = [];

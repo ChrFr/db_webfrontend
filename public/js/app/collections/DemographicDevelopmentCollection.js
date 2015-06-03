@@ -36,6 +36,10 @@ define(["backbone","models/DemographicDevelopmentModel"],
                         _.each(data, function(item){
                             var femaleAges = item.alter_weiblich,
                                 maleAges = item.alter_maennlich;
+                                
+                            item.sumFemale = femaleAges.reduce(function(sum,e){return sum + e});                            
+                            item.sumMale = maleAges.reduce(function(sum,e){return sum + e});
+                            
                             var max = Math.max(femaleAges.length, maleAges.length);
                             if (maxAge < max) maxAge = max;
                             max = Math.max(Math.max.apply(null, femaleAges), 

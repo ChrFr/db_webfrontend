@@ -45,7 +45,7 @@
                 <h4 class="modal-title">Nutzer bearbeiten</h4>
             </div>
             <div class="modal-body">
-                <!-- names of inputs have to match attributes in data models and database! -->
+                <!-- name attribute of inputs have to match attributes in data models and database! -->
                 <form>
                     <div class="form-group">
                         <label for="username">Username&#042;</label>
@@ -57,7 +57,7 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Passwort&#042;</label>
-                        <input name="password" type="password" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
+                        <input name="password" type="text" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
                     </div>                    
                     <div class="checkbox">
                       <label style="font-style: italic">
@@ -90,7 +90,7 @@
         </div>
     </div>
 </div>
-<!--
+
 <div id="editPrognosisDialog" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -101,23 +101,13 @@
             <div class="modal-body">
                 <form>
                     <div class="form-group">
-                        <label for="username">Name&#042;</label>
-                        <input name="name" type="text" class="form-control needed" id="username" placeholder="Name">
+                        <label for="progname">Name der Prognose&#042;</label>
+                        <input name="name" type="text" class="form-control needed" id="progname" placeholder="Name">
                     </div>
                     <div class="form-group">
-                        <label for="email">E-Mail</label>
-                        <input id="email" type="email" class="form-control" name="email" placeholder="E-Mail">
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Passwort&#042;</label>
-                        <input name="password" type="password" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
-                    </div>                    
-                    <div class="checkbox">
-                      <label style="font-style: italic">
-                        Superuser
-                        <input name="superuser" type="checkbox"> 
-                      </label>
-                    </div>       
+                        <label for="description">Beschreibung</label>
+                        <textarea name="description" rows="10" class="form-control" id="description"></textarea>
+                    </div>      
                 </form>
                 <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
                 <label id="status"></label>
@@ -128,4 +118,4 @@
             </div>
         </div>
     </div>
-</div>-->
+</div>

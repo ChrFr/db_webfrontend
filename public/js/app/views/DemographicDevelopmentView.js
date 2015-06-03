@@ -147,7 +147,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     _this.renderDataTable();
                     _this.renderTree();
                     _this.renderDevelopment();
-                    _this.renderSummary();
+                    _this.renderAgeGroup();
                 }});
             },
             
@@ -180,7 +180,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     columns: columns,
                     title: title,
                     data: data,
-                    dataHeight: 600,
+                    dataHeight: 400,
                     pagination: false,
                     startPage: state.page,
                     pageSize: state.size
@@ -270,7 +270,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 this.relativeChart.render();  
             },
             
-            renderSummary: function(){
+            renderAgeGroup: function(){
                 var columns = [];
                 
                 columns.push({name: "ageGroup", description: "Altersgruppe"});
@@ -325,9 +325,10 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     });
                 }
                 this.summary = new TableView({
-                    el: this.el.querySelector("#summary"),
+                    el: this.el.querySelector("#agegroup-data"),
                     columns: columns,
-                    data: data
+                    data: data,
+                    title: this.currentYear
                 });
             },
             
@@ -351,7 +352,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 var data = this.currentModel.get('data');          
                 this.yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)]; 
                 this.renderDataTable();
-                this.renderSummary();  
+                this.renderAgeGroup();  
                 this.ageTree.changeData(this.yearData);
             },
             

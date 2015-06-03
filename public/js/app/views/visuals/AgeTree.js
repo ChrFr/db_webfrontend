@@ -3,8 +3,6 @@
     Publisher: GGR
 */
 
-//var d3 = require('d3');
-
 var AgeTree = function(options){
     this.el = options.el || document;
     this.data = options.data;
@@ -15,6 +13,11 @@ var AgeTree = function(options){
     this.css = options.css;
     
     this.render = function(callback){
+        
+        //server-side d3 needs to be loaded seperately
+        if(!d3)            
+            var d3 = require('d3');
+        
         var _this = this;                                
 
         var femaleAges = this.data.alter_weiblich;

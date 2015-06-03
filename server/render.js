@@ -30,7 +30,8 @@ exports.renderAgeTree = (function(options, callback){
                 height: height,
                 maxX: maxX,
                 maxY: maxY,
-                css: visualsCss
+                css: visualsCss,
+                d3: d3
             });
             ageTree.render(callback);
         }

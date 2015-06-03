@@ -16,6 +16,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
                 this.dataHeight = options.dataHeight || 400;
                 this.startPage = options.startPage || 1;
                 this.pageSize = options.pageSize || 20;
+                this.highlight = options.highlight;
                 this.render();
                 //this.model.fetch({success: this.render});
             },
@@ -51,6 +52,17 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
                 this.table.bootstrapTable({
                     data: this.data
                 });
+                
+                if(this.highlight)
+                    this.table.on('click','tr',function(e){
+                        if(!($(this).hasClass('highlight'))){
+                            $(this).addClass('highlight');
+                            $(this).siblings().removeClass('highlight');
+                        }
+                        else $(this).removeClass('highlight');
+                            
+                    })
+                
             },   
             
             getState: function (){

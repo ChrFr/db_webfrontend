@@ -3,8 +3,6 @@
     Publisher: GGR
 */
 
-//var d3 = require('d3');
-
 var LineChart = function(options){
     this.el = options.el || document;
     this.data = options.data;
@@ -24,6 +22,10 @@ var LineChart = function(options){
     };
     
     this.render = function(callback){
+        //server-side d3 needs to be loaded seperately
+        if(!d3)            
+            var d3 = require('d3');
+        
         var _this = this;                         
 
         var year = this.data.jahr;

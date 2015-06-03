@@ -15,6 +15,10 @@ body {
     padding: 10px;
 }
 
+table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+    background: #99CCFF;
+}
+
 .tab-content, #summary{
     background-color: white;
     min-height: 500px;

@@ -14,6 +14,7 @@ function(app, Router, SessionModel, Navbar, PrognosisCollection) {
     app.prognoses = new PrognosisCollection();    
     
     function render(){
+        console.log(app.session)
         app.router = new Router();
         app.navbar = new Navbar();        
     }

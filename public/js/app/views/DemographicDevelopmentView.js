@@ -183,7 +183,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     dataHeight: 400,
                     pagination: false,
                     startPage: state.page,
-                    pageSize: state.size
+                    pageSize: state.size,
+                    highlight: true
                 });
             },
             
@@ -324,11 +325,12 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         percentage: percentage[i] + '%'
                     });
                 }
-                this.summary = new TableView({
+                this.ageGroupTable = new TableView({
                     el: this.el.querySelector("#agegroup-data"),
                     columns: columns,
                     data: data,
-                    title: this.currentYear
+                    title: this.currentYear,
+                    highlight: true
                 });
             },
             

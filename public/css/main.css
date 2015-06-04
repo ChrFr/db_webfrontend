@@ -30,6 +30,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     padding: 10px;
     padding-bottom: 20px; 
     box-shadow: 1px 0px 2px 0px grey;
+    overflow: auto;
 }
 
 .nav-pills > li > a{
@@ -72,22 +73,6 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 #prognosis-data td{
     padding: 1px 5px 1px 5px !important;
     //line-height: 0.5;
-}
-
-#controls {
-    padding-left: 0px;
-}
-
-#controls button {
-    background-color: white;
-    border: solid 1px grey;
-    width: 50px!important;
-    height: 50px;
-    box-shadow: 1px 0px 2px 0px grey;
-}
-
-#controls button img{
-    height: 30%;
 }
 
 #slide-controls{
@@ -195,15 +180,6 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     top: 50px;
 }
 
-/*
-form { display: table; }
-form p { display: table-row;}
-form label, form input { 
-    display: table-cell;  
-    padding-right: 10px; 
-    margin-bottom: 10px;
-}*/
-
 .form-control.invalid{
     box-shadow: 0px 0px 3px 0px red;
     border-color: red;
@@ -219,17 +195,29 @@ form label, form input {
 
 .side-controls {
     position: absolute;
-    right: 10px;
+    right: 20px;
     top: 10px;
+    height: 90%;
+}
+
+#scale-slider-container{
+    border: solid 1px grey;
+    background: white;
+    opacity: 0.8;
+    height: 40%;
+    width: 50px;
+    float: right;
 }
 
 .side-controls button {
     border-radius: 50%;    
-    border: solid #383838;
+    border: solid 1px grey;
     background: white;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     margin-bottom: 40px;
+    opacity: 0.8;
+    float: right;
 }
 
 .side-controls button:hover{

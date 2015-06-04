@@ -3,7 +3,7 @@
     Publisher: GGR
 */
 
-var LineChart = function(options){
+var GroupedBarChart = function(options){
     this.el = options.el || document;
     this.data = options.data;
     this.width = options.width;
@@ -11,15 +11,19 @@ var LineChart = function(options){
     this.css = options.css;
     this.xlabel = options.xlabel || "x";
     this.ylabel = options.ylabel || "y";
+    this.yNegativeLabel = options.yNegativeLabel;
     this.title = options.title || "";
-    this.minY = options.minY;
-    if (this.minY === undefined)  
-        this.minY = d3.min(this.data, function(d) { return d3.min(d.y); });
-    this.maxY = options.maxY;
-    if (this.maxY === undefined){
-        this.maxY = d3.max(this.data, function(d) { return d3.max(d.y); });
-        this.maxY += (this.maxY - this.minY) * 0.1;
-    };
+    this.groupLabels = options.groupLabels;
+    var minY = options.minY;
+    if (minY === undefined)  
+        minY = d3.min(this.data, function(d) { return d3.min(d.values); });
+    var maxY = options.maxY;
+    if (maxY === undefined)
+        maxY = d3.max(this.data, function(d) { return d3.max(d.values); });
+    
+    //prevent that there are no pos. or neg. axes, axis is at least 30% of other axis (or 1)
+    this.minY = d3.min([minY, -(maxY * 0.3), -1]);
+    this.maxY = d3.max([-(minY * 0.3), maxY, 1]);
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -41,7 +45,7 @@ var LineChart = function(options){
         var top = d3.select(this.el).append('svg')
             .attr('xmlns', "http://www.w3.org/2000/svg")
             .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
-            .attr('width', this.width)
+            .attr('width', this.width )
             .attr('height', this.height);  
     
         if(this.css){
@@ -66,40 +70,34 @@ var LineChart = function(options){
             .text(this.title);
 
         // SCALES
+        
+        var x0Scale = d3.scale.ordinal()
+            .rangeRoundBands([0, innerwidth], .1)
+            .domain(this.data.map(function(d) { return d.label; }));
 
-        var xScale = d3.scale.linear()
-            .range([0, innerwidth])
-            .domain([ d3.min(this.data, function(d) { return d3.min(d.x); }), 
-                      d3.max(this.data, function(d) { return d3.max(d.x); }) ]) ;
-
+        var x1Scale = d3.scale.ordinal()
+            .domain(this.groupLabels).rangeRoundBands([0, x0Scale.rangeBand()]);
+    
         var yScale = d3.scale.linear()
             .range([innerheight, 0])
             .domain([ _this.minY, _this.maxY ]) ;
 
         var colorScale = d3.scale.category10()
-            .domain(d3.range(this.data.length));
-    
+            .domain(d3.range(this.groupLabels.length));
+
         // AXES
+        
+        var xAxis = d3.svg.axis()
+            .scale(x0Scale)
+            .orient("bottom");
 
         var yAxis = d3.svg.axis()
             .scale(yScale)
-            .orient('left')
-            .tickSize(-innerwidth);
-
-        var xAxis = d3.svg.axis()
-            .scale(xScale)
-            .orient('bottom')
-            .tickSize(-innerheight)
-            .tickFormat(d3.format("d"));
-  
-        var drawLine = d3.svg.line()
-            .interpolate("basis")
-            .x(function(d) { return xScale(d[0]); })
-            .y(function(d) { return yScale(d[1]); }) ;
+            .orient("left");  
   
         var xApp = svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", translation(0, innerheight)) 
+            .attr("transform", translation(0, innerheight / 2)) 
             .call(xAxis);
     
         xApp.append("text")
@@ -118,31 +116,32 @@ var LineChart = function(options){
             .attr("dy", "0.71em")
             .style("text-anchor", "end")
             .text(this.ylabel)
-            .attr("transform", "rotate(-90), " + translation(0,-margin.left));
+            .attr("transform", "rotate(-90), " + translation(0,-margin.left));  
+    
+        if(this.yNegativeLabel)
+            yApp.append("text")
+            .attr("y", 6)
+            .attr("dy", "0.71em")
+            .style("text-anchor", "end")
+            .text(this.yNegativeLabel)
+            .attr("transform", "rotate(-90), " + translation(- innerheight, -margin.left)); 
+    
+        // BARS
         
-        var lines = svg.selectAll(".d3-chart-line")
-            .data(this.data.map(function(d) {return d3.zip(d.x, d.y);}))
+        var groups = svg.selectAll(".group")
+            .data(this.data)
             .enter().append("g")
-            .attr("class", ".d3-chart-line") ;
-            
-        lines.append("path")
-            .attr("class", "line")
-            .attr("d", function(d) {return drawLine(d); })
-            .attr("stroke", function(_, i) {return colorScale(i);}) ;
-
-        lines.append("text")
-            .datum(function(d, i) { 
-                return {
-                    name: _this.data[i].label, 
-                    final: d[d.length-1]}; 
-                }) 
-            .attr("transform", function(d) { 
-                return ( translation(xScale(d.final[0]), yScale(d.final[1])));
-            })
-            .attr("x", 3)
-            .attr("dy", ".35em")
-            .attr("fill", function(_, i) { return colorScale(i); })
-            .text(function(d) { return d.name; }) ;
+              .attr("class", "g")
+              .attr("transform", function(d) { return translation(x0Scale(d.label), 0); });
+      
+        groups.selectAll("rect")
+            .data(function(d) { return d.values; })
+            .enter().append("rect")
+                .attr("width", x1Scale.rangeBand())
+                .attr("x", function(d, i) { return x1Scale(_this.groupLabels[i]); })
+                .attr("y", function(d) { return yScale(d); })
+                .attr("height", function(d) { return innerheight - yScale(d); })
+                .style("fill", function(d, i) { return colorScale(i); });
 
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';
@@ -155,4 +154,4 @@ var LineChart = function(options){
 };
 //suppress client-side error (different ways to import on client and server)
 if (typeof exports !== 'undefined') 
-    exports.init = LineChart;
+    exports.init = GroupedBarChart;

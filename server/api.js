@@ -162,16 +162,16 @@ module.exports = function(){
                     return res.status(status).send(err);
                 
                 var year = req.query.year,
-                    queryString = "",
+                    queryString = queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ",
                     params = [];
                 
                 //specific year queried or all years?   
                 if (year){
-                    queryString = 'SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 AND jahr=$3';
+                    queryString += "AND jahr=$3";
                     params = [req.params.id, req.params.rs, year];
                 }
                 else{
-                    queryString = 'SELECT jahr, alter_weiblich, alter_maennlich FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ORDER BY jahr';
+                    queryString += 'ORDER BY jahr';
                     params = [req.params.id, req.params.rs];                    
                 }
                     

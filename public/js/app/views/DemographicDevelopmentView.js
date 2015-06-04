@@ -1,6 +1,7 @@
 define(["app", "backbone", "text!templates/demodevelop.html", "collections/RegionCollection",  
     "collections/DemographicDevelopmentCollection",  "views/OptionView", 
-    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", "views/visuals/LineChart"],
+    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
+    "views/visuals/LineChart", "views/visuals/GroupedBarChart"],
 
     function(app, Backbone, template, RegionCollection, DemographicDevelopmentCollection,
             OptionView, TableView, d3, d3slider){
@@ -148,6 +149,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     _this.renderTree();
                     _this.renderDevelopment();
                     _this.renderAgeGroup();
+                    _this.renderBarChart();
                 }});
             },
             
@@ -269,6 +271,44 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 });
                 
                 this.relativeChart.render();  
+            },
+            
+            renderBarChart: function(){
+                var data = this.currentModel.get('data'),
+                    dataSets = [];
+                
+                _.each(data, function(d){                      
+                    var values = [
+                        d.geburten - d.tote,
+                        d.zuzug - d.fortzug,
+                    ];
+                    values.push(values[0] + values[1]);
+                    
+                    var dataSet = { label: d.jahr,
+                                    values: values };   
+                    dataSets.push(dataSet);            
+                });
+                    
+                              
+                var vis = this.el.querySelector("#barchart");
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);
+                
+                var tabContent = this.el.querySelector(".tab-content");                
+                var width = parseInt(tabContent.offsetWidth) - 70;
+                var height = width * 0.5;
+                this.barChart = new GroupedBarChart({
+                    el: vis,
+                    data: dataSets, 
+                    width: width, 
+                    height: height,
+                    title: "Bevölkerungsentwicklung",
+                    xlabel: "Jahr",
+                    groupLabels: ["A: Geburten - Sterbefälle", "B: Zuwanderung - Abwanderung", "gesamt: A + B"],
+                    ylabel: "Zuwachs",    
+                    yNegativeLabel: "Abnahme"
+                });
+                this.barChart.render();    
             },
             
             renderAgeGroup: function(){

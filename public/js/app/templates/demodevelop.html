@@ -6,21 +6,27 @@
     <div id="visualizations" class="col-md-5">    
         <ul class="nav nav-pills">
             <li class="active"><a href="#development-tab" data-toggle="tab">Entwicklung</a></li>
+            <li><a href="#barchart-tab" data-toggle="tab">Bar Chart</a></li>
             <li id="ageTreeBtn"><a href="#agetree-tab" data-toggle="tab">Altersbaum</a></li>
         </ul>
         <div class="tab-content">            
             <div class="tab-pane active" id="development-tab">            
                 <div id="absolute"></div>         
                 <div id="relative"></div>
+            </div>          
+            <div class="tab-pane" id="barchart-tab">    
+                <div id="barchart"></div>
             </div>
             <div class="tab-pane" id="agetree-tab">            
                 <div id="agetree"></div>
                 <div class="side-controls"> 
                     <button class="download-btn" id="png" title="Grafik als png-Datei speichern"> 
                         <img src="../../../img/camera-black.png"> 
-                    </button>
-                    <div id="scale-slider"></div><br>
-                    <input type="checkbox" id="fix-scale"> fixieren 
+                    </button><br>
+                    <div id="scale-slider-container">
+                        <div id="scale-slider"></div>
+                        <input type="checkbox" id="fix-scale"> fix
+                    </div>
                 </div>
             </div>
         </div>	

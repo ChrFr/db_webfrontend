@@ -282,6 +282,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         d.geburten - d.tote,
                         d.zuzug - d.fortzug,
                     ];
+                    console.log(d)
+                    console.log(values)
                     values.push(values[0] + values[1]);
                     
                     var dataSet = { label: d.jahr,
@@ -296,7 +298,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 
                 var tabContent = this.el.querySelector(".tab-content");                
                 var width = parseInt(tabContent.offsetWidth) - 70;
-                var height = width * 0.5;
+                var height = width * 0.8;
                 this.barChart = new GroupedBarChart({
                     el: vis,
                     data: dataSets, 

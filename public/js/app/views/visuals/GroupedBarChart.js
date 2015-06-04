@@ -16,10 +16,10 @@ var GroupedBarChart = function(options){
     this.groupLabels = options.groupLabels;
     var minY = options.minY;
     if (minY === undefined)  
-        minY = d3.min(this.data, function(d) { return d3.min(d.values); });
+        minY = d3.min(this.data, function(d) { return d3.min(d.values); }) * 1.3;
     var maxY = options.maxY;
     if (maxY === undefined)
-        maxY = d3.max(this.data, function(d) { return d3.max(d.values); });
+        maxY = d3.max(this.data, function(d) { return d3.max(d.values); }) * 1.3;
     
     //prevent that there are no pos. or neg. axes, axis is at least 30% of other axis (or 1)
     this.minY = d3.min([minY, -(maxY * 0.3), -1]);
@@ -35,7 +35,7 @@ var GroupedBarChart = function(options){
         var margin = {
           top: 30,
           right: 0,
-          bottom: 30,
+          bottom: 70,
           left: 40
         };
 
@@ -97,7 +97,7 @@ var GroupedBarChart = function(options){
   
         var xApp = svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", translation(0, innerheight / 2)) 
+            .attr("transform", translation(0, innerheight)) 
             .call(xAxis);
     
         xApp.append("text")
@@ -105,7 +105,7 @@ var GroupedBarChart = function(options){
             .attr("x", innerwidth)
             .style("text-anchor", "end")
             .text(this.xlabel)
-            .attr("transform", translation(0, margin.bottom));
+            .attr("transform", translation(0, 0));
             
         var yApp = svg.append("g")
             .attr("class", "y axis")
@@ -124,7 +124,7 @@ var GroupedBarChart = function(options){
             .attr("dy", "0.71em")
             .style("text-anchor", "end")
             .text(this.yNegativeLabel)
-            .attr("transform", "rotate(-90), " + translation(- innerheight, -margin.left)); 
+            .attr("transform", "rotate(-90), " + translation(- innerheight + margin.bottom, -margin.left)); 
     
         // BARS
         
@@ -139,13 +139,32 @@ var GroupedBarChart = function(options){
             .enter().append("rect")
                 .attr("width", x1Scale.rangeBand())
                 .attr("x", function(d, i) { return x1Scale(_this.groupLabels[i]); })
-                .attr("y", function(d) { return yScale(d); })
-                .attr("height", function(d) { return innerheight - yScale(d); })
+                .attr("y", function(d) { return yScale(Math.max(0, d)); })
+                .attr("height", function(d) { return Math.abs(yScale(d) - yScale(0)); })
                 .style("fill", function(d, i) { return colorScale(i); });
 
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';
         }
+        
+        var legend = svg.selectAll(".legend")
+            .data(_this.groupLabels.slice().reverse())
+            .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d, i) { return translation(0, innerheight + 20 + i * 20); });
+
+        legend.append("rect")
+            .attr("x", innerwidth - 18)
+            .attr("width", 10)
+            .attr("height", 10)
+            .style("fill", function(d, i) { return colorScale(i); });
+
+        legend.append("text")
+            .attr("x", innerwidth - 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text(function(d) { return d; });
 
         if(callback)
             callback(this.el.innerHTML);

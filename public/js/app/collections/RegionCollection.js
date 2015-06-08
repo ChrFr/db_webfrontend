@@ -5,7 +5,7 @@ define(["backbone"],
         // Creates a new Backbone Collection class object
         var RegionCollection = Backbone.Collection.extend({
             
-            url: 'api/gemeinden',
+            url: 'api/regionen/gemeinden',
 
             initialize: function(options){   
             },    

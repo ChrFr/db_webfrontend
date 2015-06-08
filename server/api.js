@@ -82,7 +82,6 @@ module.exports = function(){
 
     var checkPermission = function(prognoseId, user, callback){           
         if(!user){
-            console.log(user)
             return callback('Nur angemeldete Nutzer haben Zugriff!', 403);
         }
         query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], 
@@ -102,7 +101,6 @@ module.exports = function(){
     var prognosen = {   
         list: function(req, res){
             //TODO session or cookie (check every time auth_token?) ?
-                console.log(req.session)
             if(!req.session.user){
                 return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
             }
@@ -126,7 +124,7 @@ module.exports = function(){
         },
         
         get: function(req, res){ 
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
+            checkPermission(req.params.pid, req.session.user, function(err, status, result){
                 if(err)
                     return res.status(status).send(err);
                 return res.status(status).send(result);
@@ -134,71 +132,100 @@ module.exports = function(){
         }
     };
     
-    var gemeinden = {        
+    var regions = {        
         
-        list: function(req, res){ 
-            //get gemeinden for specific prognosis
-            var progId = req.query.progId;
-            if(progId)
-                checkPermission(progId, req.session.user, function(err, status, result){
-                    if (err)
-                        return res.status(status).send(err);
-                    query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
+        gemeinden: {
+            list: function(req, res){ 
+                //get gemeinden for specific prognosis
+                var progId = req.query.progId;
+                if(progId)
+                    checkPermission(progId, req.session.user, function(err, status, result){
+                        if (err)
+                            return res.status(status).send(err);
+                        query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
+                            return res.status(200).send(result);
+                        });
+                    });
+                else{
+                    query("SELECT * FROM gemeinden", [], function(err, result){
                         return res.status(200).send(result);
                     });
-                });
-            else{
-                query("SELECT rs, name FROM gemeinden", [], function(err, result){
-                    return res.status(200).send(result);
+                }
+            },
+
+            get: function(req, res) {
+                query('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
+                    function(err, result){
+                        return res.status(200).send(result[0]);
                 });
             }
         },
         
-        get: function(req, res) {
-            query('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
-                function(err, result){
-                    return res.status(200).send(result[0]);
-            });
+        landkreise: {
+            list: function(req, res){ 
+                query("SELECT * FROM landkreise", [], function(err, result){
+                    return res.status(200).send(result);
+                });
+                
+            },
+
+            get: function(req, res) {
+                query('SELECT * FROM landkreise WHERE id=$1', [req.params.pid], 
+                    function(err, result){
+                        return res.status(200).send(result[0]);
+                });
+            }
         }
     }
     
     var demodevelop = {        
 
         // get demographic development from database
-        getYears: function(req, res, onSuccess){       
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
+        getYears: function(req, res, rsArray, onSuccess){   
+            checkPermission(req.params.pid, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
 
                 var year = req.query.year,
-                    queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ",
-                    params = [req.params.id, req.params.rs];
-
-                //specific year queried or all years?   
-                if (year){
-                    queryString += "AND jahr=$3";
-                    params.push(year);
+                    queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1",
+                    params = [req.params.pid];
+                var i = 2;
+                if (rsArray && rsArray instanceof Array) {
+                    var p = [];
+                    for(i; i < rsArray.length + 2; i++)
+                        p.push('$' + i)
+                    
+                    queryString += " AND rs IN (" + p.join(",") + ")";    
+                    params = params.concat(rsArray);
                 }
                 else{
-                    queryString += 'ORDER BY jahr';                    
+                    queryString += " AND rs=$" + i;
+                    params.push(req.params.rs);
                 }
-
-                query(queryString, params, function(err, result){                                
+                
+                //specific year queried or all years?   
+                if (year){
+                    queryString += " AND jahr=$3 ";
+                    params.push(year);
+                }
+                else {
+                    queryString += ' ORDER BY jahr';                    
+                };
+                
+                query(queryString, params, function(err, result){  
                     if (err || result.length === 0)
                         return res.sendStatus(404);
-                   // if(req.query.weiblich)
-                    //    result = result[0];
                     return onSuccess(result);                     
                 });
             });     
         },
         
         // shows a undetailed preview over the demodevelopments in all regions
-        list: function(req, res){            
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
+        list: function(req, res){    
+            checkPermission(req.params.pid, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose WHERE prognose_id=$1 ORDER BY rs;", [req.params.id], function(err, result){                    
+                query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose WHERE prognose_id=$1 ORDER BY rs;", [req.params.pid], function(err, result){                    
                     var response = [];
                     var entry = {'rs': ''};
                     result.forEach(function(r){
@@ -217,8 +244,8 @@ module.exports = function(){
         },
 
         // get details of the demo.development in a spec. region
-        getJSON: function(req, res){       
-            demodevelop.getYears(req, res, function(result){                
+        getJSON: function(req, res){ 
+            demodevelop.getYears(req, res, null, function(result){                
                 if(req.query.year)
                     result = result[0];
                 return res.json({
@@ -227,16 +254,25 @@ module.exports = function(){
                 });
             });
         },
+        
+        getAggregation: function(req, res){
+            var rsList = req.query.rs;
+            if(!rsList)
+                return res.status(400).send('Für Aggregationen werden die Regionalschlüssel als Parameter benötigt.')
+            else demodevelop.getYears(req, res, rsList, function(result){  
+                res.send(result);
+            });
+        },
 
         csv: function(req, res){
 
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
+            checkPermission(req.params.pid, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
 
                 var year = req.query.year;
 
-                demodevelop.getYears(req, res, function(result){
+                demodevelop.getYears(req, res, null, function(result){
                     res.statusCode = 200;    
 
                     //MIME Type and filename
@@ -276,7 +312,7 @@ module.exports = function(){
             if(!req.query.year)       
                 res.status(400).send('SVGs können nur für spezifische Jahre angezeigt werden.')
             else
-                demodevelop.getYears(req, res, function(result){
+                demodevelop.getYears(req, res, null, function(result){
                     Render.renderAgeTree({
                         data: result[0],
                         width: 400,
@@ -295,32 +331,32 @@ module.exports = function(){
         png: function(req, res){
             var Render = require('./render');
             if(!req.query.year)       
-                res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.');
-            else{
-                demodevelop.getYears(req, res, function(result){                    
-                    Render.renderAgeTree({
-                        data: result[0],
-                        width: 400,
-                        height: 600,
-                        maxX: req.query.maxX
-                    }, function(svg){
-                        //MIME Type and filename
-                        res.set('Content-Type', 'image/png' );
-                        var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".png";
-                        res.setHeader('Content-disposition', 'attachment; filename=' + filename);                         
+                return res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.');
+            
+            demodevelop.getYears(req, res, null, function(result){                    
+                Render.renderAgeTree({
+                    data: result[0],
+                    width: 400,
+                    height: 600,
+                    maxX: req.query.maxX
+                }, function(svg){
+                    //MIME Type and filename
+                    res.set('Content-Type', 'image/png' );
+                    var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".png";
+                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);                         
 
-                        var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
-                        convert.stdout.on('data', function (data) {
-                          res.write(data);
-                        });
-                        convert.on('exit', function(code) {
-                          return res.end();
-                        });                                   
-                        convert.stdin.write(svg);
-                        convert.stdin.end();
-                    }); 
-                });
-            };
+                    var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
+                    convert.stdout.on('data', function (data) {
+                      res.write(data);
+                    });
+                    convert.on('exit', function(code) {
+                      return res.end();
+                    });                                   
+                    convert.stdin.write(svg);
+                    convert.stdin.end();
+                }); 
+            });
+            
         }
                     
     };
@@ -405,7 +441,6 @@ module.exports = function(){
     var users = {
         list: function(req, res){
             //admin only
-                console.log(req.session)
             if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
@@ -420,7 +455,6 @@ module.exports = function(){
         
         get: function(req, res){
             //admin only
-                console.log(req.session)
             if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
@@ -433,7 +467,6 @@ module.exports = function(){
         },
         
         post: function(req, res){
-                console.log(req.session)
             if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
@@ -458,7 +491,6 @@ module.exports = function(){
         },
         
         put: function(req, res){  
-                console.log(req.session)
             if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }          
@@ -478,7 +510,6 @@ module.exports = function(){
         },
         
         delete: function(req, res){
-                console.log(req.session)
             if(!req.session.user || !req.session.user.superuser){
                 return res.sendStatus(403);
             }
@@ -506,18 +537,38 @@ module.exports = function(){
                 post: session.register
             }
         },
-        '/gemeinden':{
-            get: gemeinden.list, 
-            '/:rs': {                
-                get: gemeinden.get,
+        '/regionen': {
+            '/gemeinden':{
+                get: regions.gemeinden.list, 
+                '/:rs': {                
+                    get: regions.gemeinden.get
+                }
+            },
+            '/landkreise':{
+                get: regions.landkreise.list, 
+                '/:id': {                
+                    get: regions.landkreise.get
+                }
             }
         },
         '/prognosen': {
             get: prognosen.list,        
-            '/:id': {                
+            '/:pid': {                
                 get: prognosen.get, 
                 '/bevoelkerungsprognose': {      
-                    get: demodevelop.list,                    
+                    get: demodevelop.list,                        
+                    '/aggregiert': {                
+                        get: demodevelop.getAggregation,                    
+                        '/svg':{
+                            get: demodevelop.svg
+                        },
+                        '/csv':{
+                            get: demodevelop.csv
+                        },                            
+                        '/png':{
+                            get: demodevelop.png
+                        }
+                    },     
                     '/:rs': {                
                         get: demodevelop.getJSON,                    
                         '/svg':{
@@ -531,7 +582,7 @@ module.exports = function(){
                         }
                     }
                 }    
-            },            
+            }            
         },
         '/users': {
             get: users.list,

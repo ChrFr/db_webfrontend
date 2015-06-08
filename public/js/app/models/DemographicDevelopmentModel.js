@@ -17,14 +17,14 @@ define(["backbone"],
             },
             
             csvUrl: function(year){
-                var url = this.url + '/csv'
+                var url = this.urlRoot + this.get('rs') + '/csv'
                 if(year)
-                    url += '?year=' + year;
+                    urlRoot += '?year=' + year;
                 return url
             },
             
             pngUrl: function(year, maxX){
-                var url = this.url + '/png?year=' + year;
+                var url = this.urlRoot + this.get('rs') + '/png?year=' + year;
                 if(maxX)
                     url += '&maxX=' + maxX;
                 return url

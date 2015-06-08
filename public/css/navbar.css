@@ -60,7 +60,7 @@
 }
 
 .submenu .navbar-header{
-    padding: 15px 15px;
+    padding: 8px 8px;
 }
 
 #home-menu{
@@ -111,6 +111,10 @@
         height: 45px;
         margin-top: 5px;
     }  
+    
+    #progSelect{
+        margin-right: 20px;
+    }
     
     .submenu{        
         position: absolute;

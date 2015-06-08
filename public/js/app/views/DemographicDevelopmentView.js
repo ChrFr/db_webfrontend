@@ -17,7 +17,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 if(progId){
                     this.collection = new DemographicDevelopmentCollection({progId: progId});
                     this.collection.fetch({success: function(){    
-                        _this.regions = new RegionCollection({progId: progId});
+                        _this.regions = new RegionCollection();
                         _this.regions.fetch({data: {progId: progId},
                                              success: _this.render});
                     }});
@@ -33,30 +33,53 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             render: function() {
                 var _this = this;
                 this.template = _.template(template, {});
-                
                 this.el.innerHTML = this.template;   
+                var layerSelector = this.el.querySelector("#layer-select");
                 
-                var regionSelector = this.el.querySelector("#rsSelect");
+                new OptionView({el: layerSelector, name: 'Bitte wählen', value: -2});                 
+                new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: "gesamt"});             
+                new OptionView({el: layerSelector, name: 'Landkreise', value: "landkreise"});          
+                new OptionView({el: layerSelector, name: 'Gemeinden', value: "gemeinden"});
                 
-                new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2}); 
-                this.regions.comparator = 'name';
-                this.regions.sort();
-                this.regions.each(function(region){                        
-                    new OptionView({
-                        el: regionSelector,
-                        name: region.get('name'), 
-                        value: region.get('rs')
-                    });
-                });
-                
-                regionSelector.onchange = function(e) { 
+                layerSelector.onchange = function(e) { 
                     if (e.target.value > 0){
-                        _this.changeRegion(e.target.value);
+                        _this.changeLayer(e.target.value);
                     }
-                };                
+                };  
                 
                 return this;
-            },            
+            },     
+            
+            changeLayer: function(region){
+                var _this = this;
+                
+                if(region === "gesamt"){
+                    
+                }
+                else{
+                    var regionSelector = this.el.querySelector("#region-select");
+
+                    regionSelector.style.display = "block";                
+                    this.el.querySelector("#region-label").style.display = "block";
+
+                    new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2}); 
+                    this.regions.comparator = 'name';
+                    this.regions.sort();
+                    this.regions.each(function(region){                        
+                        new OptionView({
+                            el: regionSelector,
+                            name: region.get('name'), 
+                            value: region.get('rs')
+                        });
+                    });
+
+                    regionSelector.onchange = function(e) { 
+                        if (e.target.value > 0){
+                            _this.changeRegion(e.target.value);
+                        }
+                    };  
+                }
+            },
             
             changeRegion: function(rs){
                 var _this = this;
@@ -284,8 +307,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                         d.geburten - d.tote,
                         d.zuzug - d.fortzug,
                     ];
-                    console.log(d)
-                    console.log(values)
                     values.push(values[0] + values[1]);
                     
                     var dataSet = { label: d.jahr,

@@ -3,18 +3,17 @@ define(["backbone"],
     function(Backbone) {
 
         var DemographicDevelopmentModel = Backbone.Model.extend({
+            idAttribute: 'rs',
             
-            url: 'api/prognosen/{progId}/bevoelkerungsprognose/{rs}',
+            urlRoot: 'api/prognosen/{progId}/bevoelkerungsprognose/',
 
             initialize: function(options) {
-                this.setURL(options.progId, options.rs);
+                this.setURL(options.progId);
             },
             
-            setURL: function(progId, rs) {
+            setURL: function(progId) {
                 if(progId)
-                    this.url = this.url.replace('{progId}', progId);
-                if(rs)
-                    this.url = this.url.replace('{rs}', rs);
+                    this.urlRoot = this.urlRoot.replace('{progId}', progId);
             },
             
             csvUrl: function(year){

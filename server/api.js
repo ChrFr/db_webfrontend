@@ -134,47 +134,55 @@ module.exports = function(){
         }
     };
     
-    var demodevelop = {
-        list: function(req, res){            
-            checkPermission(req.params.id, req.session.user, function(err, status, result){
-                if (err)
-                    return res.status(status).send(err);
-                query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [req.params.id], function(err, result){
+    var gemeinden = {        
+        
+        list: function(req, res){ 
+            //get gemeinden for specific prognosis
+            var progId = req.query.progId;
+            if(progId)
+                checkPermission(progId, req.session.user, function(err, status, result){
+                    if (err)
+                        return res.status(status).send(err);
+                    query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
+                        return res.status(200).send(result);
+                    });
+                });
+            else{
+                query("SELECT rs, name FROM gemeinden", [], function(err, result){
                     return res.status(200).send(result);
                 });
-            });
+            }
         },
         
-        getJSON: function(req, res){       
-            demodevelop.getYears(req, res, function(result){                
-                if(req.query.year)
-                    result = result[0];
-                return res.json({
-                    rs: req.params.rs,
-                    data: result
-                });
+        get: function(req, res) {
+            query('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs], 
+                function(err, result){
+                    return res.status(200).send(result[0]);
             });
-        },
-        
+        }
+    }
+    
+    var demodevelop = {        
+
+        // get demographic development from database
         getYears: function(req, res, onSuccess){       
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                
+
                 var year = req.query.year,
-                    queryString = queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ",
-                    params = [];
-                
+                    queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1 AND rs=$2 ",
+                    params = [req.params.id, req.params.rs];
+
                 //specific year queried or all years?   
                 if (year){
                     queryString += "AND jahr=$3";
-                    params = [req.params.id, req.params.rs, year];
+                    params.push(year);
                 }
                 else{
-                    queryString += 'ORDER BY jahr';
-                    params = [req.params.id, req.params.rs];                    
+                    queryString += 'ORDER BY jahr';                    
                 }
-                    
+
                 query(queryString, params, function(err, result){                                
                     if (err || result.length === 0)
                         return res.sendStatus(404);
@@ -185,32 +193,67 @@ module.exports = function(){
             });     
         },
         
-        csv: function(req, res){
-                     
+        // shows a undetailed preview over the demodevelopments in all regions
+        list: function(req, res){            
             checkPermission(req.params.id, req.session.user, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                
+                query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose WHERE prognose_id=$1 ORDER BY rs;", [req.params.id], function(err, result){                    
+                    var response = [];
+                    var entry = {'rs': ''};
+                    result.forEach(function(r){
+                        //new rs
+                        if(r.rs !== entry.rs){
+                            if(entry.data)
+                                response.push(entry);
+                            entry = {'rs' : r.rs, 'data': []};
+                        }
+                        delete r.rs;
+                        entry.data.push(r);
+                    });
+                    return res.status(200).send(response);
+                });
+            });
+        },
+
+        // get details of the demo.development in a spec. region
+        getJSON: function(req, res){       
+            demodevelop.getYears(req, res, function(result){                
+                if(req.query.year)
+                    result = result[0];
+                return res.json({
+                    rs: req.params.rs,
+                    data: result
+                });
+            });
+        },
+
+        csv: function(req, res){
+
+            checkPermission(req.params.id, req.session.user, function(err, status, result){
+                if (err)
+                    return res.status(status).send(err);
+
                 var year = req.query.year;
-                    
+
                 demodevelop.getYears(req, res, function(result){
                     res.statusCode = 200;    
-                    
+
                     //MIME Type and filename
                     res.set('Content-Type', 'text/csv');
                     var filename = req.params.rs + '-bevoelkerungsprognose'; 
-                    
+
                     var expanded = "Bevoelkerungsprognose " + req.params.rs;
                     if(year){
                         filename += '-' + year; 
                         expanded += " " + year;
                     }
                     res.setHeader('Content-disposition', 'attachment; filename=' + filename + ".csv");                      
-                    
+
                     for(var i = 0; i < result.length; i++){
                         if(year)                            
                             delete result[i]['jahr'];
-                        
+
                         expanded += "\n" + expandJsonToCsv({
                             data: result[i],
                             renameFields: {'alter_weiblich': 'Anzahl weiblich', 
@@ -219,14 +262,14 @@ module.exports = function(){
                             countPos: (year) ? 0: 1,
                             writeHead: (i === 0) ? true: false
                         }) + '\n';
-                           
+
                     }
-                    
+
                     res.send(expanded);                      
                 });
             });
         },
-        
+
         //converts to SVG
         svg: function(req, res){
             var Render = require('./render');
@@ -247,7 +290,7 @@ module.exports = function(){
                 }); 
             });
         },
-        
+
         //converts to PNG
         png: function(req, res){
             var Render = require('./render');
@@ -265,7 +308,7 @@ module.exports = function(){
                         res.set('Content-Type', 'image/png' );
                         var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".png";
                         res.setHeader('Content-disposition', 'attachment; filename=' + filename);                         
-                    
+
                         var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
                         convert.stdout.on('data', function (data) {
                           res.write(data);
@@ -279,7 +322,7 @@ module.exports = function(){
                 });
             };
         }
-        
+                    
     };
     
     var session = {
@@ -463,26 +506,32 @@ module.exports = function(){
                 post: session.register
             }
         },
+        '/gemeinden':{
+            get: gemeinden.list, 
+            '/:rs': {                
+                get: gemeinden.get,
+            }
+        },
         '/prognosen': {
             get: prognosen.list,        
             '/:id': {                
-                get: prognosen.get,
-                '/bevoelkerungsprognose': {
-                    get: demodevelop.list,        
-                        '/:rs': {                
-                            get: demodevelop.getJSON,
-                            '/svg':{
-                                get: demodevelop.svg
-                            },
-                            '/csv':{
-                                get: demodevelop.csv
-                            },                            
-                            '/png':{
-                                get: demodevelop.png
-                            }
-                        }                    
-                }
-            }
+                get: prognosen.get, 
+                '/bevoelkerungsprognose': {      
+                    get: demodevelop.list,                    
+                    '/:rs': {                
+                        get: demodevelop.getJSON,                    
+                        '/svg':{
+                            get: demodevelop.svg
+                        },
+                        '/csv':{
+                            get: demodevelop.csv
+                        },                            
+                        '/png':{
+                            get: demodevelop.png
+                        }
+                    }
+                }    
+            },            
         },
         '/users': {
             get: users.list,

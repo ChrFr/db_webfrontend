@@ -13,13 +13,15 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 _.bindAll(this, 'render');
                 var _this = this;
                 var progId = app.get('activePrognosis');
+                
                 if(progId){
                     this.collection = new DemographicDevelopmentCollection({progId: progId});
                     this.collection.fetch({success: function(){    
                         _this.regions = new RegionCollection({progId: progId});
-                        _this.regions.fetch({success: _this.render});
+                        _this.regions.fetch({data: {progId: progId},
+                                             success: _this.render});
                     }});
-                }              
+                }     
             },
 
             events: {
@@ -58,7 +60,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             
             changeRegion: function(rs){
                 var _this = this;
-                this.stop();
+                this.stop();                
                 this.collection.fetchDetails({rs: rs, success: function(model){                     
                     var maxYear = model.get('maxYear');
                     var minYear = model.get('minYear');

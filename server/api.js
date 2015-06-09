@@ -27,8 +27,9 @@ module.exports = function(){
       }
     };        
     
-    //group a list of json objects by given key, by now only median of all other values
-    function groupBy(array, key){
+    //group a list of json objects by given key, by now only sum or median of all other values
+    function groupBy(array, key, mode){
+        var mode = mode || 'sum';
         var groups = {};
         //map array by key in groups and merge other keys of group into arrays
         array.forEach( function(item){
@@ -61,13 +62,17 @@ module.exports = function(){
                         var sum = 0;
                         for(var j = 0; j < group[k].length; j++)
                             sum += group[k][j][i];
-                        g[k].push(sum / group[k].length);
+                        if(mode === 'median')
+                            sum /= group[k].length;
+                        g[k].push(sum);
                     }
                 }
                 else{
                     g[k] = group[k].reduce(function (sum, element) {
                         return sum + element;
-                    }, 0) / group[k].length;
+                    }, 0);                    
+                    if(mode === 'median')
+                        g[k] /= group[k].length;
                 }
             }
             result.push(g);

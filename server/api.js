@@ -15,14 +15,14 @@ module.exports = function(){
       route = route || '';
       for (var key in a) {
         switch (typeof a[key]) {
-          // { '/path': { ... }}
-          case 'object':
-            api.map(a[key], route + key);
-            break;
-          // get: function(){ ... }
-          case 'function':
-            api[key](route, a[key]);
-            break;
+            // { '/path': { ... }}
+            case 'object':
+                api.map(a[key], route + key);
+                break;
+            // get: function(){ ... }
+            case 'function':
+                api[key](route, a[key]);
+                break;
         }
       }
     };        
@@ -35,8 +35,7 @@ module.exports = function(){
         array.forEach( function(item){
             if(!groups[item[key]]){
                 groups[item[key]] = {};
-            }
-            
+            }            
             for(var k in item){
                 if(k !== key){
                     if(!groups[item[key]][k])
@@ -44,8 +43,7 @@ module.exports = function(){
                     else
                         groups[item[key]][k].push(item[k])
                 }
-            }
-            
+            }            
         });
         
         var result = [];
@@ -312,8 +310,11 @@ module.exports = function(){
             var rsList = req.query.rs;
             if(!rsList)
                 return res.status(400).send('Für Aggregationen werden die Regionalschlüssel als Parameter benötigt.')
-            else demodevelop.getYears(req, res, rsList, function(result){                  
-                res.send(groupBy(result, 'jahr'));
+            else demodevelop.getYears(req, res, rsList, function(result){                   
+                return res.json({
+                    rs: rsList,
+                    data: groupBy(result, 'jahr')
+                });
             });
         },
 

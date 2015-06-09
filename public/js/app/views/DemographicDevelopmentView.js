@@ -1,9 +1,9 @@
 define(["app", "backbone", "text!templates/demodevelop.html", "collections/RegionCollection",  
-    "collections/DemographicDevelopmentCollection",  "views/OptionView", 
+    "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
     "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
     "views/visuals/LineChart", "views/visuals/GroupedBarChart"],
 
-    function(app, Backbone, template, RegionCollection, DemographicDevelopmentCollection,
+    function(app, Backbone, template, RegionCollection, DDCollection, DDAggregate,
             OptionView, TableView, d3, d3slider){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
@@ -15,7 +15,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 var progId = app.get('activePrognosis');
                 
                 if(progId){
-                    this.collection = new DemographicDevelopmentCollection({progId: progId});
+                    this.collection = new DDCollection({progId: progId});
                     this.collection.fetch({success: function(){    
                         _this.regions = new RegionCollection();
                         _this.regions.fetch({data: {progId: progId},
@@ -32,17 +32,19 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
 
             render: function() {
                 var _this = this;
+                this.regions.comparator = 'name';
+                this.regions.sort();
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;   
                 var layerSelector = this.el.querySelector("#layer-select");
                 
-                new OptionView({el: layerSelector, name: 'Bitte wählen', value: -2});                 
+                new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});                 
                 new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: "gesamt"});             
                 new OptionView({el: layerSelector, name: 'Landkreise', value: "landkreise"});          
                 new OptionView({el: layerSelector, name: 'Gemeinden', value: "gemeinden"});
                 
                 layerSelector.onchange = function(e) { 
-                    if (e.target.value > 0){
+                    if (e.target.value){
                         _this.changeLayer(e.target.value);
                     }
                 };  
@@ -54,7 +56,16 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 var _this = this;
                 
                 if(region === "gesamt"){
-                    
+                    var m = this.collection.find(function(model) { return model.get('name') == 'Gesamtgebiet'; });
+                    if(!m){
+                        var allRegions = [];
+                        this.regions.each(function(region){   
+                            allRegions.push(region.get('rs'));
+                        });
+                        m = new DDAggregate({progId: this.collection.progId, rs: allRegions});
+                        
+                    };
+                    this.renderModel(m);
                 }
                 else{
                     var regionSelector = this.el.querySelector("#region-select");
@@ -63,8 +74,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     this.el.querySelector("#region-label").style.display = "block";
 
                     new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2}); 
-                    this.regions.comparator = 'name';
-                    this.regions.sort();
                     this.regions.each(function(region){                        
                         new OptionView({
                             el: regionSelector,
@@ -75,16 +84,17 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
 
                     regionSelector.onchange = function(e) { 
                         if (e.target.value > 0){
-                            _this.changeRegion(e.target.value);
+                            var model = _this.collection.get(e.target.value);
+                            _this.renderModel(model);
                         }
                     };  
                 }
             },
             
-            changeRegion: function(rs){
+            renderModel: function(model){
                 var _this = this;
                 this.stop();                
-                this.collection.fetchDetails({rs: rs, success: function(model){                     
+                model.fetch({success: function(){  
                     var maxYear = model.get('maxYear');
                     var minYear = model.get('minYear');
                     _this.currentModel = model;

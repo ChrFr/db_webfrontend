@@ -22,11 +22,13 @@ define(["backbone", "models/DDModel"],
                 options || (options = {});
                 var callback = options.success;
                 
-                options.success = function(model, res, opt){
-                    
+                options.success = function(collection, res, opt){
+                    collection.each(function(model){
+                        model.setURL(collection.progId);
+                    })
                     //call given callback
                     if(callback)
-                        callback(model, res, opt);
+                        callback(collection, res, opt);
                 };
 
                 return Backbone.Model.prototype.fetch.call(this, options);

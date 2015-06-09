@@ -183,7 +183,13 @@ module.exports = function(){
         }
     };
     
-    var regions = {        
+    var layer = {        
+        list: function(req, res){ 
+            query("SELECT * FROM layer", [], function(err, result){
+                return res.status(200).send(result);
+            });
+                
+        },
         
         gemeinden: {
             list: function(req, res){ 
@@ -591,17 +597,18 @@ module.exports = function(){
                 post: session.register
             }
         },
-        '/regionen': {
+        '/layer': {
+            get: layer.list, 
             '/gemeinden':{
-                get: regions.gemeinden.list, 
+                get: layer.gemeinden.list, 
                 '/:rs': {                
-                    get: regions.gemeinden.get
+                    get: layer.gemeinden.get
                 }
             },
             '/landkreise':{
-                get: regions.landkreise.list, 
+                get: layer.landkreise.list, 
                 '/:id': {                
-                    get: regions.landkreise.get
+                    get: layer.landkreise.get
                 }
             }
         },

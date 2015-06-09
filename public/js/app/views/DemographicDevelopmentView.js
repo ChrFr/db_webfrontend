@@ -1,9 +1,9 @@
-define(["app", "backbone", "text!templates/demodevelop.html", "collections/RegionCollection",  
+define(["app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
     "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
     "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
     "views/visuals/LineChart", "views/visuals/GroupedBarChart"],
 
-    function(app, Backbone, template, RegionCollection, DDCollection, DDAggregate,
+    function(app, Backbone, template, CommunityCollection, DDCollection, DDAggregate,
             OptionView, TableView, d3, d3slider){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
@@ -17,9 +17,9 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                 if(progId){
                     this.collection = new DDCollection({progId: progId});
                     this.collection.fetch({success: function(){    
-                        _this.regions = new RegionCollection();
-                        _this.regions.fetch({data: {progId: progId},
-                                             success: _this.render});
+                        _this.communities = new CommunityCollection();
+                        _this.communities.fetch({data: {progId: progId},
+                                                 success: _this.render});
                     }});
                 }     
             },
@@ -32,8 +32,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
 
             render: function() {
                 var _this = this;
-                this.regions.comparator = 'name';
-                this.regions.sort();
+                this.communities.comparator = 'name';
+                this.communities.sort();
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;   
                 var layerSelector = this.el.querySelector("#layer-select");
@@ -54,12 +54,15 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
             
             changeLayer: function(region){
                 var _this = this;
+                var regionSelector = this.el.querySelector("#region-select");
                 
                 if(region === "gesamt"){
+                    regionSelector.style.display = "none";      
+                    this.el.querySelector("#region-label").style.display = "none";
                     var m = this.collection.find(function(model) { return model.get('name') == 'Gesamtgebiet'; });
                     if(!m){
                         var allRegions = [];
-                        this.regions.each(function(region){   
+                        this.communities.each(function(region){   
                             allRegions.push(region.get('rs'));
                         });
                         m = new DDAggregate({progId: this.collection.progId, rs: allRegions});
@@ -68,17 +71,15 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Regio
                     this.renderModel(m);
                 }
                 else{
-                    var regionSelector = this.el.querySelector("#region-select");
-
                     regionSelector.style.display = "block";                
                     this.el.querySelector("#region-label").style.display = "block";
 
                     new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2}); 
-                    this.regions.each(function(region){                        
+                    this.communities.each(function(community){                        
                         new OptionView({
                             el: regionSelector,
-                            name: region.get('name'), 
-                            value: region.get('rs')
+                            name: community.get('name'), 
+                            value: community.get('rs')
                         });
                     });
 

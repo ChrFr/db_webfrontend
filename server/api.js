@@ -27,6 +27,54 @@ module.exports = function(){
       }
     };        
     
+    //group a list of json objects by given key, by now only median of all other values
+    function groupBy(array, key){
+        var groups = {};
+        //map array by key in groups and merge other keys of group into arrays
+        array.forEach( function(item){
+            if(!groups[item[key]]){
+                groups[item[key]] = {};
+            }
+            
+            for(var k in item){
+                if(k !== key){
+                    if(!groups[item[key]][k])
+                        groups[item[key]][k] = [item[k]]
+                    else
+                        groups[item[key]][k].push(item[k])
+                }
+            }
+            
+        });
+        
+        var result = [];
+        //reduce group key-values and restore input form (array of json objects)
+        for(var gk in groups){
+            var group = groups[gk]
+            var g = {}; g[key] = gk;     
+            
+            for(var k in group){
+                if(group[k][0] instanceof Array){
+                    g[k] = [];
+                    // js vanilla lacks matrix transposition or vector addition
+                    for(var i = 0; i < group[k][0].length; i++){
+                        var sum = 0;
+                        for(var j = 0; j < group[k].length; j++)
+                            sum += group[k][j][i];
+                        g[k].push(sum / group[k].length);
+                    }
+                }
+                else{
+                    g[k] = group[k].reduce(function (sum, element) {
+                        return sum + element;
+                    }, 0) / group[k].length;
+                }
+            }
+            result.push(g);
+        };
+        return result;
+    }
+    
     // transform json object by splitting array fields e.g. 
     function expandJsonToCsv(options){
         var data = options.data || {},
@@ -259,8 +307,8 @@ module.exports = function(){
             var rsList = req.query.rs;
             if(!rsList)
                 return res.status(400).send('Für Aggregationen werden die Regionalschlüssel als Parameter benötigt.')
-            else demodevelop.getYears(req, res, rsList, function(result){  
-                res.send(result);
+            else demodevelop.getYears(req, res, rsList, function(result){                  
+                res.send(groupBy(result, 'jahr'));
             });
         },
 

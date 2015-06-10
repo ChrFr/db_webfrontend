@@ -234,26 +234,40 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                         sliderDiv.removeChild(sliderDiv.firstChild);
                     
                     //var minScale = Math.ceil(model.get('maxNumber'));
-                    var minScale = 10;
+                    var minScale = 1;
                     if(!_this.xScale || !checked){// || minScale > _this.xScale) 
-                        _this.xScale = Math.ceil(model.get('maxNumber'));  
+                        _this.xScale = model.get('maxNumber');  
                         _this.xScale *= 1.3;
+                        _this.xScale = Math.ceil(_this.xScale);
+                        _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
                     }
                         
-                    var maxScale = 1000;
+                    var maxScale = 10000;
                     
+                    var xScale = d3.scale.log()
+                            .domain([minScale, maxScale])
+                            //.range([0, parseInt(sliderDiv.offsetHeight)]);
+                    /*
                     var scaleSlider = d3slider().value(maxScale - _this.xScale + minScale).orientation("vertical")
-				.min(minScale).max(maxScale).step(10)
+				//.min(minScale).max(maxScale).step(10)
 				.axis( d3.svg.axis().orient("right")
                                         .tickValues([minScale, maxScale/4, maxScale/2, maxScale*3/4 ,maxScale])
 					.tickFormat(d3.format(""))
-					);
+                                        
+                                        .scale(xScale)
+					);*/
+                        
+                    var scaleSlider = d3slider().scale(xScale)
+                                                .value(_this.xScale)
+                                                .axis(d3.svg.axis().orient("right").tickFormat(d3.format("")).ticks(10))
+                                                .orientation("vertical");
                                 
                     d3.select('#scale-slider').call(scaleSlider);
                     
                     scaleSlider.on("slide", function(evt, value) {
                         evt.stopPropagation();
-                        _this.xScale = maxScale - value + minScale;
+                        _this.xScale = Math.ceil(value);
+                        _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
                         _this.renderTree();
                     });
                     
@@ -309,6 +323,11 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             },
             
             renderTree: function(){
+                // get name of region and remove suffix
+                var name = this.currentModel.get('name'); 
+                var idx = name.indexOf('_');
+                if(idx > 0)
+                    name = name.substring(0, idx);
                 
                 var vis = this.el.querySelector("#agetree");
                 while (vis.firstChild) 
@@ -321,6 +340,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 this.ageTree = new AgeTree({
                     el: vis,
                     data: this.yearData, 
+                    title: name,
                     width: width, 
                     height: height,
                     maxY: this.currentModel.get('maxAge'),

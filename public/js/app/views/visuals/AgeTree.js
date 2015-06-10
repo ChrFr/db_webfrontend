@@ -11,6 +11,7 @@ var AgeTree = function(options){
     this.maxX = options.maxX;// || 1000;
     this.maxY = options.maxY || 100;
     this.css = options.css;
+    this.title = options.title || "";
     
     this.render = function(callback){
         
@@ -22,9 +23,6 @@ var AgeTree = function(options){
 
         var femaleAges = this.data.alter_weiblich;
         var maleAges = this.data.alter_maennlich;
-
-        var year = this.data.jahr;
-        var title = year;
 
         var margin = {
           top: 30,
@@ -63,7 +61,7 @@ var AgeTree = function(options){
             .attr('class', 'title')
             .attr("x", margin.left)             
             .attr("y", 0 - (margin.top / 2))
-            .text(title);
+            .text(this.title + " - " + this.data.jahr);
 
         // SCALES
 
@@ -205,7 +203,7 @@ var AgeTree = function(options){
     this.changeData = function(data){
         this.data = data;
         var _this = this;
-        var title = data.jahr;
+        var title = this.title + " - " + data.jahr;
         var d3el = d3.select(this.el);
         d3el.select('.title').text(title);
 

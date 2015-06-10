@@ -29,12 +29,12 @@ define(["app", "jquery", "backbone", "text!templates/prognosis.html"],
             
             renderPrognosis: function(pid){
                 var title = this.el.querySelector("#title");
-                var textarea = this.el.querySelector("#description");
-                if(!textarea)
+                var text = this.el.querySelector("#description");
+                if(!text)
                     return;
                 if (!pid || pid < 0){
                     title.innerText = "Bitte eine Prognose im Menü auswählen!";
-                    textarea.value = '';
+                    text.innerHTML = '';
                     return;
                 }
                 else{
@@ -43,7 +43,7 @@ define(["app", "jquery", "backbone", "text!templates/prognosis.html"],
                     });
                     
                     title.innerText = prognosis.get('name');
-                    textarea.value = prognosis.get('description');
+                    text.innerHTML = prognosis.get('description');
                 }
             },
             

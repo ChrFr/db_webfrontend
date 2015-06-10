@@ -5,7 +5,7 @@
 
 
 svg {
-  font: 0.8em sans-serif;
+    font: 0.8em sans-serif;
 }
 
 .title{    
@@ -14,42 +14,46 @@ svg {
 
 .axis line,
 .axis path {
-  shape-rendering: crispEdges;
-  fill: transparent;
-  stroke: #555;
+    shape-rendering: crispEdges;
+    fill: transparent;
+    stroke: #555;
 }
 
 .x.axis line {
-  stroke: #777;
-  stroke-dasharray: 2,2;
+    stroke: #777;
+    stroke-dasharray: 2,2;
 }
 
 .y.axis line {
-  stroke: #777;
-  stroke-dasharray: 2,2;
+    stroke: #777;
+    stroke-dasharray: 2,2;
 }
 
 .line {
-  fill: none;
-  stroke-width: 2.5px;
+    fill: none;
+    stroke-width: 2.5px;
 }
 
 rect.male{
-  fill-opacity: 1;
-  fill: #0066FF;
+    fill-opacity: 1;
+    fill: #0066FF;
 }
 
 text.male{
-  stroke: #0066FF;  
+    stroke: #0066FF;  
 }
 
 rect.female{
-  fill-opacity: 1;
-  fill: #CC3399;
+    fill-opacity: 1;
+    fill: #CC3399;
 }
 
 text.female{
-  stroke: #CC3399;
+    stroke: #CC3399;
+}
+
+rect.highlight{    
+    fill: gold;
 }
 
 
@@ -57,4 +61,15 @@ text.female{
 .x.axis path.domain, .y.axis path.domain  {
     display: none;
     visibility: hidden;
+}
+
+div.tooltip {   
+    position: absolute;           
+    text-align: center;           
+    padding: 2px;             
+    font: 12px sans-serif;        
+    background: white;   
+    border: 1px;      
+    border: solid 1px grey;         
+    pointer-events: none;         
 }

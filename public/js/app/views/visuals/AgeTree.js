@@ -66,52 +66,61 @@ var AgeTree = function(options){
         // SCALES
 
         this.xScale = d3.scale.linear()
-          .domain([0, _this.maxX])
-          .range([0, regionWidth])
-          .nice();
+            .domain([0, _this.maxX])
+            .range([0, regionWidth])
+            .nice();
 
         this.yScale = d3.scale.linear()
-          .domain([0, _this.maxY])
-          .range([this.height, 0]);
+            .domain([0, _this.maxY])
+            .range([this.height, 0]);
 
         // BARS                
         var barHeight = this.height/this.maxY;   
         
         var maleGroup = svg.append('g')
-          .attr('class', 'maleGroup')
-          .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
+            .attr('class', 'maleGroup')
+            .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
 
         var femaleGroup = svg.append('g')
-          .attr('class', 'femaleGroup')
-          .attr('transform', translation(pointB, 0));
+            .attr('class', 'femaleGroup')
+            .attr('transform', translation(pointB, 0));
 
         var rightBars = femaleGroup.selectAll("g")
             .data(femaleAges)
             .enter().append("g")
             .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * barHeight - barHeight/2); });
 
+        
+    
+        var mouseOverBar = function(d) {
+            var tooltip = d3.select('body').append("div").attr("class", "tooltip");
+            var bar = d3.select(this);
+            bar.classed("highlight", true);
+            tooltip.style("opacity", .9);      
+            var sex = '';
+            if(bar.classed('female'))
+                sex = 'weiblich';
+            else if(bar.classed('male'))
+                sex = 'männlich';
+                            
+            tooltip.html("Geschlecht: " + sex + "<br>Alter: " + bar.attr("age") + "<br>Anzahl: " + d );
+            
+            tooltip.style("left", (d3.event.pageX + 10) + "px")     
+                   .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 
+        };     
+            
+        var mouseOutBar = function(d){
+            d3.select(this).classed("highlight", false);     
+            d3.select('body').selectAll("div.tooltip").remove();
+        };
+    
         rightBars.append("rect")
             .attr('class', 'female')
             .attr("width", this.xScale)
-            .attr("height", barHeight - 1)/*
-            .on("mouseover", function(d) { 
-                d3.select(this).select("text").style("opacity", 0)
-                // no highlight of the symmetry
-                //d3.select(this).select(".males").style("fill", highlight)
-                //d3.select(this).select(".females").style("fill", highlight)
-                d3.select(this).append("text")
-                                        .attr("class", "hoverBirthYear")
-                                        .attr("x", width-10)
-                                        .attr("y", -1)
-                                        .attr("text-anchor", "end")
-                                                .text(bYearTxt[language]+" "+d);
-                d3.select(this).append("text")
-                                        .attr("class", "hoverBirthYear hoverTotals")
-                                        .attr("x", width+centerPadding+10)
-                                        .attr("y", -1)
-                                        .attr("text-anchor", "start")
-                                                .text(thsd((data[year][tmpVariant][d][0]+data[year][tmpVariant][d][1])*1000)+" "+persTxt[language]);
-            });    */        
+            .attr("height", barHeight - 1)
+            .attr("age", function(d, i) { return i })
+            .on("mouseover", mouseOverBar)
+            .on("mouseout", mouseOutBar);
 
         var leftBars = maleGroup.selectAll("g")
             .data(maleAges)
@@ -121,7 +130,10 @@ var AgeTree = function(options){
         leftBars.append("rect")
             .attr('class', 'male')
             .attr("width", _this.xScale)
-            .attr("height", barHeight - 1);
+            .attr("height", barHeight - 1)
+            .attr("age", function(d, i) { return i })
+            .on("mouseover", mouseOverBar)
+            .on("mouseout", mouseOutBar);
 
 
         // AXES
@@ -215,7 +227,7 @@ var AgeTree = function(options){
         d3el.select('.maleGroup').selectAll("g")
             .data(data.alter_maennlich)
             .select("rect").attr("width", _this.xScale);    
-    }    
+    };    
 };
 //suppress client-side error (different ways to import on client and server)
 if (typeof exports !== 'undefined') 

@@ -11,14 +11,15 @@ body {
 }
 
 .centered{
-    text-align:center;
-    margin: 0 auto;
+    text-align: center;
 }
 
-#description{
+.text-body{
     //background-color: white;
     padding: 10px;
-    border: 0px;
+    border: solid 1px grey;
+    box-shadow: 1px 0px 2px 0px grey;
+    background-color: white;
 }
 
 table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {

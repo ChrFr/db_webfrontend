@@ -29,7 +29,11 @@ define(["app", "backbone", "views/HomeView",
                 this.view = new Home({el: document.getElementById('mainFrame')});
             },
             
-            prognoses: function() {   
+            prognoses: function() {
+               // if (!app.session.get('authenticated')) {
+               //     this.navigate("login", {trigger: true});
+               // } 
+              //  else
                 this.view = new Prognosis({el: document.getElementById('mainFrame')});
             },
             

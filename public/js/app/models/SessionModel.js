@@ -29,8 +29,9 @@ define(["jquery", "backbone"],
             
             //authenticate by sending the data wit the user information
             //to the server
-            login : function(data){
+            login : function(options){
                 var _this = this;
+                var data = {'name': options.name, 'password': options.password};
                 var login = $.ajax({
                     url : this.url,
                     data : data,
@@ -39,10 +40,15 @@ define(["jquery", "backbone"],
                 login.done(function(response){
                     _this.set('authenticated', true);
                     _this.set('user', response.user); 
+                    if(options.success)
+                        options.success(response);
                 });
                 login.fail(function(response){
                     _this.set('authenticated', false);
                     _this.set('user', null);
+                    if(options.error){
+                        options.error(response.responseText);
+                    }
                 });
             },
             

@@ -30,8 +30,7 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
 
             // the Event Handlers of the login form
             events: {
-                "click #loginButton": "login",
-                "click #logoutButton": "logout",
+                "click #login-button": "login",
             },        
 
             // Renders the view's template to the UI
@@ -41,14 +40,25 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
                 
                 // Dynamically updates the UI with the view's template
                 this.$el.html(this.template); 
-                if (app.session.get('authenticated')){
-                    $('#loginForm').hide();
-                    $('#loginStatus').show();
-                    this.displayStatus();
+                if (app.session.get('authenticated')){                 
+                    $(this.el).find('#login-button').text('Ausloggen');
+                    //no changes wanted 
+                    $(this.el).find("input").prop('disabled', true);       
+                    var user = app.session.get('user');                
+                    $(this.el).find('#name').val(user.name);
+                    $(this.el).find('#email').val(user.email);
+                    $(this.el).find('#password').val(user.password);
+                    var status = 
+                        $(this.el).find('#status');
+                    if (user.superuser)
+                        status.text('Sie sind als Superuser angemeldet');
+                    else
+                        status.text('Sie sind eingeloggt.');
                 }
                 else{
-                    $('#loginForm').show();
-                    $('#loginStatus').hide();
+                    $(this.el).find('#email').hide();
+                    $(this.el).find('#mail-label').hide();      
+                    $(this.el).find('#login-button').text('Einloggen');
                 }
             
                 // Maintains chainability
@@ -57,27 +67,20 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
             
             //log in with the entries made in the login form
             login: function() {
-                var name = $('#loginForm').find('#name').val() || '';      
-                var password = $('#loginForm').find('#password').val() || '';
-                app.session.login({
-                    name: name,
-                    password: password
-                });
-            },
-            
-            //log out
-            logout: function(){
-                app.session.logout();
-            },            
-            
-            //display the login status in the form
-            displayStatus: function(){            
-                var user = app.session.get('user');                
-                $('#loginStatus').find('#name').val(user.name);
-                $('#loginStatus').find('#email').val(user.email);
-                $('#loginStatus').find('#password').val(user.password);
-                if (user.superuser)
-                    $('#loginStatus').find('#status').text('Sie sind als Superuser angemeldet');
+                var _this = this;
+                if($(this.el).find('#login-button').text() === 'Einloggen'){
+                    var name = $(this.el).find('#name').val() || '';      
+                    var password = $(this.el).find('#password').val() || '';
+                    app.session.login({
+                        name: name,
+                        password: password,
+                        error: function(response){
+                            $(_this.el).find('#status').text(response);
+                        }
+                    });
+                }
+                else
+                    app.session.logout();                    
             },
             
             //remove the view

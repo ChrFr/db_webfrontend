@@ -95,7 +95,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                     $('#admin-menu').addClass('active');
             },
             
-            displayRoute: function(route, params){   
+            displayRoute: function(route, params){  
                 $('.submenu').removeClass('active');
                 var item = $('');
                 var subitem = $('');

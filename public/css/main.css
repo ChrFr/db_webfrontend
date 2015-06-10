@@ -10,9 +10,15 @@ body {
     background-color: #EBEBE0;
 }
 
+.centered{
+    text-align:center;
+    margin: 0 auto;
+}
+
 #description{
-    background-color: white;
+    //background-color: white;
     padding: 10px;
+    border: 0px;
 }
 
 table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
@@ -235,7 +241,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 @media (min-width: 768px) {
     
     #mainFrame{
-        margin-left: 10px;
+        padding-left: 10px;
         margin-top: 80px;
     }    
 }

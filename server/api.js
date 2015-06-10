@@ -76,7 +76,7 @@ module.exports = function(){
             result.push(g);
         };
         return result;
-    }
+    }    
     
     // transform json object by splitting array fields e.g. 
     function expandJsonToCsv(options){
@@ -185,10 +185,40 @@ module.exports = function(){
     
     var layer = {        
         list: function(req, res){ 
-            query("SELECT * FROM layer", [], function(err, result){
+            query("SELECT id, name FROM layer", [], function(err, result){
                 return res.status(200).send(result);
-            });
+            });                
+        },
+        
+        get: function(req, res){
+            query("SELECT * FROM layer WHERE id=$1", [req.params.id], function(err, result){
+                var table = result[0].tabelle,
+                    key = result[0].key,
+                    params = [],
+                    subquery;
                 
+                //grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
+                var queryStr = "SELECT {key}, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
+                
+                //for which communities does data exist belonging to this prognosis?
+                var progId = req.query.progId;
+                if(progId){
+                    subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1)";
+                    params.push(progId);
+                }
+                //take the table as is, if no prognosis id is given
+                else
+                    subquery = 'gemeinden';
+                
+                //pgquery doesn't seem to allow injection of table/columnnames
+                //they are taken from a db-table anyway, so it should be safe to replace manual
+                queryStr = queryStr.replace('{subquery}', subquery)
+                                   .replace(new RegExp('{table}', 'g'), table)
+                                   .replace(new RegExp('{key}', 'g'), key); 
+                query(queryStr, params, function(err, result){
+                    return res.status(200).send(result);
+                });
+            });   
         },
         
         gemeinden: {
@@ -217,22 +247,6 @@ module.exports = function(){
                 });
             }
         },
-        
-        landkreise: {
-            list: function(req, res){ 
-                query("SELECT * FROM landkreise", [], function(err, result){
-                    return res.status(200).send(result);
-                });
-                
-            },
-
-            get: function(req, res) {
-                query('SELECT * FROM landkreise WHERE id=$1', [req.params.pid], 
-                    function(err, result){
-                        return res.status(200).send(result[0]);
-                });
-            }
-        }
     }
     
     var demodevelop = {        
@@ -605,12 +619,9 @@ module.exports = function(){
                     get: layer.gemeinden.get
                 }
             },
-            '/landkreise':{
-                get: layer.landkreise.list, 
-                '/:id': {                
-                    get: layer.landkreise.get
-                }
-            }
+            '/:id': {                
+                get: layer.get
+            }            
         },
         '/prognosen': {
             get: prognosen.list,        

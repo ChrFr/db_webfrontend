@@ -183,7 +183,7 @@ module.exports = function(){
         }
     };
     
-    var layer = {        
+    var layers = {        
         list: function(req, res){ 
             query("SELECT id, name FROM layer", [], function(err, result){
                 return res.status(200).send(result);
@@ -192,7 +192,8 @@ module.exports = function(){
         
         get: function(req, res){
             query("SELECT * FROM layer WHERE id=$1", [req.params.id], function(err, result){
-                var table = result[0].tabelle,
+                var name = result[0].name,
+                    table = result[0].tabelle,
                     key = result[0].key,
                     params = [],
                     subquery;
@@ -216,7 +217,10 @@ module.exports = function(){
                                    .replace(new RegExp('{table}', 'g'), table)
                                    .replace(new RegExp('{key}', 'g'), key); 
                 query(queryStr, params, function(err, result){
-                    return res.status(200).send(result);
+                    return res.status(200).send(
+                        {'id': req.params.id,
+                         'name': name,
+                         'regionen': result});
                 });
             });   
         },
@@ -226,12 +230,8 @@ module.exports = function(){
                 //get gemeinden for specific prognosis
                 var progId = req.query.progId;
                 if(progId)
-                    checkPermission(progId, req.session.user, function(err, status, result){
-                        if (err)
-                            return res.status(status).send(err);
-                        query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
-                            return res.status(200).send(result);
-                        });
+                    query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
+                        return res.status(200).send(result);
                     });
                 else{
                     query("SELECT * FROM gemeinden", [], function(err, result){
@@ -611,16 +611,16 @@ module.exports = function(){
                 post: session.register
             }
         },
-        '/layer': {
-            get: layer.list, 
+        '/layers': {
+            get: layers.list, 
             '/gemeinden':{
-                get: layer.gemeinden.list, 
+                get: layers.gemeinden.list, 
                 '/:rs': {                
-                    get: layer.gemeinden.get
+                    get: layers.gemeinden.get
                 }
             },
             '/:id': {                
-                get: layer.get
+                get: layers.get
             }            
         },
         '/prognosen': {

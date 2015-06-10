@@ -10,6 +10,7 @@ define(["backbone", "models/DDModel"],
 
             initialize: function(options) {
                 this.setURL(options.progId, options.rs);
+                this.set('name', options.name);
             },
             
             setURL: function(progId, rs) {

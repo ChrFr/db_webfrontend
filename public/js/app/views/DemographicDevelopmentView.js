@@ -1,10 +1,10 @@
 define(["app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
-    "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
+    "collections/LayerCollection", "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
     "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
     "views/visuals/LineChart", "views/visuals/GroupedBarChart"],
 
-    function(app, Backbone, template, CommunityCollection, DDCollection, DDAggregate,
-            OptionView, TableView, d3, d3slider){
+    function(app, Backbone, template, CommunityCollection, LayerCollection, 
+            DDCollection, DDAggregate, OptionView, TableView, d3, d3slider){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
             el: document,
@@ -15,11 +15,22 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 var progId = app.get('activePrognosis');
                 
                 if(progId){
+                    // container for all demographic developments (aggregated too)
+                    // serves as cache
                     this.collection = new DDCollection({progId: progId});
+                    //available comunities (base entity)
+                    this.communities = new CommunityCollection();
+                    //layers for community-aggregations
+                    this.layers = new LayerCollection();
+                    
+                    // nested fetch collections and finally render (all coll.'s needed for rendering)
                     this.collection.fetch({success: function(){    
-                        _this.communities = new CommunityCollection();
-                        _this.communities.fetch({data: {progId: progId},
-                                                 success: _this.render});
+                        _this.layers.fetch({success: function(){
+                            _this.communities.fetch({
+                                data: {progId: progId},
+                                success: _this.render
+                            })                            
+                        }});
                     }});
                 }     
             },
@@ -32,19 +43,27 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
 
             render: function() {
                 var _this = this;
-                this.communities.comparator = 'name';
-                this.communities.sort();
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;   
                 var layerSelector = this.el.querySelector("#layer-select");
                 
                 new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});                 
-                new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: "gesamt"});             
-                new OptionView({el: layerSelector, name: 'Landkreise', value: "landkreise"});          
-                new OptionView({el: layerSelector, name: 'Gemeinden', value: "gemeinden"});
+                new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});
+                new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
+                
+                this.layers.each(function(layer){   
+                    new OptionView({
+                        el: layerSelector, 
+                        name: layer.get('name'), 
+                        value: layer.get('id')
+                    });
+                })
+                                
+                this.communities.comparator = 'name';
+                this.communities.sort();     
                 
                 layerSelector.onchange = function(e) { 
-                    if (e.target.value){
+                    if (e.target.value !== null){
                         _this.changeLayer(e.target.value);
                     }
                 };  
@@ -52,25 +71,65 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 return this;
             },     
             
-            changeLayer: function(region){
+            changeLayer: function(layerId){
                 var _this = this;
-                var regionSelector = this.el.querySelector("#region-select");
+                var progId = app.get('activePrognosis');
+                var regionSelector = this.el.querySelector("#region-select"); 
                 
-                if(region === "gesamt"){
+                while (regionSelector.firstChild) 
+                    regionSelector.removeChild(regionSelector.firstChild);
+                
+                // special case: whole area (all entities summed up) needs no region-selection
+                if(layerId == -2){
+                    var _this = this;
                     regionSelector.style.display = "none";      
                     this.el.querySelector("#region-label").style.display = "none";
-                    var m = this.collection.find(function(model) { return model.get('name') == 'Gesamtgebiet'; });
-                    if(!m){
-                        var allRegions = [];
-                        this.communities.each(function(region){   
-                            allRegions.push(region.get('rs'));
-                        });
-                        m = new DDAggregate({progId: this.collection.progId, rs: allRegions});
-                        
-                    };
-                    this.renderModel(m);
+                    var allRegions = [];
+                    this.communities.each(function(region){   
+                        allRegions.push(region.get('rs'));
+                    });
+                    this.renderRegion(this.getAggregateRegion(allRegions, 'Gesamtgebiet'));
                 }
-                else{
+                                
+                // specific layer
+                else if(layerId > 0){
+                    
+                    this.layers.get(layerId).fetch({
+                        data: {progId: progId}, success: function(layer){
+                            _this.el.querySelector("#region-label").innerHTML = layer.get('name');
+                            regionSelector.style.display = "block";                
+                            _this.el.querySelector("#region-label").style.display = "block";
+                            new OptionView({el: regionSelector, name: 'Bitte wählen', value: null}); 
+                            
+                            var rsArr = [];
+                            var i = 0;
+                            layer.get('regionen').forEach(function(region){ 
+                                new OptionView({
+                                    el: regionSelector,
+                                    name: region.name, 
+                                    value: i
+                                });
+                                rsArr.push(region.rs);
+                                i++;
+                            });
+
+                            regionSelector.onchange = function(e) { 
+                                if (e.target.value !== null){
+                                    var rs = rsArr[e.target.value];
+                                    var name = e.target.selectedOptions[0].innerHTML;
+                                    //id suffix (there may be other layers with same names)
+                                    name += '_' + layerId;
+                                    _this.renderRegion(_this.getAggregateRegion(rs, name));
+                                }
+                            };  
+                        }                        
+                    });
+                                            
+                }
+                
+                // basic layer gemeinden
+                else if(layerId == -1){
+                    _this.el.querySelector("#region-label").innerHTML = 'Gemeinde';
                     regionSelector.style.display = "block";                
                     this.el.querySelector("#region-label").style.display = "block";
 
@@ -85,14 +144,31 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
 
                     regionSelector.onchange = function(e) { 
                         if (e.target.value > 0){
+                            var name = e.target.selectedOptions[0].innerHTML;
                             var model = _this.collection.get(e.target.value);
-                            _this.renderModel(model);
+                            model.set('name', name);
+                            _this.renderRegion(model);
                         }
                     };  
                 }
             },
             
-            renderModel: function(model){
+            //get an aggregated region from the collection or create it (as cache)
+            getAggregateRegion: function(rs, name){
+                var region = this.collection.find(function(model) { 
+                    return model.get('name') == name; });
+                if(!region){
+                    region = new DDAggregate({
+                        name: name,
+                        progId: this.collection.progId, 
+                        rs: rs
+                    });   
+                    this.collection.add(region);
+                };
+                return region;
+            },
+            
+            renderRegion: function(model){
                 var _this = this;
                 this.stop();                
                 model.fetch({success: function(){  
@@ -191,7 +267,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             
             renderDataTable: function(){
                 
-                var title = this.currentYear,
+                // get name of region and remove suffix
+                var name = this.currentModel.get('name'); 
+                var idx = name.indexOf('_');
+                if(idx > 0)
+                    name = name.substring(0, idx);
+                
+                var title = name + " - " + this.currentYear,
                     columns = [];                   
                 
                 columns.push({name: "year", description: "Alter"});
@@ -252,6 +334,12 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     total = [],
                     years = [];
             
+                // get name of region and remove suffix
+                var name = this.currentModel.get('name'); 
+                var idx = name.indexOf('_');
+                if(idx > 0)
+                    name = name.substring(0, idx);
+                        
                 // ABSOLUTE DATA
                 
                 _.each(data, function(d){       
@@ -276,7 +364,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     data: [dataSet], 
                     width: width, 
                     height: height,
-                    title: "Bevölkerungsentwicklung absolut",
+                    title: name + " - Bevölkerungsentwicklung absolut",
                     xlabel: "Jahr",
                     ylabel: "Gesamtbevölkerung in absoluten Zahlen",                    
                     minY: 0
@@ -301,7 +389,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     data: [dataSet], 
                     width: width, 
                     height: height,
-                    title: "Bevölkerungsentwicklung relativ",
+                    title: name + " - Bevölkerungsentwicklung relativ",
                     xlabel: "Jahr",
                     ylabel: "Gesamtbevölkerung in Prozent (relativ zu " + dataSet.x[0] + ")"
                 });
@@ -312,6 +400,12 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             renderBarChart: function(){
                 var data = this.currentModel.get('data'),
                     dataSets = [];
+            
+                // get name of region and remove suffix
+                var name = this.currentModel.get('name'); 
+                var idx = name.indexOf('_');
+                if(idx > 0)
+                    name = name.substring(0, idx);
                 
                 _.each(data, function(d){                      
                     var values = [
@@ -338,7 +432,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     data: dataSets, 
                     width: width, 
                     height: height,
-                    title: "Bevölkerungsentwicklung",
+                    title: name + " - Bevölkerungsentwicklung",
                     xlabel: "Jahr",
                     groupLabels: ["A: Geburten - Sterbefälle", "B: Zuwanderung - Abwanderung", "gesamt: A + B"],
                     ylabel: "Zuwachs",    
@@ -348,7 +442,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             },
             
             renderAgeGroup: function(){
-                var columns = [];
+                var columns = [];                
+                
+                // get name of region and remove suffix
+                var name = this.currentModel.get('name'); 
+                var idx = name.indexOf('_');
+                if(idx > 0)
+                    name = name.substring(0, idx);
                 
                 columns.push({name: "ageGroup", description: "Altersgruppe"});
                 columns.push({name: "sumAll", description: "Anzahl"});
@@ -405,7 +505,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     el: this.el.querySelector("#agegroup-data"),
                     columns: columns,
                     data: data,
-                    title: this.currentYear,
+                    title: name + " - " + this.currentYear,
                     highlight: true
                 });
             },

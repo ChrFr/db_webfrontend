@@ -5,7 +5,7 @@ define(["backbone"],
         // Creates a new Backbone Collection class object
         var CommunityCollection = Backbone.Collection.extend({
             
-            url: 'api/layer/gemeinden',
+            url: 'api/layers/gemeinden',
 
             initialize: function(){   
             },    

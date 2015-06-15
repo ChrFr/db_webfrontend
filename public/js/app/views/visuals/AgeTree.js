@@ -61,7 +61,7 @@ var AgeTree = function(options){
             .attr('class', 'title')
             .attr("x", margin.left)             
             .attr("y", 0 - (margin.top / 2))
-            .text(this.title + " - " + this.data.jahr);
+            .text(this.title + " " + this.data.jahr);
 
         // SCALES
 

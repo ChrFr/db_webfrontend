@@ -35,6 +35,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     padding-bottom: 20px; 
     box-shadow: 1px 0px 2px 0px lightgrey;
     margin-top: -1px;
+    min-height: 200px;
 }
 
 .tab-pane{ 

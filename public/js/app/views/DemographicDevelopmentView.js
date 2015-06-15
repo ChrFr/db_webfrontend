@@ -29,7 +29,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                             _this.communities.fetch({
                                 data: {progId: progId},
                                 success: _this.render
-                            })                            
+                            });                          
                         }});
                     }});
                 }     
@@ -38,7 +38,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             events: {
                 'click .download-btn#csv': 'openCurrentYearCsvTab',
                 'click .download-btn#png': 'openCurrentYearPngTab',
-                'click #play': 'play'
+                'click #play': 'play',
+                'click #visualizations li': 'tabChange'
             },
 
             render: function() {
@@ -57,7 +58,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                         name: layer.get('name'), 
                         value: layer.get('id')
                     });
-                })
+                });
                                 
                 this.communities.comparator = 'name';
                 this.communities.sort();     
@@ -172,43 +173,46 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 var _this = this;
                 this.stop();                
                 model.fetch({success: function(){  
-                    var maxYear = model.get('maxYear');
-                    var minYear = model.get('minYear');
+                    var data = model.get('data')[0];
+                    var maxYear = model.get('maxYear'),
+                        minYear = model.get('minYear'),
+                        yearData,
+                        data = model.get('data');
                     _this.currentModel = model;
                     
                     //draw first year if not assigned yet
                     if(!_this.currentYear){
-                        _this.yearData = _this.currentModel.get('data')[0];
+                        yearData = data[0];
                         _this.currentYear = minYear;
                     }
                     //keep year of previous region, if new region has data for it
                     else{
                         var found = false;
-                        _.each(_this.currentModel.get('data'), (function(data){                     
-                            if(data.jahr == _this.currentYear) {
+                        _.each(model.get('data'), (function(yd){                     
+                            if(yd.jahr == _this.currentYear) {
                                 found = true;
-                                _this.yearData = data;
+                                yearData = yd;
                             }
                         }));
                         if(!found){
                             _this.currentYear = minYear;
-                            _this.yearData = this.currentModel.get('data')[0];
+                            yearData = data[0];
                         }
                     }   
                     // UPDATE SLIDERS    
                     var tabContent = _this.el.querySelector(".tab-content");                  
                     var width = parseInt(tabContent.offsetWidth) - 90;
-                    _this.el.querySelector("#slide-controls").style.display = 'block';
                     var sliderDiv = _this.el.querySelector("#year-slider");                    
                     while (sliderDiv.firstChild) 
                         sliderDiv.removeChild(sliderDiv.firstChild);
-                    
-                    sliderDiv.style.width = width + "px";  
+                    //var btnWidth = parseInt(_this.el.querySelector("#play").clientWidth; returns 0, why?
+                    sliderDiv.style.width = width - 30 + "px";  
                     var yearStep = Math.floor((maxYear - minYear) / 4);
                       
                     _this.yearSlider = d3slider()
                         .axis(
                             d3.svg.axis().orient("down")
+                            //4 ticks
                             .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
                             .tickFormat(d3.format("d"))
                             .ticks(maxYear - minYear)
@@ -244,7 +248,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     var maxScale = 10000;
                     
                     var xScale = d3.scale.log()
-                            .domain([minScale, maxScale])
+                            .domain([minScale, maxScale]);
                         
                     var scaleSlider = d3slider().scale(xScale)
                                                 .value(_this.xScale)
@@ -259,66 +263,21 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                         _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
                         _this.renderTree();
                     });
-                    
-                    _this.renderDataTable();
-                    _this.renderTree();
-                    _this.renderDevelopment();
-                    _this.renderAgeGroup();
-                    _this.renderBarChart();
+                    //visualizations
+                    _this.renderTree(yearData);
+                    _this.renderDevelopment(data);
+                    _this.renderBarChart(data);
+                    //data tables
+                    _this.renderAgeGroup(yearData);
+                    _this.renderDataTable(yearData);
                 }});
             },
             
-            renderDataTable: function(){
+            renderTree: function(data){
                 
-                // get name of region and remove suffix
-                var name = this.currentModel.get('name'); 
-                var idx = name.indexOf('_');
-                if(idx > 0)
-                    name = name.substring(0, idx);
-                
-                var title = name + " - " + this.currentYear,
-                    columns = [];                   
-                
-                columns.push({name: "year", description: "Alter"});
-                columns.push({name: "female", description: "Anzahl weiblich"});                
-                columns.push({name: "male", description: "Anzahl männlich"});
-                
-                var femaleAges = this.yearData.alter_weiblich;
-                var maleAges = this.yearData.alter_maennlich;
-                
-                var data = [];
-                for (var i = 0; i < femaleAges.length; i++) { 
-                    data.push({
-                        year: i,
-                        female: femaleAges[i],
-                        male: maleAges[i]
-                    });
-                }
-                
-                //get state of prev. table to apply on new one
-                var state = (this.table) ? this.table.getState(): {};
-                
-                this.table = new TableView({
-                    el: this.el.querySelector("#prognosis-data"),
-                    columns: columns,
-                    title: title,
-                    data: data,
-                    dataHeight: 400,
-                    pagination: false,
-                    startPage: state.page,
-                    pageSize: state.size,
-                    highlight: true
-                });
-            },
+                var vis = this.el.querySelector("#agetree"),
+                    title = this.getRegionName();
             
-            renderTree: function(){
-                // get name of region and remove suffix
-                var name = this.currentModel.get('name'); 
-                var idx = name.indexOf('_');
-                if(idx > 0)
-                    name = name.substring(0, idx);
-                
-                var vis = this.el.querySelector("#agetree");
                 while (vis.firstChild) 
                     vis.removeChild(vis.firstChild);
                 
@@ -328,8 +287,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 var height = width * 0.8;
                 this.ageTree = new AgeTree({
                     el: vis,
-                    data: this.yearData, 
-                    title: name,
+                    data: data, 
+                    title: title,
                     width: width, 
                     height: height,
                     maxY: this.currentModel.get('maxAge'),
@@ -338,17 +297,11 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 this.ageTree.render();     
             },       
             
-            renderDevelopment: function(){
-                var data = this.currentModel.get('data'),
-                    total = [],
-                    years = [];
+            renderDevelopment: function(data){
+                var total = [],
+                    years = [],
+                    title = this.getRegionName();
             
-                // get name of region and remove suffix
-                var name = this.currentModel.get('name'); 
-                var idx = name.indexOf('_');
-                if(idx > 0)
-                    name = name.substring(0, idx);
-                        
                 // ABSOLUTE DATA
                 
                 _.each(data, function(d){       
@@ -373,7 +326,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     data: [dataAbs], 
                     width: width, 
                     height: height,
-                    title: name + " - Bevölkerungsentwicklung absolut",
+                    title: title + " - Bevölkerungsentwicklung absolut",
                     xlabel: "Jahr",
                     ylabel: "Gesamtbevölkerung in absoluten Zahlen",                    
                     minY: 0
@@ -402,7 +355,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     data: [dataRel], 
                     width: width, 
                     height: height,
-                    title: name + " - Bevölkerungsentwicklung relativ",
+                    title: title + " - Bevölkerungsentwicklung relativ",
                     xlabel: "Jahr",
                     ylabel: "Gesamtbevölkerung in Prozent (relativ zu " + dataRel.x[0] + ")"
                 });
@@ -410,20 +363,14 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 this.relativeChart.render();  
             },
             
-            renderBarChart: function(){
-                var data = this.currentModel.get('data'),
-                    dataSets = [];
-            
-                // get name of region and remove suffix
-                var name = this.currentModel.get('name'); 
-                var idx = name.indexOf('_');
-                if(idx > 0)
-                    name = name.substring(0, idx);
+            renderBarChart: function(data){
+                var dataSets = [],
+                    title = this.getRegionName();
                 
                 _.each(data, function(d){                      
                     var values = [
                         d.geburten - d.tote,
-                        d.zuzug - d.fortzug,
+                        d.zuzug - d.fortzug
                     ];
                     values.push(values[0] + values[1]);
                     
@@ -445,7 +392,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     data: dataSets, 
                     width: width, 
                     height: height,
-                    title: name + " - Bevölkerungsentwicklung",
+                    title: title + " - Bevölkerungsentwicklung",
                     xlabel: "Jahr",
                     groupLabels: ["A: Geburten - Sterbefälle", "B: Zuwanderung - Abwanderung", "gesamt: A + B"],
                     ylabel: "Zuwachs",    
@@ -454,14 +401,56 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 this.barChart.render();    
             },
             
-            renderAgeGroup: function(){
-                var columns = [];                
+            renderDataTable: function(yearData){  
+                var columns = [],
+                    title = this.getRegionName();
+
+                if(yearData.jahr == this.currentModel.get('minYear'))
+                    title += ' - Basisjahr';
+                else
+                    title += ' - Prognose';
                 
-                // get name of region and remove suffix
-                var name = this.currentModel.get('name'); 
-                var idx = name.indexOf('_');
-                if(idx > 0)
-                    name = name.substring(0, idx);
+                columns.push({name: "year", description: "Alter"});
+                columns.push({name: "female", description: "Anzahl weiblich"});                
+                columns.push({name: "male", description: "Anzahl männlich"});
+                
+                var femaleAges = yearData.alter_weiblich;
+                var maleAges = yearData.alter_maennlich;
+                
+                var data = [];
+                for (var i = 0; i < femaleAges.length; i++) { 
+                    data.push({
+                        year: i,
+                        female: femaleAges[i],
+                        male: maleAges[i]
+                    });
+                }
+                
+                //get state of prev. table to apply on new one
+                var state = (this.table) ? this.table.getState(): {};
+                
+                this.table = new TableView({
+                    el: this.el.querySelector("#prognosis-data"),
+                    columns: columns,
+                    title: title + " " + yearData.jahr,
+                    data: data,
+                    dataHeight: 400,
+                    pagination: false,
+                    startPage: state.page,
+                    pageSize: state.size,
+                    highlight: true
+                });
+            },
+            
+            renderAgeGroup: function(yearData){
+                
+                var columns = [],
+                    title = this.getRegionName();
+
+                if(yearData.jahr == this.currentModel.get('minYear'))
+                    title += ' - Basisjahr';
+                else
+                    title += ' - Prognose';                
                 
                 columns.push({name: "ageGroup", description: "Altersgruppe"});
                 columns.push({name: "sumAll", description: "Anzahl"});
@@ -469,8 +458,8 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 //columns.push({name: "perMale", description: "männlich"});
                 //columns.push({name: "perFemale", description: "weiblich"});
                                 
-                var femaleAges = this.yearData.alter_weiblich;
-                var maleAges = this.yearData.alter_maennlich;
+                var femaleAges = yearData.alter_weiblich;
+                var maleAges = yearData.alter_maennlich;
                 
                 var cat2 = 20;
                 var cat3 = 65;
@@ -518,7 +507,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     el: this.el.querySelector("#agegroup-data"),
                     columns: columns,
                     data: data,
-                    title: name + " - " + this.currentYear,
+                    title: title + " " + yearData.jahr,
                     highlight: true
                 });
             },
@@ -541,20 +530,50 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             changeYear: function(year){ 
                 this.currentYear = year;          
                 var data = this.currentModel.get('data');   
-                this.yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)]; 
-
-                this.renderDataTable();
-                this.renderAgeGroup();  
-                this.ageTree.changeData(this.yearData);
+                var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
+                var yearData = data[idx]; 
+                this.ageTree.changeData(yearData);
+                this.renderAgeGroup(yearData); 
+                this.renderDataTable(yearData); 
+            },
+            
+            /*
+             * if tab changed, show specific data and controls
+             */
+            tabChange: function(event){
+                this.stop();              
+                if(event.target.getAttribute('href') === "#agetree-tab"){
+                    // age tree can render multiple years -> render data of current one  
+                    this.changeYear(this.currentYear);
+                    // age tree needs slider to change years                    
+                    this.el.querySelector("#slide-controls").style.display = 'block';
+                }
+                //the others render summary over years -> render data of first year (thats the year the predictions base on)
+                else{
+                    var yearData = this.currentModel.get('data')[0];
+                    this.renderDataTable(yearData);
+                    this.renderAgeGroup(yearData);  
+                    
+                    //no need for changing years
+                    this.el.querySelector("#slide-controls").style.display = 'none';
+                }
+                    
             },
             
             play: function(event){
                 var _this = this;  
                 if(!this.timerId){
                     event.target.innerHTML = 'Stop';
+                    var maxYear = _this.currentModel.get('maxYear');
+                    var minYear = _this.currentModel.get('minYear');
+                    // slider reached end? -> reset
+                    if(_this.yearSlider.value() >= maxYear){
+                        _this.yearSlider.value(minYear);
+                        _this.changeYear(minYear);
+                    }
                     this.timerId = setInterval(function(){
                         var currentYear = _this.yearSlider.value();
-                        if(currentYear == _this.currentModel.get('maxYear')){ 
+                        if(currentYear == maxYear){ 
                             _this.stop();
                         }
                         else{
@@ -573,6 +592,15 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     clearInterval(this.timerId);
                     this.timerId = null;
                 }
+            },
+            
+            // get name of region and remove suffix
+            getRegionName: function(){                
+                var name = this.currentModel.get('name'); 
+                var idx = name.indexOf('_');
+                if(idx > 0)
+                    name = name.substring(0, idx);
+                return name;
             },
             
             //remove the view

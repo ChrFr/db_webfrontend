@@ -30,7 +30,7 @@ var LineChart = function(options){
 
         var margin = {
           top: 30,
-          right: 40,
+          right: 35,
           bottom: 30,
           left: 50
         };
@@ -149,7 +149,8 @@ var LineChart = function(options){
             .style("display", "none");
 
         focus.append("circle")
-            .attr("r", 4.5);
+            .attr("r", 4.5)
+            .attr("fill", colorScale(0));
     
         // tooltip
         focus.append("rect")

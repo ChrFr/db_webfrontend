@@ -377,7 +377,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     vis.removeChild(vis.firstChild);
                 
                 var tabContent = this.el.querySelector(".tab-content");                
-                var width = parseInt(tabContent.offsetWidth) - 20;
+                var width = parseInt(tabContent.offsetWidth) - 30;
                 var height = width * 0.5;
                 this.absoluteChart = new LineChart({
                     el: vis,

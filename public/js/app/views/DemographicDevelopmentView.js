@@ -263,13 +263,16 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                         _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
                         _this.renderTree();
                     });
+                    
                     //visualizations
                     _this.renderTree(yearData);
                     _this.renderDevelopment(data);
                     _this.renderBarChart(data);
+                    
                     //data tables
                     _this.renderAgeGroup(yearData);
-                    _this.renderDataTable(yearData);
+                    _this.renderAgeTable(yearData);
+                    _this.renderRawData(data);
                 }});
             },
             
@@ -401,7 +404,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 this.barChart.render();    
             },
             
-            renderDataTable: function(yearData){  
+            renderAgeTable: function(yearData){  
                 var columns = [],
                     title = this.getRegionName();
 
@@ -410,9 +413,10 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 else
                     title += ' - Prognose';
                 
-                columns.push({name: "year", description: "Alter"});
+                // adapt age data to build table (arrays to single entries)
+                columns.push({name: "age", description: "Alter"});
                 columns.push({name: "female", description: "Anzahl weiblich"});                
-                columns.push({name: "male", description: "Anzahl männlich"});
+                columns.push({name: "male", description: "Anzahl männlich"});  
                 
                 var femaleAges = yearData.alter_weiblich;
                 var maleAges = yearData.alter_maennlich;
@@ -420,17 +424,17 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 var data = [];
                 for (var i = 0; i < femaleAges.length; i++) { 
                     data.push({
-                        year: i,
+                        age: i,
                         female: femaleAges[i],
                         male: maleAges[i]
                     });
                 }
                 
                 //get state of prev. table to apply on new one
-                var state = (this.table) ? this.table.getState(): {};
+                var state = (this.ageTable) ? this.ageTable.getState(): {};
                 
-                this.table = new TableView({
-                    el: this.el.querySelector("#prognosis-data"),
+                this.ageTable = new TableView({
+                    el: this.el.querySelector("#age-data"),
                     columns: columns,
                     title: title + " " + yearData.jahr,
                     data: data,
@@ -438,6 +442,21 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     pagination: false,
                     startPage: state.page,
                     pageSize: state.size,
+                    highlight: true
+                });
+            },
+            
+            renderRawData: function(data){  
+                var columns = [];
+                Object.keys(data[0]).forEach(function(i){
+                    columns.push({name: i, description: i});
+                });
+                
+                this.rawTable = new TableView({
+                    el: this.el.querySelector("#raw-data"),
+                    columns: columns,
+                    data: data,
+                    title: data[0].jahr + " - " + data[data.length -1].jahr,
                     highlight: true
                 });
             },
@@ -534,7 +553,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 var yearData = data[idx]; 
                 this.ageTree.changeData(yearData);
                 this.renderAgeGroup(yearData); 
-                this.renderDataTable(yearData); 
+                this.renderAgeTable(yearData); 
             },
             
             /*
@@ -551,7 +570,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 //the others render summary over years -> render data of first year (thats the year the predictions base on)
                 else{
                     var yearData = this.currentModel.get('data')[0];
-                    this.renderDataTable(yearData);
+                    this.renderAgeTable(yearData);
                     this.renderAgeGroup(yearData);  
                     
                     //no need for changing years

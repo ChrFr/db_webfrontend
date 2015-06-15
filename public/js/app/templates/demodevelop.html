@@ -45,14 +45,21 @@
     <div id="tables" class="col-md-4"> 
         <ul class="nav nav-pills">
             <li class="active"><a href="#agegroup-tab" data-toggle="tab">Altersgruppen</a></li>
-            <li><a href="#prognosis-tab" data-toggle="tab">Datenblatt</a></li>
+            <li><a href="#age-tab" data-toggle="tab">Alterstabelle</a></li>
+            <li><a href="#raw-tab" data-toggle="tab">Rohdaten</a></li>
         </ul>
         <div class="tab-content">            
             <div class="tab-pane active" id="agegroup-tab">  
                 <div id="agegroup-data"></div> 
             </div>
-            <div class="tab-pane" id="prognosis-tab">    
-                <div id="prognosis-data"></div>
+            <div class="tab-pane" id="age-tab">    
+                <div id="age-data"></div>
+                <br>
+                <button type="button" id="csv" class="btn btn-primary download-btn" title="Datenblatt als csv-Datei speichern.">Speichern</button>
+                <br>
+            </div>
+            <div class="tab-pane" id="raw-tab">    
+                <div id="raw-data"></div>
                 <br>
                 <button type="button" id="csv" class="btn btn-primary download-btn" title="Datenblatt als csv-Datei speichern.">Speichern</button>
                 <br>

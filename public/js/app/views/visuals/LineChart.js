@@ -30,7 +30,7 @@ var LineChart = function(options){
 
         var margin = {
           top: 30,
-          right: 50,
+          right: 40,
           bottom: 30,
           left: 50
         };
@@ -151,9 +151,15 @@ var LineChart = function(options){
         focus.append("circle")
             .attr("r", 4.5);
     
+        // tooltip
+        focus.append("rect")
+            .attr("fill", "white")
+            .style("fill-opacity", "0.7")
+            .attr("x", 9)
+            .attr("y", -5);
         focus.append("text")
-          .attr("x", 9)
-          .attr("dy", ".35em");
+            .attr("x", 9)
+            .attr("dy", ".35em");  
   
         //overlay for capturing mouse move
         svg.append("rect")
@@ -166,6 +172,7 @@ var LineChart = function(options){
             .on("mousemove", mousemove);
 
         var bisect = d3.bisector(function(d) { return d; }).left;
+        
         function mousemove() {
             //first dataset is taken to show dots
             var mousePos = d3.mouse(this)[0];
@@ -176,7 +183,12 @@ var LineChart = function(options){
                 i = bisect(xData, x0) -1,
                 d = xData[i];
             focus.attr("transform", translation( xScale(d), yScale(yData[i])));
-            focus.select("text").text(yData[i]);
+            var back = focus.select("rect");
+            var text = focus.select("text");
+            back.style("width", parseInt(text.style("width")) + 10);
+            back.style("height", text.style("height"));
+            text.text(yData[i]);
+            //var bb = text.getBBox();
         }
 
         function translation(x,y) {

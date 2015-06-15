@@ -59,7 +59,7 @@ define(["backbone"],
                 var url = this.urlRoot || this.url
                 url += this.get('rs') + '/csv'
                 if(year)
-                    urlRoot += '?year=' + year;
+                    url += '?year=' + year;
                 return url
             },
             

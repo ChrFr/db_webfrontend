@@ -61,7 +61,10 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
                         }
                         else $(this).removeClass('highlight');
                             
-                    })
+                    });
+                
+                this.table.find('td').css('max-width', '200px');
+                this.table.find('td').css('overflow', 'auto');
                 
             },   
             

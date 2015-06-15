@@ -28,8 +28,8 @@ module.exports = function(){
     };        
     
     //group a list of json objects by given key, by now only sum or median of all other values
-    function groupBy(array, key, mode){
-        var mode = mode || 'sum';
+    function groupBy(array, key, options){
+        var mode = options.mode || 'sum';
         var groups = {};
         //map array by key in groups and merge other keys of group into arrays
         array.forEach( function(item){
@@ -50,6 +50,7 @@ module.exports = function(){
         //reduce group key-values and restore input form (array of json objects)
         for(var gk in groups){
             var group = groups[gk]
+            if (options.keyIsInt) gk = parseInt(gk);
             var g = {}; g[key] = gk;     
             
             for(var k in group){
@@ -333,7 +334,7 @@ module.exports = function(){
             else demodevelop.getYears(req, res, rsList, function(result){                   
                 return res.json({
                     rs: rsList,
-                    data: groupBy(result, 'jahr')
+                    data: groupBy(result, 'jahr', {keyIsInt: true})
                 });
             });
         },

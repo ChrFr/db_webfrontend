@@ -195,7 +195,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                             _this.yearData = this.currentModel.get('data')[0];
                         }
                     }   
-
                     // UPDATE SLIDERS    
                     var tabContent = _this.el.querySelector(".tab-content");                  
                     var width = parseInt(tabContent.offsetWidth) - 90;
@@ -246,16 +245,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     
                     var xScale = d3.scale.log()
                             .domain([minScale, maxScale])
-                            //.range([0, parseInt(sliderDiv.offsetHeight)]);
-                    /*
-                    var scaleSlider = d3slider().value(maxScale - _this.xScale + minScale).orientation("vertical")
-				//.min(minScale).max(maxScale).step(10)
-				.axis( d3.svg.axis().orient("right")
-                                        .tickValues([minScale, maxScale/4, maxScale/2, maxScale*3/4 ,maxScale])
-					.tickFormat(d3.format(""))
-                                        
-                                        .scale(xScale)
-					);*/
                         
                     var scaleSlider = d3slider().scale(xScale)
                                                 .value(_this.xScale)
@@ -551,8 +540,9 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             
             changeYear: function(year){ 
                 this.currentYear = year;          
-                var data = this.currentModel.get('data');          
+                var data = this.currentModel.get('data');   
                 this.yearData = data[data.length - 1 - (this.currentModel.get('maxYear') - year)]; 
+
                 this.renderDataTable();
                 this.renderAgeGroup();  
                 this.ageTree.changeData(this.yearData);

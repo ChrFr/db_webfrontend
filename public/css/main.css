@@ -28,9 +28,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 
 .tab-content, #summary{
     background-color: white;
-    min-height: 500px;
     width: 100%;
-    transition: height 1s;
     border: solid 1px lightgrey;
     z-index: 10;
     padding: 10px;
@@ -39,7 +37,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     margin-top: -1px;
 }
 
-.tab-pane{    
+.tab-pane{ 
     overflow: auto;
 }
 

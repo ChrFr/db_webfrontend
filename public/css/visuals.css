@@ -53,7 +53,7 @@ text.female{
 }
 
 rect.highlight{    
-    fill: gold;
+    fill: gold!important;
 }
 
 

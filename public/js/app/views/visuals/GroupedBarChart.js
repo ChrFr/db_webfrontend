@@ -89,23 +89,26 @@ var GroupedBarChart = function(options){
         
         var xAxis = d3.svg.axis()
             .scale(x0Scale)
-            .orient("bottom");
+            .orient("bottom")
+            .tickSize(0); 
 
         var yAxis = d3.svg.axis()
             .scale(yScale)
-            .orient("left");  
+            .orient("left")
+            .tickSize(-this.width);  
   
         var xApp = svg.append("g")
             .attr("class", "x axis")
             .attr("transform", translation(0, innerheight)) 
             .call(xAxis);
     
+    /*
         xApp.append("text")
             .attr("dy", "-.71em")
             .attr("x", innerwidth)
             .style("text-anchor", "end")
             .text(this.xlabel)
-            .attr("transform", translation(0, 0));
+            .attr("transform", translation(0, 0));*/
             
         var yApp = svg.append("g")
             .attr("class", "y axis")
@@ -132,7 +135,26 @@ var GroupedBarChart = function(options){
             .data(this.data)
             .enter().append("g")
               .attr("class", "g")
+              .attr("xvalue", function(d){return d.label})
               .attr("transform", function(d) { return translation(x0Scale(d.label), 0); });
+      
+          
+        var mouseOverBar = function(d, i) {
+            var tooltip = d3.select('body').append("div").attr("class", "tooltip");
+            var bar = d3.select(this);
+            bar.classed("highlight", true);
+            tooltip.style("opacity", .9);     
+            var parent = d3.select(this.parentNode); 
+            tooltip.html(_this.groupLabels[i] + "<br>" + _this.xlabel + ": " + parent.datum().label + "<br><b>" + d + "</b>");
+            
+            tooltip.style("left", (d3.event.pageX + 10) + "px")     
+                   .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 
+        };     
+            
+        var mouseOutBar = function(){
+            d3.select(this).classed("highlight", false);     
+            d3.select('body').selectAll("div.tooltip").remove();
+        };
       
         groups.selectAll("rect")
             .data(function(d) { return d.values; })
@@ -141,17 +163,20 @@ var GroupedBarChart = function(options){
                 .attr("x", function(d, i) { return x1Scale(_this.groupLabels[i]); })
                 .attr("y", function(d) { return yScale(Math.max(0, d)); })
                 .attr("height", function(d) { return Math.abs(yScale(d) - yScale(0)); })
-                .style("fill", function(d, i) { return colorScale(i); });
+                .style("fill", function(d, i) { return colorScale(i); })
+        
+            .on("mouseover", mouseOverBar)
+            .on("mouseout", mouseOutBar);
 
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';
         }
         
         var legend = svg.selectAll(".legend")
-            .data(_this.groupLabels.slice().reverse())
+            .data(_this.groupLabels.slice())
             .enter().append("g")
                 .attr("class", "legend")
-                .attr("transform", function(d, i) { return translation(0, innerheight + 20 + i * 20); });
+                .attr("transform", function(d, i) { return translation(0, innerheight + 20 + i * 15); });
 
         legend.append("rect")
             .attr("x", innerwidth - 18)

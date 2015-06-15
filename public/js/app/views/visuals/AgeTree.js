@@ -89,8 +89,6 @@ var AgeTree = function(options){
             .data(femaleAges)
             .enter().append("g")
             .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * barHeight - barHeight/2); });
-
-        
     
         var mouseOverBar = function(d) {
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
@@ -103,7 +101,7 @@ var AgeTree = function(options){
             else if(bar.classed('male'))
                 sex = 'männlich';
                             
-            tooltip.html("Geschlecht: " + sex + "<br>Alter: " + bar.attr("age") + "<br>Anzahl: " + d );
+            tooltip.html("Geschlecht: " + sex + "<br>Alter: " + bar.attr("age") + "<br><b>Anzahl: " + d +"</b>");
             
             tooltip.style("left", (d3.event.pageX + 10) + "px")     
                    .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 
@@ -118,7 +116,7 @@ var AgeTree = function(options){
             .attr('class', 'female')
             .attr("width", this.xScale)
             .attr("height", barHeight - 1)
-            .attr("age", function(d, i) { return i })
+            .attr("age", function(d, i) { return i; })
             .on("mouseover", mouseOverBar)
             .on("mouseout", mouseOutBar);
 
@@ -131,7 +129,7 @@ var AgeTree = function(options){
             .attr('class', 'male')
             .attr("width", _this.xScale)
             .attr("height", barHeight - 1)
-            .attr("age", function(d, i) { return i })
+            .attr("age", function(d, i) { return i; })
             .on("mouseover", mouseOverBar)
             .on("mouseout", mouseOutBar);
 

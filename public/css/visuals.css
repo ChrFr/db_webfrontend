@@ -72,4 +72,9 @@ div.tooltip {
     border: 1px;      
     border: solid 1px grey;         
     pointer-events: none;         
+    opacity: 0.9;
+}
+
+.focus circle{    
+    fill: steelblue;
 }

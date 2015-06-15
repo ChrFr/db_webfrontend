@@ -367,7 +367,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     years.push(d.jahr);
                 });
                 
-                var dataSet = { label: "",
+                var dataAbs = { label: "",
                                 x: years,
                                 y: total
                               };       
@@ -377,11 +377,11 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     vis.removeChild(vis.firstChild);
                 
                 var tabContent = this.el.querySelector(".tab-content");                
-                var width = parseInt(tabContent.offsetWidth) - 70;
+                var width = parseInt(tabContent.offsetWidth) - 10;
                 var height = width * 0.5;
                 this.absoluteChart = new LineChart({
                     el: vis,
-                    data: [dataSet], 
+                    data: [dataAbs], 
                     width: width, 
                     height: height,
                     title: name + " - Bevölkerungsentwicklung absolut",
@@ -393,10 +393,14 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 
                 // RELATIVE DATA (to first year)
                 
-                var relVal = dataSet.y[0];
+                // clone data (prevent conflicts in drawing dots in both line charts)
+                var dataRel = JSON.parse(JSON.stringify(dataAbs))
                 
-                for(var i = 0; i < dataSet.y.length; i++){
-                    dataSet.y[i] *= 100 / relVal;
+                var relVal = dataRel.y[0];
+                
+                for(var i = 0; i < dataRel.y.length; i++){
+                    dataRel.y[i] *= 100 / relVal;
+                    dataRel.y[i] = Math.round(dataRel.y[i] * 100) / 100
                 };
                               
                 vis = this.el.querySelector("#relative");
@@ -406,12 +410,12 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 
                 this.relativeChart = new LineChart({
                     el: vis,
-                    data: [dataSet], 
+                    data: [dataRel], 
                     width: width, 
                     height: height,
                     title: name + " - Bevölkerungsentwicklung relativ",
                     xlabel: "Jahr",
-                    ylabel: "Gesamtbevölkerung in Prozent (relativ zu " + dataSet.x[0] + ")"
+                    ylabel: "Gesamtbevölkerung in Prozent (relativ zu " + dataRel.x[0] + ")"
                 });
                 
                 this.relativeChart.render();  

@@ -30,9 +30,9 @@ var LineChart = function(options){
 
         var margin = {
           top: 30,
-          right: 0,
+          right: 50,
           bottom: 30,
-          left: 40
+          left: 50
         };
 
         var innerwidth = this.width - margin.left - margin.right,
@@ -143,6 +143,41 @@ var LineChart = function(options){
             .attr("dy", ".35em")
             .attr("fill", function(_, i) { return colorScale(i); })
             .text(function(d) { return d.name; }) ;
+    
+        var focus = svg.append("g")
+            .attr("class", "focus")
+            .style("display", "none");
+
+        focus.append("circle")
+            .attr("r", 4.5);
+    
+        focus.append("text")
+          .attr("x", 9)
+          .attr("dy", ".35em");
+  
+        //overlay for capturing mouse move
+        svg.append("rect")
+            .style("fill", "none")
+            .style("pointer-events", "all")
+            .attr("width", innerwidth + 20)
+            .attr("height", innerheight)
+            .on("mouseover", function() { focus.style("display", null); })
+            .on("mouseout", function() { focus.style("display", "none"); })
+            .on("mousemove", mousemove);
+
+        var bisect = d3.bisector(function(d) { return d; }).left;
+        function mousemove() {
+            //first dataset is taken to show dots
+            var mousePos = d3.mouse(this)[0];
+            if (mousePos < 0) return;
+            var xData = _this.data[0].x,
+                yData = _this.data[0].y,
+                x0 = xScale.invert(mousePos),
+                i = bisect(xData, x0) -1,
+                d = xData[i];
+            focus.attr("transform", translation( xScale(d), yScale(yData[i])));
+            focus.select("text").text(yData[i]);
+        }
 
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';

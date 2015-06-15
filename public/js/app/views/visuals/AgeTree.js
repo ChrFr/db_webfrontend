@@ -94,7 +94,6 @@ var AgeTree = function(options){
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
             var bar = d3.select(this);
             bar.classed("highlight", true);
-            tooltip.style("opacity", .9);      
             var sex = '';
             if(bar.classed('female'))
                 sex = 'weiblich';

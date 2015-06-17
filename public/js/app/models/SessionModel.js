@@ -71,10 +71,9 @@ define(["jquery", "backbone"],
                 $.ajax({
                     url : this.url,
                     type : 'DELETE'
-                }).done(function(response){
-                    _this.clear();
-                    //get new token                    
+                }).done(function(response){       
                     _this.setHeader(null, null);
+                    _this.clear();
                 });
             }
         });

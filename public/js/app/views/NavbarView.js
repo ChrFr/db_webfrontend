@@ -68,6 +68,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                 app.attributes.activePrognosis = null;
                 //update prognoses available for this user
                 app.prognoses.fetch({success: function(){    
+                    console.log(app.prognoses)
                     new OptionView({el: progSelector, name: 'Bitte wählen', value: -1}); 
                     app.prognoses.each(function(prognosis){
                         new OptionView({

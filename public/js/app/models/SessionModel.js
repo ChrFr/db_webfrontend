@@ -14,7 +14,8 @@ define(["jquery", "backbone"],
             url : 'api/users/login',
             
             defaults: {
-                user: null
+                user: null,
+                token: null
             },
             
             fetch: function(options){
@@ -52,6 +53,7 @@ define(["jquery", "backbone"],
                 });
                 login.done(function(response){
                     _this.setHeader(response.user.id, response.token);
+                    _this.set('token', response.token); 
                     _this.set('user', response.user); 
                     if(options.success)
                         options.success(response);

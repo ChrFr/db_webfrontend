@@ -542,8 +542,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             },
             
             openCurrentYearPngTab: function() {
-                var win = window.open(this.currentModel.pngUrl(this.currentYear, this.xScale), '_blank');
-                win.focus();
+                var xhr = new XMLHttpRequest;
+
+                xhr.open( "GET", this.currentModel.pngUrl(this.currentYear, this.xScale) ); //I had test.pdf this on my local server
+
+                xhr.setRequestHeader("id", app.session.get('user').id );
+                xhr.setRequestHeader("token", app.session.get('token'));
+                xhr.send(null);
             },
             
             changeYear: function(year){ 

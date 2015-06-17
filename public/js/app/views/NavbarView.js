@@ -24,11 +24,11 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                 
                 //show login status and available prognoses on user change
                 if (app.session) 
-                    app.session.bind("change:user", function() {_this.displayUserContent()});  
+                    app.session.bind("change:user", function() {_this.displayUserContent();});  
                 //update navbar on route change
                 app.router.on("route", _this.displayRoute); 
                 //display current route (needed when entering site or reload)
-                this.displayRoute(app.router.routes[Backbone.history.getFragment()])
+                this.displayRoute(app.router.routes[Backbone.history.getFragment()]);
             },
 
             events: {
@@ -68,14 +68,13 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                 app.attributes.activePrognosis = null;
                 //update prognoses available for this user
                 app.prognoses.fetch({success: function(){    
-                    console.log(app.prognoses)
                     new OptionView({el: progSelector, name: 'Bitte wählen', value: -1}); 
                     app.prognoses.each(function(prognosis){
                         new OptionView({
                             el: progSelector,
                             name: prognosis.get('name'), 
                             value: prognosis.get('id')
-                        })
+                        });
                     });
                     progSelector.onchange = function(t) {
                         var pid = t.target.value;    

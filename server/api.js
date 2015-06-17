@@ -276,6 +276,8 @@ module.exports = function(){
 
         // get demographic development from database
         getYears: function(req, res, rsArray, onSuccess){   
+            console.log(req.headers.id)
+                        console.log(req.headers.token)
             checkPermission(req.headers, req.params.pid, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);

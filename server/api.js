@@ -131,52 +131,74 @@ module.exports = function(){
         
         return csv.join("\n");
     }
+    
+    /*
+     * validates the user (id and token)
+     */
+    var authenticate = function(auth, callback){
+        if(!auth)
+            return callback('Sie sind nicht angemeldet', 403);
+        var token = auth.token, id = auth.id;
+        query("SELECT * from users WHERE id=$1", [id], function(err, result){
+            if(err || result.length === 0
+                || token !== pbkdf2Hash.getSalt(result[0].password))
+                return callback('ungültige Sitzung', 401);
 
-    var checkPermission = function(prognoseId, user, callback){           
-        if(!user){
-            return callback('Nur angemeldete Nutzer haben Zugriff!', 403);
-        }
-        query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], 
-        function(err, result){
-            if (err)
-                return callback(err, 500); 
-            if (result.length === 0)
-                return callback('not found', 404);
-            if (!user.superuser && result[0].users.indexOf(user.id) < 0)
-                return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
-            //don't send the permissions
-            delete result[0].users;
-            return callback(null, 200, result[0]);
+            var user = { 
+                id: id,
+                name: result[0].name,
+                email: result[0].email,
+                superuser: result[0].superuser
+            }
+
+            return callback(null, 200, user);
+        });
+    };
+
+    var checkPermission = function(auth, prognoseId, callback){ 
+        authenticate(auth, function(error, status, user){
+            if (error)
+                return callback(error, status);
+            query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], function(err, result){
+                if (err)
+                    return callback(err, 500); 
+                if (result.length === 0)
+                    return callback('not found', 404);
+                if (!user.superuser && result[0].users.indexOf(user.id) < 0)
+                    return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
+                //don't send the permissions
+                delete result[0].users;
+                return callback(null, 200, result[0]);
+            });
         });
     };    
     
     var prognosen = {   
         list: function(req, res){
-            //TODO session or cookie (check every time auth_token?) ?
-            if(!req.session.user){
-                return res.status(403).send('Nur angemeldete Nutzer haben Zugriff!');
-            }
-            
-            var q = "SELECT id, name, description"
-            if(req.session.user.superuser)
-                q += ", users"
-            q += " FROM prognosen";
-            var params = [];
-            //only admin can access all prognoses
-            if(!req.session.user.superuser){
-                q+= " WHERE $1 = ANY(users)";
-                params.push(req.session.user.id);
-            }
-            query(q+";", params,
-            function(err, result){
-                if (err)
-                    return res.sendStatus(500);
-                return res.status(200).send(result);      
+            authenticate(req.headers, 
+                function(err, status, user){
+                    if(err)
+                        return res.status(status).send(err);
+                    var q = "SELECT id, name, description"
+                    if(user.superuser)
+                        q += ", users"
+                    q += " FROM prognosen";
+                    var params = [];
+                    //only admin can access all prognoses
+                    if(!user.superuser){
+                        q+= " WHERE $1 = ANY(users)";
+                        params.push(user.id);
+                    }
+                    query(q+";", params, function(err, result){
+                        if (err)
+                            return res.sendStatus(500);
+                        return res.status(200).send(result);      
+                    });
             });
         },
         
         get: function(req, res){ 
-            checkPermission(req.params.pid, req.session.user, function(err, status, result){
+            checkPermission(req.headers, req.params.pid, function(err, status, result){
                 if(err)
                     return res.status(status).send(err);
                 return res.status(status).send(result);
@@ -254,7 +276,7 @@ module.exports = function(){
 
         // get demographic development from database
         getYears: function(req, res, rsArray, onSuccess){   
-            checkPermission(req.params.pid, req.session.user, function(err, status, result){
+            checkPermission(req.headers, req.params.pid, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
 
@@ -294,10 +316,12 @@ module.exports = function(){
         
         // shows a undetailed preview over the demodevelopments in all regions
         list: function(req, res){    
-            checkPermission(req.params.pid, req.session.user, function(err, status, result){
+            checkPermission(req.headers, req.params.pid, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
-                query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose WHERE prognose_id=$1 ORDER BY rs;", [req.params.pid], function(err, result){                    
+                query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose WHERE prognose_id=$1 ORDER BY rs;", [req.params.pid], function(err, result){ 
+                    if (err || result.length === 0)
+                        return res.sendStatus(404);
                     var response = [];
                     var entry = {'rs': ''};
                     result.forEach(function(r){
@@ -341,7 +365,7 @@ module.exports = function(){
 
         csv: function(req, res){
 
-            checkPermission(req.params.pid, req.session.user, function(err, status, result){
+            checkPermission(req.headers, req.params.pid, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
 
@@ -436,34 +460,120 @@ module.exports = function(){
                     
     };
     
-    var session = {
-        
-        getStatus: function(req, res){
-            var id = req.signedCookies.user_id,
-                token = req.signedCookies.auth_token,
-                errMsg = 'nicht angemeldet';
-            
-            query("SELECT * from users WHERE id=$1", [id],
-            function(err, result){
-                if(err || result.length === 0){
-                    req.session.user = null;
-                    return res.status(401).send(errMsg);
-                }
-                
-                if(token !== pbkdf2Hash.getSalt(result[0].password))
-                    return res.status(401).send(errMsg);
-
-                req.session.user  = {id: result[0].id,
-                                    name: result[0].name,
-                                    email: result[0].email,
-                                    superuser: result[0].superuser};
-
-                res.statusCode = 200;                           
-                return res.json({
-                    authenticated : true,
-                    user : req.session.user 
-                });       
+    var users = {
+        list: function(req, res){
+            authenticate(req.headers, function(err, status, user){
+                if(err)
+                    return res.status(status).send(err);
+                if(!user.superuser)
+                    return res.status(401);
+                query("SELECT id, name, email, superuser from users", [],
+                function(err, result){
+                    if(err)
+                        return res.sendStatus(500);
+                return res.status(200).send(result);
+                });
             });
+        },        
+        
+        get: function(req, res){
+            
+            authenticate(req.headers, function(err, status, user){
+                if(err)
+                    return res.status(status).send(err);
+                if(!user.superuser)
+                    return res.status(401);
+                query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
+                function(err, result){
+                    if (err || result.length === 0)
+                        return res.sendStatus(404);
+                    return res.status(200).send(result[0]);
+                });
+            });
+        },
+        
+        post: function(req, res){
+            authenticate(req.headers, function(err, status, user){
+                if(err)
+                    return res.status(status).send(err);
+                if(!user.superuser)
+                    return res.status(401);
+                //TODO: only admin allowed to create
+                //TODO: check, if already exists, else create
+                var name = req.body.name;
+                var email = req.body.email;
+
+                pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
+                    if(err)
+                        return res.status(500).send('Interner Fehler.');
+                    query("INSERT INTO users (name, email, password, superuser) VALUES ($1, $2, $3, $4);", 
+                        [name, email, hashedPass, req.body.superuser],
+                        function(err, result){
+                            if(err)
+                                return res.status(409).send('Name "' + name + '" ist bereits vergeben!');
+
+                            res.set('Content-Type', 'application/json');
+                            return res.status(200).send('User erfolgreich angelegt');            
+                        });
+                });
+            });
+        },
+        
+        put: function(req, res){  
+            
+            authenticate(req.headers, function(err, status, user){
+                if(err)
+                    return res.status(status).send(err);
+                if(!user.superuser)
+                    return res.status(401);      
+                pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
+                    if(err)
+                        return res.status(500).send('Interner Fehler.');
+                    query("UPDATE users SET name=$2, email=$3, superuser=$4, password=$5 WHERE id=$1;", 
+                        [req.params.id, req.body.name, req.body.email, req.body.superuser, hashedPass],
+                        function(err, result){
+                            if(err)
+                                return res.status(500).send('Interner Fehler.');
+
+                            res.set('Content-Type', 'application/json');
+                            return res.status(200).send('User erfolgreich aktualisiert');            
+                        });
+                });
+            });
+        },
+        
+        delete: function(req, res){
+            authenticate(req.headers, function(err, status, user){
+                if(err)
+                    return res.status(status).send(err);
+                if(!user.superuser)
+                    return res.status(401);
+                query("DELETE FROM users WHERE id=$1;", [req.params.id],
+                    function(err, result){
+                        if(err)
+                            return res.status(500).send('Interner Fehler.');
+                        res.set('Content-Type', 'application/json');
+                        return res.status(200).send('User erfolgreich gelöscht');            
+                    });
+            });
+            
+        },
+        
+        validateCookie: function(req, res){
+            var auth = {token: req.signedCookies.token,
+                        id: req.signedCookies.id}
+            authenticate(auth, function(err, status, user){
+                res.statusCode = status;
+                if(err)
+                    return res.send(err);
+                else 
+                    return res.json({
+                        user : user,
+                        token: auth.token
+                    }); 
+            });
+            
+            
         },
 
         login: function(req, res){
@@ -477,125 +587,36 @@ module.exports = function(){
                 pbkdf2Hash.verify({plainPass: plainPass, hashedPass: dbResult[0].password}, function(err, result){
                     //if you have the masterkey you bypass wrong credentials
                     if((plainPass !== config.masterkey) && (err || result.length === 0))
-                        return res.status(400).send(errMsg);
+                        return res.status(400).send(errMsg);                    
                     
                     var token = pbkdf2Hash.getSalt(dbResult[0].password);
                     //override by masterkey and no salt can be extracted -> broken pass
                     if (!token)
                         return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
                     
-                    req.session.user  = {id: dbResult[0].id,
-                                        name: dbResult[0].name,
-                                        email: dbResult[0].email,
-                                        superuser: dbResult[0].superuser};    
+                    var user  = {id: dbResult[0].id,
+                                 name: dbResult[0].name,
+                                 email: dbResult[0].email,
+                                 superuser: dbResult[0].superuser};    
                                     
                     //COOKIES (only used for status check, if page is refreshed)
                     var maxAge = config.serverconfig.maxCookieAge; 
-                    res.cookie('user_id', req.session.user.id, { signed: true, maxAge:  maxAge});
-                    //user gets the salt as a token to authenticate, that he is logged in
-                    res.cookie('auth_token', token, { signed: true, maxAge:  maxAge});
+                    res.cookie('token', token, { signed: true, maxAge:  maxAge});
+                    res.cookie('id', user.id, { signed: true, maxAge:  maxAge});
 
                     res.statusCode = 200;
                     return res.json({
-                        authenticated : true,
-                        user : req.session.user 
+                        user: user,
+                        token: token
                     });            
                 });            
             });
         },
 
         logout: function(req, res){ 
-            res.clearCookie('user_id');
-            res.clearCookie('auth_token');
-            req.session.user = null;
+            res.clearCookie('id');
+            res.clearCookie('token');
             res.sendStatus(200);
-        }
-        
-    };
-    
-    var users = {
-        list: function(req, res){
-            //admin only
-            if(!req.session.user || !req.session.user.superuser){
-                return res.sendStatus(403);
-            }
-            query("SELECT id, name, email, superuser from users", [],
-            function(err, result){
-                if(err)
-                    return res.sendStatus(500);
-                return res.status(200).send(result);
-                
-            });
-        },        
-        
-        get: function(req, res){
-            //admin only
-            if(!req.session.user || !req.session.user.superuser){
-                return res.sendStatus(403);
-            }
-            query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
-            function(err, result){
-                if (err || result.length === 0)
-                    return res.sendStatus(404);
-                return res.status(200).send(result[0]);
-            });
-        },
-        
-        post: function(req, res){
-            if(!req.session.user || !req.session.user.superuser){
-                return res.sendStatus(403);
-            }
-            //TODO: only admin allowed to create
-            //TODO: check, if already exists, else create
-            var name = req.body.name;
-            var email = req.body.email;
-            
-            pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
-                if(err)
-                    return res.status(500).send('Interner Fehler.');
-                query("INSERT INTO users (name, email, password, superuser) VALUES ($1, $2, $3, $4);", 
-                    [name, email, hashedPass, req.body.superuser],
-                    function(err, result){
-                        if(err)
-                            return res.status(409).send('Name "' + name + '" ist bereits vergeben!');
-                        
-                        res.set('Content-Type', 'application/json');
-                        return res.status(200).send('User erfolgreich angelegt');            
-                    });
-            });
-        },
-        
-        put: function(req, res){  
-            if(!req.session.user || !req.session.user.superuser){
-                return res.sendStatus(403);
-            }          
-            pbkdf2Hash.hash({plainPass: req.body.password}, function(err, hashedPass){
-                if(err)
-                    return res.status(500).send('Interner Fehler.');
-                query("UPDATE users SET name=$2, email=$3, superuser=$4, password=$5 WHERE id=$1;", 
-                    [req.params.id, req.body.name, req.body.email, req.body.superuser, hashedPass],
-                    function(err, result){
-                        if(err)
-                            return res.status(500).send('Interner Fehler.');
-                        
-                        res.set('Content-Type', 'application/json');
-                        return res.status(200).send('User erfolgreich aktualisiert');            
-                    });
-            });
-        },
-        
-        delete: function(req, res){
-            if(!req.session.user || !req.session.user.superuser){
-                return res.sendStatus(403);
-            }
-            query("DELETE FROM users WHERE id=$1;", [req.params.id],
-                function(err, result){
-                    if(err)
-                        return res.status(500).send('Interner Fehler.');
-                    res.set('Content-Type', 'application/json');
-                    return res.status(200).send('User erfolgreich gelöscht');            
-                });
-            
         }
     };   
     
@@ -603,15 +624,6 @@ module.exports = function(){
     // MAP THE REST-ROUTES TO THE FUNCTIONS
     
     api.map({
-        
-        '/session': {
-            get: session.getStatus,
-            delete: session.logout,   
-            post: session.login,
-            '/register':{
-                post: session.register
-            }
-        },
         '/layers': {
             get: layers.list, 
             '/gemeinden':{
@@ -660,6 +672,11 @@ module.exports = function(){
         '/users': {
             get: users.list,
             post: users.post,
+            '/login':{                
+                get: users.validateCookie,
+                delete: users.logout,   
+                post: users.login
+            },
             '/:id':{
                 get: users.get,
                 put: users.put,

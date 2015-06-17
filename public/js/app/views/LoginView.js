@@ -40,7 +40,7 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
                 
                 // Dynamically updates the UI with the view's template
                 this.$el.html(this.template); 
-                if (app.session.get('authenticated')){                 
+                if (app.session.get('user')){                 
                     $(this.el).find('#login-button').text('Ausloggen');
                     //no changes wanted 
                     $(this.el).find("input").prop('disabled', true);       

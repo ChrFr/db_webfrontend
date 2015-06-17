@@ -11,21 +11,34 @@ define(["jquery", "backbone"],
 
         var SessionModel = Backbone.Model.extend({
             
-            url : 'api/session',
+            url : 'api/users/login',
             
             defaults: {
-                authenticated: false,
                 user: null
             },
+            
+            fetch: function(options){
+                var _this = this;
+                options || (options = {});
+                var callback = options.success;
+                
+                options.success = function(model, res, opt){
+                    _this.setHeader(model.get('user').id, model.get('token'));                    
+                    if(callback)
+                        callback(model, res, opt);
+                };
 
-            initialize : function(){
-                var csrf = $('meta[name="csrf-token"]').attr('content');
+                return Backbone.Model.prototype.fetch.call(this, options);
+            },    
+            
+            setHeader: function(id, token){
                 $.ajaxSetup({                    
-                    headers : {
-                        'X-CSRF-Token' : csrf
-                    }}
-                );    
-            },            
+                    headers : { 
+                        id: id,
+                        token: token
+                    }
+                });
+            },
             
             //authenticate by sending the data wit the user information
             //to the server
@@ -38,31 +51,17 @@ define(["jquery", "backbone"],
                     type : 'POST'
                 });
                 login.done(function(response){
-                    _this.set('authenticated', true);
+                    _this.setHeader(response.user.id, response.token);
                     _this.set('user', response.user); 
                     if(options.success)
                         options.success(response);
                 });
                 login.fail(function(response){
-                    _this.set('authenticated', false);
                     _this.set('user', null);
                     if(options.error){
                         options.error(response.responseText);
-                    }
-                });
-            },
-            
-            //send the register data to the server
-            register : function(data){
-                var _this = this;
-                var login = $.ajax({
-                    url : _this.url + '/register',
-                    data : data,
-                    type : 'POST'
-                });
-                login.done(function(response){
-                });
-                login.fail(function(response){
+                    }                    
+                    _this.setHeader(null, null);
                 });
             },
 
@@ -74,8 +73,8 @@ define(["jquery", "backbone"],
                     type : 'DELETE'
                 }).done(function(response){
                     _this.clear();
-                    //get new token
-                    _this.initialize();
+                    //get new token                    
+                    _this.setHeader(null, null);
                 });
             }
         });

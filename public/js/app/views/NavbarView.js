@@ -46,7 +46,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
             
             displayUserContent: function(){
                 //change the text of the menu item, to show, that the user is logged in
-                if (app.session.get('authenticated')){
+                if (app.session.get('user')){
                     var user = app.session.get('user');
                     this.$el.find('#login').text('Eingeloggt als ' + user.name);  
                     if (user.superuser){
@@ -67,7 +67,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                          
                 app.attributes.activePrognosis = null;
                 //update prognoses available for this user
-                app.prognoses.fetch({success: function(){     
+                app.prognoses.fetch({success: function(){    
                     new OptionView({el: progSelector, name: 'Bitte wählen', value: -1}); 
                     app.prognoses.each(function(prognosis){
                         new OptionView({

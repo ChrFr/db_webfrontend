@@ -276,8 +276,6 @@ module.exports = function(){
 
         // get demographic development from database
         getYears: function(req, res, rsArray, onSuccess){   
-            console.log(req.headers.id)
-                        console.log(req.headers.token)
             checkPermission(req.headers, req.params.pid, function(err, status, result){
                 if (err)
                     return res.status(status).send(err);
@@ -427,7 +425,7 @@ module.exports = function(){
         },
 
         //converts to PNG
-        png: function(req, res){
+        agetree: function(req, res){
             var Render = require('./render');
             if(!req.query.year)       
                 return res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.');
@@ -651,7 +649,7 @@ module.exports = function(){
                             get: demodevelop.csv
                         },                            
                         '/png':{
-                            get: demodevelop.png
+                            get: demodevelop.agetree
                         }
                     },     
                     '/:rs': {                
@@ -663,7 +661,7 @@ module.exports = function(){
                             get: demodevelop.csv
                         },                            
                         '/png':{
-                            get: demodevelop.png
+                            get: demodevelop.agetree
                         }
                     }
                 }    

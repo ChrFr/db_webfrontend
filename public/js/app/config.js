@@ -24,6 +24,10 @@ require.config({
       "filesaver": "../libs/FileSaver.min",
       
       "tableexport": "../libs/tableExport.min",
+      
+      "canvg": "../libs/canvg",
+      
+      "pnglink": "../libs/jquery.pnglink",
 
       // Plugins
       // -------
@@ -55,7 +59,9 @@ require.config({
       // Jasmine-jQuery plugin
       "jasminejquery": ["jquery"],
       
-      "d3slider": ["d3"]
+      "d3slider": ["d3"],
+      
+      "pnglink": ["jquery"]
 
   }
 

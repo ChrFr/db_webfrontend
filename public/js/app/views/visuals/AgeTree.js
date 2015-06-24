@@ -19,8 +19,8 @@ var AgeTree = function(options){
         if(!d3)            
             var d3 = require('d3');
         
-        var _this = this;                                
-
+        var _this = this;        
+        
         var femaleAges = this.data.alter_weiblich;
         var maleAges = this.data.alter_maennlich;
 
@@ -41,13 +41,30 @@ var AgeTree = function(options){
             .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
             .attr('width', margin.left + this.width + margin.right)
             .attr('height', margin.top + this.height + margin.bottom);  
-    
         if(this.css){
             var defs = top.append('defs');
             var style = defs.append('style');  
             //style.type = 'text/css';                
             style.attr("type", "text/css");     
             style.html(this.css);  
+        }
+        else{            
+            var parsed = "\n"
+            for (var i=0;i<document.styleSheets.length; i++) {
+              var str = document.styleSheets[i].href.split("/");
+              if (str[str.length-1]=="visuals.css"){
+                var rules = document.styleSheets[i].rules;
+                for (var j=0; j<rules.length;j++){
+                  parsed += (rules[j].cssText + "\n");
+                }
+                break;
+              }
+            }     
+
+            var style = top.append('style');  
+            //style.type = 'text/css';                
+            style.attr("type", "text/css");
+            style.html("\n<![CDATA[" + parsed + "]]>\n");
         }
 
         // create svg

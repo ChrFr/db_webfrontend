@@ -1,9 +1,9 @@
-define(["app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
+define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
     "collections/LayerCollection", "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
     "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
-    "views/visuals/LineChart", "views/visuals/GroupedBarChart"],
+    "views/visuals/LineChart", "views/visuals/GroupedBarChart", "canvg", "pnglink", "filesaver"],
 
-    function(app, Backbone, template, CommunityCollection, LayerCollection, 
+    function($, app, Backbone, template, CommunityCollection, LayerCollection, 
             DDCollection, DDAggregate, OptionView, TableView, d3, d3slider){
         var DemographicDevelopmentView = Backbone.View.extend({
             // The DOM Element associated with this view
@@ -39,8 +39,11 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
                 'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
                 'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
+                'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
+                'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
                 'click #play': 'play',
-                'click #visualizations li': 'tabChange'
+                'click #visualizations li': 'tabChange',
+                'click #hiddenPng': 'test'
             },
 
             render: function() {
@@ -69,7 +72,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                         _this.changeLayer(e.target.value);
                     }
                 };  
-                
                 return this;
             },     
             
@@ -173,7 +175,9 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             renderRegion: function(model){
                 var _this = this;
                 this.stop();                
-                model.fetch({success: function(){  
+                model.fetch({success: function(){      
+                    _this.el.querySelector("#visualizations").style.display = 'block';
+                    _this.el.querySelector("#tables").style.display = 'block';
                     var data = model.get('data')[0];
                     var maxYear = model.get('maxYear'),
                         minYear = model.get('minYear'),
@@ -544,9 +548,25 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 this.rawTable.save();
             },
             
-            downloadAgeTreePng: function() {
-                var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png"
-                this.currentModel.downloadAgeTreePng(this.currentYear, this.xScale, filename);
+            downloadAgeTreePng: function(e) {
+                var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png";
+                var svgDiv = $("#agetree>svg");                
+                downloadPng(svgDiv, filename);
+            },
+            
+            downloadBarChartPng: function(e) {
+                var filename = this.getRegionName() + "-barchart.png";
+                var svgDiv = $("#barchart>svg");                
+                downloadPng(svgDiv, filename);
+            },
+            
+            downloadDevelopmentPng: function(e) {
+                var filename = this.getRegionName() + "-bevoelkerungsentwicklung_absolut.png";
+                var svgDiv = $("#absolute>svg");                
+                downloadPng(svgDiv, filename);
+                var filename = this.getRegionName() + "-bevoelkerungsentwicklung_relativ.png";
+                var svgDiv = $("#relative>svg");                
+                downloadPng(svgDiv, filename);
             },
             
             changeYear: function(year){ 
@@ -633,6 +653,22 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             }
 
         });
+        
+        
+        function downloadPng(svgDiv, filename) {
+
+            var svg = svgDiv[0].outerHTML,
+                canvas = document.getElementById('pngRenderer');
+
+            canvg(canvas, svg);
+
+            var image = canvas.toDataURL('image/png');        
+            var link = document.createElement("a");
+            link.download = filename;
+            link.href = image;
+            link.click();
+        };
+          
         // Returns the View class
         return DemographicDevelopmentView;
 

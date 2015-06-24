@@ -55,6 +55,24 @@ var GroupedBarChart = function(options){
             style.attr("type", "text/css");     
             style.html(this.css);  
         }
+        else{            
+            var parsed = "\n"
+            for (var i=0;i<document.styleSheets.length; i++) {
+              var str = document.styleSheets[i].href.split("/");
+              if (str[str.length-1]=="visuals.css"){
+                var rules = document.styleSheets[i].rules;
+                for (var j=0; j<rules.length;j++){
+                  parsed += (rules[j].cssText + "\n");
+                }
+                break;
+              }
+            }     
+
+            var style = top.append('style');  
+            //style.type = 'text/css';                
+            style.attr("type", "text/css");
+            style.html("\n<![CDATA[" + parsed + "]]>\n");
+        }
 
         // create svg
         var svg = top.append('svg')
@@ -119,7 +137,7 @@ var GroupedBarChart = function(options){
             .attr("dy", "0.71em")
             .style("text-anchor", "end")
             .text(this.ylabel)
-            .attr("transform", "rotate(-90), " + translation(0,-margin.left));  
+            .attr("transform", "rotate(-90), " + translation(0, 0));  
     
         if(this.yNegativeLabel)
             yApp.append("text")
@@ -127,7 +145,7 @@ var GroupedBarChart = function(options){
             .attr("dy", "0.71em")
             .style("text-anchor", "end")
             .text(this.yNegativeLabel)
-            .attr("transform", "rotate(-90), " + translation(- innerheight + margin.bottom, -margin.left)); 
+            .attr("transform", "rotate(-90), " + translation(- innerheight + margin.bottom, 0)); 
     
         // BARS
         

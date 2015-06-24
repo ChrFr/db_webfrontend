@@ -10,6 +10,10 @@ body {
     background-color: #EBEBE0;
 }
 
+#visualizations, #tables{
+    display: none;
+}
+
 .centered{
     text-align: center;
 }
@@ -196,7 +200,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     color: red;
 }
 
-#csv {
+.csv {
     margin: 0 auto;
 }
 
@@ -228,14 +232,14 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 }
 
 .side-controls button:hover{
-    background: gold;
+    box-shadow: 0px 0px 4px 2px gold;
 }
 
 .side-controls button img {
     width: 100%;
 }
 
-.side-controls #png{
+.side-controls .png{
     margin-top: 45px;
 }
 

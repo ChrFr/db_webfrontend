@@ -5,11 +5,11 @@
 
 
 svg {
-    font: 0.8em sans-serif;
+    font: 0.9em sans-serif;
 }
 
 .title{    
-    font-size: 1.5em;
+    font-size: 1.2em;
 }
 
 .axis line,
@@ -35,7 +35,6 @@ svg {
 }
 
 rect.male{
-    fill-opacity: 1;
     fill: #0066FF;
 }
 
@@ -44,7 +43,6 @@ text.male{
 }
 
 rect.female{
-    fill-opacity: 1;
     fill: #CC3399;
 }
 

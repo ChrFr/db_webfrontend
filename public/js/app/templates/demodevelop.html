@@ -1,4 +1,4 @@
-
+<link rel="stylesheet" type="text/css" href="../../../css/visuals.css">
 <div class="container-fluid">    
     <div class="col-md-2"> 
         <label> Gliederungsebene </label>
@@ -18,9 +18,19 @@
             <div class="tab-pane active" id="development-tab">            
                 <div id="absolute"></div>         
                 <div id="relative"></div>
+                <div class="side-controls"> 
+                    <button class="download-btn png" title="Grafik als png-Datei speichern"> 
+                        <img src="../../../img/camera-black.png"> 
+                    </button>
+                </div>
             </div>          
             <div class="tab-pane" id="barchart-tab">    
                 <div id="barchart"></div>
+                <div class="side-controls"> 
+                    <button class="download-btn png" title="Grafik als png-Datei speichern"> 
+                        <img src="../../../img/camera-black.png"> 
+                    </button>
+                </div>
             </div>
             <div class="tab-pane" id="agetree-tab">            
                 <div id="agetree"></div>
@@ -66,4 +76,8 @@
             </div>
         </div>	
     </div>
+</div>
+
+<div id="pngWrapper" style="display: none">
+  <canvas id="pngRenderer"></canvas>
 </div>

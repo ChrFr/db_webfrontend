@@ -535,39 +535,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 });
             },
             
-            downloadAgeTableCsv: function() {
-                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
-                //this.currentModel.downloadCsv(this.currentYear, filename);
-                this.ageTable.save();
-            },
-            
-            downloadRawCsv: function() {
-                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
-                //this.currentModel.downloadCsv(this.currentYear, filename);
-                this.rawTable.save();
-            },
-            
-            downloadAgeTreePng: function(e) {
-                var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png";
-                var svgDiv = $("#agetree>svg");                
-                downloadPng(svgDiv, filename, {width: this.ageTree.svgWidth, height: this.ageTree.svgHeight});
-            },
-            
-            downloadBarChartPng: function(e) {
-                var filename = this.getRegionName() + "-barchart.png";
-                var svgDiv = $("#barchart>svg");                
-                downloadPng(svgDiv, filename);
-            },
-            
-            downloadDevelopmentPng: function(e) {
-                var filename = this.getRegionName() + "-bevoelkerungsentwicklung_absolut.png";
-                var svgDiv = $("#absolute>svg");                
-                downloadPng(svgDiv, filename);
-                var filename = this.getRegionName() + "-bevoelkerungsentwicklung_relativ.png";
-                var svgDiv = $("#relative>svg");                
-                downloadPng(svgDiv, filename);
-            },
-            
             changeYear: function(year){ 
                 this.currentYear = year;          
                 var data = this.currentModel.get('data');   
@@ -644,6 +611,39 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 return name;
             },
             
+            downloadAgeTableCsv: function() {
+                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+                //this.currentModel.downloadCsv(this.currentYear, filename);
+                this.ageTable.save();
+            },
+            
+            downloadRawCsv: function() {
+                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+                //this.currentModel.downloadCsv(this.currentYear, filename);
+                this.rawTable.save();
+            },
+            
+            downloadAgeTreePng: function(e) {
+                var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png";
+                var svgDiv = $("#agetree>svg");                
+                downloadPng(svgDiv, filename, {width: 2, height: 2});
+            },
+            
+            downloadBarChartPng: function(e) {
+                var filename = this.getRegionName() + "-barchart.png";
+                var svgDiv = $("#barchart>svg");                
+                downloadPng(svgDiv, filename, {width: 2, height: 2});
+            },
+            
+            downloadDevelopmentPng: function(e) {
+                var filename = this.getRegionName() + "-bevoelkerungsentwicklung_absolut.png";
+                var svgDiv = $("#absolute>svg");                
+                downloadPng(svgDiv, filename, {width: 2, height: 2});
+                var filename = this.getRegionName() + "-bevoelkerungsentwicklung_relativ.png";
+                var svgDiv = $("#relative>svg");                
+                downloadPng(svgDiv, filename, {width: 2, height: 2});
+            },
+            
             //remove the view
             close: function () {
                 this.stop();
@@ -654,19 +654,33 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
         
         
-        function downloadPng(svgDiv, filename, replace) {
+        function downloadPng(svgDiv, filename, scale) {
+            var oldWidth = svgDiv.width(),
+                oldHeight = svgDiv.height(),
+                oldScale = svgDiv.attr('transform');
+        
+            //change scale
+            if (scale){
+                svgDiv.height(scale.width * oldWidth);
+                svgDiv.width(scale.height * oldHeight);
+                svgDiv.attr('transform', 'scale(' + scale.width + ' ' + scale.height + ')');
+            }
 
+            //get svg plain text (eventually scaled)
             var svg = svgDiv[0].outerHTML,
                 canvas = document.getElementById('pngRenderer');
-
-            if(replace){                
-                svg = svg.replace('width="' + replace.width + '"', 'width="2000"').replace('height="' + replace.height + '"', 'height="2000"');   
-                var dWidth = 2000/replace.width, dHeight = 2000/replace.height;
-                svg = svg.replace('<svg ', '<svg transform="scale(' + dWidth + ' ' + dHeight + ')" ');   
-                console.log(svg);
+        
+            //reset scale
+            if (scale){
+                svgDiv.height(oldHeight);
+                svgDiv.width(oldWidth),
+                svgDiv.attr('transform', oldScale);
             }
+            
+            //draw svg on hidden canvas
             canvg(canvas, svg);
 
+            //save canvas to file
             var image = canvas.toDataURL('image/png');        
             var link = document.createElement("a");
             link.download = filename;

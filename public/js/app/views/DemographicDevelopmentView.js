@@ -537,18 +537,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             },
             
             openCurrentYearCsvTab: function() {
-                var win = window.open(this.currentModel.csvUrl(this.currentYear), '_blank');
-                win.focus();
+                var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+                this.currentModel.downloadCsv(this.currentYear, filename);
             },
             
             openCurrentYearPngTab: function() {
-                var xhr = new XMLHttpRequest;
-
-                xhr.open( "GET", this.currentModel.pngUrl(this.currentYear, this.xScale) ); //I had test.pdf this on my local server
-
-                xhr.setRequestHeader("id", app.session.get('user').id );
-                xhr.setRequestHeader("token", app.session.get('token'));
-                xhr.send(null);
+                var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png"
+                this.currentModel.downloadPng(this.currentYear, this.xScale, filename);
             },
             
             changeYear: function(year){ 
@@ -635,7 +630,6 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             }
 
         });
-
         // Returns the View class
         return DemographicDevelopmentView;
 

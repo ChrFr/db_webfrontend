@@ -31,7 +31,9 @@ require.config({
 
       "text": "../libs/text",
 
-      "jasminejquery": "../libs/jasmine-jquery"
+      "jasminejquery": "../libs/jasmine-jquery",
+      
+      "filesaver": "../libs/FileSaver.min"
   },
 
   // Sets the configuration for your third party scripts that are not AMD compatible

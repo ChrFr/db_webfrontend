@@ -1,6 +1,6 @@
-define(["backbone"],
+define(["app", "backbone", "filesaver"],
 
-    function(Backbone) {
+    function(app, Backbone) {
 
         var DemographicDevelopmentModel = Backbone.Model.extend({
             idAttribute: 'rs',
@@ -55,20 +55,38 @@ define(["backbone"],
                     this.urlRoot = this.urlRoot.replace('{progId}', progId);
             },
             
-            csvUrl: function(year){
-                var url = this.urlRoot || this.url
-                url += this.get('rs') + '/csv'
-                if(year)
-                    url += '?year=' + year;
-                return url
+            download: function(url, mimeType, fn){                
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.responseType = 'arraybuffer';
+
+                xhr.onload = function(e) {
+                  if (this.status == 200) {
+                    var blob = new Blob([xhr.response], {type: mimeType});
+                    saveAs(blob, fn);
+                  }
+                };
+
+                xhr.setRequestHeader("id", app.session.get('user').id );
+                xhr.setRequestHeader("token", app.session.get('token'));
+                xhr.send();
             },
             
-            pngUrl: function(year, maxX){
-                var url = this.urlRoot || this.url
+            downloadCsv: function(year, fn){
+                var url = this.urlRoot || this.url;
+                url += this.get('rs') + '/csv';
+                if(year)
+                    url += '?year=' + year;
+                this.download(url, "text/csv", fn ||  this.get('rs') + "-" + year + ".png");
+            },
+            
+            downloadPng: function(year, maxX, fn){
+                var url = this.urlRoot || this.url;
                 url += this.get('rs') + '/png?year=' + year;
                 if(maxX)
                     url += '&maxX=' + maxX;
-                return url
+                
+                this.download(url, "image/png", fn ||  this.get('rs') + "-" + year + ".png");
             }
         });
         return DemographicDevelopmentModel;

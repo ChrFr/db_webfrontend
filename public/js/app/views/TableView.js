@@ -81,7 +81,8 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
             
             save: function(){
                 this.table.tableExport({type:'csv',
-                                        fileName: this.title});
+                                        fileName: this.title,
+                                        csvSeparator: ';'});
             },
             
             //remove the view

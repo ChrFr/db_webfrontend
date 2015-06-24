@@ -181,13 +181,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     var data = model.get('data')[0];
                     var maxYear = model.get('maxYear'),
                         minYear = model.get('minYear'),
-                        yearData,
                         data = model.get('data');
                     _this.currentModel = model;
                     
                     //draw first year if not assigned yet
                     if(!_this.currentYear){
-                        yearData = data[0];
+                        _this.yearData = data[0];
                         _this.currentYear = minYear;
                     }
                     //keep year of previous region, if new region has data for it
@@ -196,12 +195,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         _.each(model.get('data'), (function(yd){                     
                             if(yd.jahr == _this.currentYear) {
                                 found = true;
-                                yearData = yd;
+                                _this.yearData = yd;
                             }
                         }));
                         if(!found){
                             _this.currentYear = minYear;
-                            yearData = data[0];
+                            _this.yearData = data[0];
                         }
                     }   
                     // UPDATE SLIDERS    
@@ -266,17 +265,17 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         evt.stopPropagation();
                         _this.xScale = Math.ceil(value);
                         _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-                        _this.renderTree();
+                        _this.renderTree(_this.yearData);
                     });
                     
                     //visualizations
-                    _this.renderTree(yearData);
+                    _this.renderTree(_this.yearData);
                     _this.renderDevelopment(data);
                     _this.renderBarChart(data);
                     
                     //data tables
-                    _this.renderAgeGroup(yearData);
-                    _this.renderAgeTable(yearData);
+                    _this.renderAgeGroup(_this.yearData);
+                    _this.renderAgeTable(_this.yearData);
                     _this.renderRawData(data);
                 }});
             },
@@ -573,10 +572,10 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 this.currentYear = year;          
                 var data = this.currentModel.get('data');   
                 var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
-                var yearData = data[idx]; 
-                this.ageTree.changeData(yearData);
-                this.renderAgeGroup(yearData); 
-                this.renderAgeTable(yearData); 
+                this.yearData = data[idx]; 
+                this.ageTree.changeData(this.yearData);
+                this.renderAgeGroup(this.yearData); 
+                this.renderAgeTable(this.yearData); 
             },
             
             /*
@@ -592,9 +591,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 }
                 //the others render summary over years -> render data of first year (thats the year the predictions base on)
                 else{
-                    var yearData = this.currentModel.get('data')[0];
-                    this.renderAgeTable(yearData);
-                    this.renderAgeGroup(yearData);  
+                    this.yearData = this.currentModel.get('data')[0];
+                    this.renderAgeTable(this.yearData);
+                    this.renderAgeGroup(this.yearData);  
                     
                     //no need for changing years
                     this.el.querySelector("#slide-controls").style.display = 'none';

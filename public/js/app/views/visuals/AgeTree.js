@@ -34,13 +34,16 @@ var AgeTree = function(options){
 
         var regionWidth = this.width/2 - margin.middle;
         var pointA = regionWidth,
-            pointB = this.width - regionWidth;       
+            pointB = this.width - regionWidth;  
+    
+        this.svgWidth = margin.left + this.width + margin.right,
+        this.svgHeight = margin.top + this.height + margin.bottom;
         
         var top = d3.select(this.el).append('svg')
             .attr('xmlns', "http://www.w3.org/2000/svg")
             .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
-            .attr('width', margin.left + this.width + margin.right)
-            .attr('height', margin.top + this.height + margin.bottom);  
+            .attr('width', this.svgWidth)
+            .attr('height', this.svgHeight);  
         if(this.css){
             var defs = top.append('defs');
             var style = defs.append('style');  

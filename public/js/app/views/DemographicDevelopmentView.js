@@ -550,7 +550,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             downloadAgeTreePng: function(e) {
                 var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png";
                 var svgDiv = $("#agetree>svg");                
-                downloadPng(svgDiv, filename);
+                downloadPng(svgDiv, filename, {width: this.ageTree.svgWidth, height: this.ageTree.svgHeight});
             },
             
             downloadBarChartPng: function(e) {
@@ -654,11 +654,17 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
         
         
-        function downloadPng(svgDiv, filename) {
+        function downloadPng(svgDiv, filename, replace) {
 
             var svg = svgDiv[0].outerHTML,
                 canvas = document.getElementById('pngRenderer');
 
+            if(replace){                
+                svg = svg.replace('width="' + replace.width + '"', 'width="2000"').replace('height="' + replace.height + '"', 'height="2000"');   
+                var dWidth = 2000/replace.width, dHeight = 2000/replace.height;
+                svg = svg.replace('<svg ', '<svg transform="scale(' + dWidth + ' ' + dHeight + ')" ');   
+                console.log(svg);
+            }
             canvg(canvas, svg);
 
             var image = canvas.toDataURL('image/png');        

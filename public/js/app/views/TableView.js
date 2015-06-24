@@ -1,5 +1,5 @@
 
-define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
+define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "filesaver", "tableexport"],
 
     function(Backbone, $, template){
         var DemographicDevelopmentView = Backbone.View.extend({
@@ -77,6 +77,11 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable"],
             
             getSelections: function(){
                 return this.table.bootstrapTable('getSelections');
+            },
+            
+            save: function(){
+                this.table.tableExport({type:'csv',
+                                        fileName: this.title});
             },
             
             //remove the view

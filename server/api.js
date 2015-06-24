@@ -399,9 +399,7 @@ module.exports = function(){
                             countPos: (year) ? 0: 1,
                             writeHead: (i === 0) ? true: false
                         }) + '\n';
-
                     }
-
                     res.send(expanded);                      
                 });
             });

@@ -36,8 +36,9 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
             },
 
             events: {
-                'click .download-btn#csv': 'openCurrentYearCsvTab',
-                'click .download-btn#png': 'openCurrentYearPngTab',
+                'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
+                'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
+                'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
                 'click #play': 'play',
                 'click #visualizations li': 'tabChange'
             },
@@ -339,13 +340,13 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 // RELATIVE DATA (to first year)
                 
                 // clone data (prevent conflicts in drawing dots in both line charts)
-                var dataRel = JSON.parse(JSON.stringify(dataAbs))
+                var dataRel = JSON.parse(JSON.stringify(dataAbs));
                 
                 var relVal = dataRel.y[0];
                 
                 for(var i = 0; i < dataRel.y.length; i++){
                     dataRel.y[i] *= 100 / relVal;
-                    dataRel.y[i] = Math.round(dataRel.y[i] * 100) / 100
+                    dataRel.y[i] = Math.round(dataRel.y[i] * 100) / 100;
                 };
                               
                 vis = this.el.querySelector("#relative");
@@ -456,7 +457,7 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                     el: this.el.querySelector("#raw-data"),
                     columns: columns,
                     data: data,
-                    title: data[0].jahr + " - " + data[data.length -1].jahr,
+                    title: this.getRegionName() + " - " + data[0].jahr + "-" + data[data.length -1].jahr,
                     highlight: true
                 });
             },
@@ -531,19 +532,21 @@ define(["app", "backbone", "text!templates/demodevelop.html", "collections/Commu
                 });
             },
             
-            openAllYearsCsvTab: function() {
-                var win = window.open(this.currentModel.csvUrl(), '_blank');
-                win.focus();
+            downloadAgeTableCsv: function() {
+                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+                //this.currentModel.downloadCsv(this.currentYear, filename);
+                this.ageTable.save();
             },
             
-            openCurrentYearCsvTab: function() {
-                var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
-                this.currentModel.downloadCsv(this.currentYear, filename);
+            downloadRawCsv: function() {
+                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+                //this.currentModel.downloadCsv(this.currentYear, filename);
+                this.rawTable.save();
             },
             
-            openCurrentYearPngTab: function() {
+            downloadAgeTreePng: function() {
                 var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png"
-                this.currentModel.downloadPng(this.currentYear, this.xScale, filename);
+                this.currentModel.downloadAgeTreePng(this.currentYear, this.xScale, filename);
             },
             
             changeYear: function(year){ 

@@ -20,6 +20,10 @@ require.config({
       "d3": "../libs/d3.min",
       
       "d3slider": "../libs/d3.slider",
+      
+      "filesaver": "../libs/FileSaver.min",
+      
+      "tableexport": "../libs/tableExport.min",
 
       // Plugins
       // -------
@@ -31,9 +35,7 @@ require.config({
 
       "text": "../libs/text",
 
-      "jasminejquery": "../libs/jasmine-jquery",
-      
-      "filesaver": "../libs/FileSaver.min"
+      "jasminejquery": "../libs/jasmine-jquery"
   },
 
   // Sets the configuration for your third party scripts that are not AMD compatible

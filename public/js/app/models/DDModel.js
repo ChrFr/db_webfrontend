@@ -80,7 +80,7 @@ define(["app", "backbone", "filesaver"],
                 this.download(url, "text/csv", fn ||  this.get('rs') + "-" + year + ".png");
             },
             
-            downloadPng: function(year, maxX, fn){
+            downloadAgeTreePng: function(year, maxX, fn){
                 var url = this.urlRoot || this.url;
                 url += this.get('rs') + '/png?year=' + year;
                 if(maxX)

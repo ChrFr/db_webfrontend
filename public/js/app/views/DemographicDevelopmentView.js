@@ -225,7 +225,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         .min(minYear)
                         .max(maxYear)
                         .step(1)
-                        .margin(20)
                         .value(_this.currentYear);              
                           
                     d3.select('#year-slider').call(_this.yearSlider);
@@ -253,10 +252,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     
                     var xScale = d3.scale.log()
                             .domain([minScale, maxScale]);
+                    
+                    _this.el.querySelector('#min-scale').innerHTML = minScale;
+                    _this.el.querySelector('#max-scale').innerHTML = maxScale;
                         
                     var scaleSlider = d3slider().scale(xScale)
                                                 .value(_this.xScale)
-                                                .axis(d3.svg.axis().orient("right").tickFormat(d3.format("")).ticks(10))
+                                                .axis(d3.svg.axis().orient("right").tickFormat(d3.format("")).ticks(10).tickFormat(""))
                                                 .orientation("vertical");
                                 
                     d3.select('#scale-slider').call(scaleSlider);
@@ -554,7 +556,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     // age tree can render multiple years -> render data of current one  
                     this.changeYear(this.currentYear);
                     // age tree needs slider to change years                    
-                    this.el.querySelector("#slide-controls").style.display = 'block';
+                    this.el.querySelector("#bottom-controls").style.display = 'block';
                 }
                 //the others render summary over years -> render data of first year (thats the year the predictions base on)
                 else{
@@ -563,7 +565,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     this.renderAgeGroup(this.yearData);  
                     
                     //no need for changing years
-                    this.el.querySelector("#slide-controls").style.display = 'none';
+                    this.el.querySelector("#bottom-controls").style.display = 'none';
                 }
                     
             },

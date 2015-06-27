@@ -551,12 +551,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
              * if tab changed, show specific data and controls
              */
             tabChange: function(event){
-                this.stop();              
+                this.stop();       
                 if(event.target.getAttribute('href') === "#agetree-tab"){
                     // age tree can render multiple years -> render data of current one  
                     this.changeYear(this.currentYear);
                     // age tree needs slider to change years                    
-                    this.el.querySelector("#bottom-controls").style.display = 'block';
+                    this.el.querySelector(".bottom-controls").style.display = 'block';
                 }
                 //the others render summary over years -> render data of first year (thats the year the predictions base on)
                 else{
@@ -565,15 +565,17 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     this.renderAgeGroup(this.yearData);  
                     
                     //no need for changing years
-                    this.el.querySelector("#bottom-controls").style.display = 'none';
+                    this.el.querySelector(".bottom-controls").style.display = 'none';
                 }
                     
             },
             
             play: function(event){
-                var _this = this;  
+                var _this = this;                  
                 if(!this.timerId){
-                    event.target.innerHTML = 'Stop';
+                    var btn = event.target;
+                    btn.classList.remove('stopped');
+                    btn.classList.add('playing');
                     var maxYear = _this.currentModel.get('maxYear');
                     var minYear = _this.currentModel.get('minYear');
                     // slider reached end? -> reset
@@ -596,8 +598,10 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     this.stop();
             },
             
-            stop: function(){               
-                this.el.querySelector("#play").innerHTML = 'Play';
+            stop: function(){  
+                var btn = this.el.querySelector("#play");
+                btn.classList.remove('playing');
+                btn.classList.add('stopped');
                 if(this.timerId){
                     clearInterval(this.timerId);
                     this.timerId = null;

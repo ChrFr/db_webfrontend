@@ -1,4 +1,4 @@
-#bottom-controls{
+.bottom-controls{
     display: none;
     background-color: white;
     height: 50px;
@@ -8,8 +8,17 @@
 }
 
 #play{
-    float: left;
-    width: 30px;
+    background-repeat: no-repeat;
+    background-size: 50%;
+    background-position: center;
+}
+
+#play.stopped{    
+    background-image: url("../img/play.png");
+}
+
+#play.playing{    
+    background-image: url("../img/pause.png");
 }
 
 #year-slider{
@@ -25,6 +34,45 @@
 
 .side-controls label{
     font-size: .8em;
+}
+
+.side-controls button, .bottom-controls button {
+    border-radius: 50%;    
+    border: solid 1px lightgrey;
+    background: white;
+}
+
+
+.side-controls button{    
+    width: 40px;
+    height: 40px;
+    margin-bottom: 40px;
+    opacity: 0.8;
+    float: right;
+}
+
+.bottom-controls button{    
+    float: left;
+    width: 30px;
+    height: 30px;
+}
+
+.side-controls button:focus, .bottom-controls button:focus{
+    /*remove bootstrap outline*/
+    outline: 0 none;
+    box-shadow: 0px 0px 2px 1px gold;
+}
+
+.side-controls button:hover, .bottom-controls button:hover{
+    box-shadow: 0px 0px 4px 2px gold;
+}
+
+.download-btn img {
+    width: 100%;
+}
+
+.side-controls .png{
+    margin-top: 45px;
 }
 
 .d3-slider-axis{

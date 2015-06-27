@@ -74,7 +74,7 @@
 }
 
 /*unified borders*/
-#current-scale, #fix-wrapper, .bottom-controls, #scale-slider-container{
+#current-scale, #fix-wrapper, #scale-slider-container{
     margin-bottom: 0px;    
     background-color: white;
     background: white;

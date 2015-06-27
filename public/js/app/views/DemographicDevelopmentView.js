@@ -38,6 +38,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             events: {
                 'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
                 'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
+                'click #agegroup-tab>.new-row': 'addAgeGroup',
                 'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
                 'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
@@ -541,6 +542,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     title: title + " " + yearData.jahr,
                     highlight: true
                 });
+            },
+            
+            addAgeGroup: function(){
+                var table = this.ageGroupTable.table,
+                    length = table.bootstrapTable('getData').length;
+            
+                this.ageGroupTable.table.bootstrapTable('insertRow', {
+                    index: length-1, 
+                    row: {}})
             },
             
             changeYear: function(year){ 

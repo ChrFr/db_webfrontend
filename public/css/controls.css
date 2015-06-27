@@ -21,6 +21,22 @@
     background-image: url("../img/pause.png");
 }
 
+#fix-scale{
+    background-repeat: no-repeat;
+    background-size: 50%;
+    background-position: center;
+    width: 30px;
+    height: 30px;
+}
+
+#fix-scale.locked{    
+    background-image: url("../img/locked.png");
+}
+
+#fix-scale.unlocked{    
+    background-image: url("../img/unlocked.png");
+}
+
 #year-slider{
     float: left;
     margin-left: 30px;
@@ -42,13 +58,23 @@
     background: white;
 }
 
-
-.side-controls button{    
+.side-controls .download-btn{    
     width: 40px;
     height: 40px;
     margin-bottom: 40px;
     opacity: 0.8;
-    float: right;
+}
+
+.side-controls  > *{    
+    margin-left: auto;
+    margin-right: auto;  
+    display: block;
+    text-align: center;
+}
+#current-scale{
+    margin-bottom: 0px;    
+    background-color: white;
+    border: solid 1px lightgrey;
 }
 
 .bottom-controls button{    
@@ -84,13 +110,12 @@
     background: white;
     opacity: 0.8;
     width: 50px;
-    float: right;
-    padding: 10px; 
+    padding-top: 10px; 
 }
 
 #scale-slider-container > *{    
-  margin-left: auto;
-  margin-right: auto;  
+    margin-left: auto;
+    margin-right: auto;  
     display: block;
     text-align: center;
 }
@@ -180,4 +205,10 @@
     left: -.25em;
     margin-left: 0;
     margin-bottom: -.6em;      
+}
+
+/*disable elements (no interaction possible)*/
+.disabled{    
+  pointer-events: none !important;
+  opacity: 0.5 !important;
 }

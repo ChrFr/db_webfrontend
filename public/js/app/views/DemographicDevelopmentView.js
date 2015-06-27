@@ -43,7 +43,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
                 'click #play': 'play',
                 'click #visualizations li': 'tabChange',
-                'click #hiddenPng': 'test'
+                'click #hiddenPng': 'test',
+                'click #fix-scale': 'fixScale'
             },
 
             render: function() {
@@ -235,13 +236,16 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     });
                     
                     sliderDiv = _this.el.querySelector("#scale-slider"); 
-                    var checked = _this.el.querySelector("#fix-scale").checked;
+                    var locked = (_this.el.querySelector("#fix-scale").className === 'locked');
                     while (sliderDiv.firstChild) 
                         sliderDiv.removeChild(sliderDiv.firstChild);
                     
-                    //var minScale = Math.ceil(model.get('maxNumber'));
-                    var minScale = 1;
-                    if(!_this.xScale || !checked){// || minScale > _this.xScale) 
+                    //you can only scale below highest number, if you fixed scale before (for comparison)
+                    var min = Math.ceil(model.get('maxNumber'));
+                    var minScale = (!_this.xScale || min < _this.xScale) ? min: _this.xScale;
+                    if(minScale < 1) minScale = 1;
+                    
+                    if(!_this.xScale || !locked){
                         _this.xScale = model.get('maxNumber');  
                         _this.xScale *= 1.3;
                         _this.xScale = Math.ceil(_this.xScale);
@@ -255,6 +259,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     
                     _this.el.querySelector('#min-scale').innerHTML = minScale;
                     _this.el.querySelector('#max-scale').innerHTML = maxScale;
+                    
+                    
                         
                     var scaleSlider = d3slider().scale(xScale)
                                                 .value(_this.xScale)
@@ -608,6 +614,22 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 }
             },
             
+        
+            fixScale: function(event){                
+                var btn = event.target;
+                var slider = this.el.querySelector('#scale-slider-container');
+                if(btn.className === 'locked'){
+                    btn.classList.remove('locked');
+                    btn.classList.add('unlocked');
+                    slider.classList.remove('disabled');
+                }
+                else{
+                    btn.classList.remove('unlocked');
+                    btn.classList.add('locked');
+                    slider.classList.add('disabled');
+                }
+            },
+            
             // get name of region and remove suffix
             getRegionName: function(){                
                 var name = this.currentModel.get('name'); 
@@ -657,8 +679,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 this.remove(); // Remove view from DOM
             }
 
-        });
-        
+        });        
         
         function downloadPng(svgDiv, filename, scale) {
             var oldWidth = svgDiv.width(),

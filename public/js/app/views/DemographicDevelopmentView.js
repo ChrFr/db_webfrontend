@@ -32,7 +32,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             });                          
                         }});
                     }});
-                }     
+                }
             },
 
             events: {
@@ -79,6 +79,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         _this.changeLayer(e.target.value);
                     }
                 };  
+                this.validateAgeGroups();
                 return this;
             },     
             
@@ -512,6 +513,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         femaleSum, maleSum;
                     maleSum = femaleSum = 0;
                     
+                    if(ageGroup.intersects)
+                        groupName += '&nbsp&nbsp<span class="glyphicon glyphicon-warning-sign"></span>';
+                    
                     //sum up female ages
                     var to = (ageGroup.to === null || ageGroup.to >= femaleAges.length) ? femaleAges.length: ageGroup.to;      
                     for(var i = from; i < to; i++)
@@ -554,7 +558,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     data: rows,
                     dataHeight: 300,
                     title: title + " " + yearData.jahr,
-                    highlight: true,
+                    clickable: true,
                     selectable: true
                 });
             },
@@ -583,9 +587,37 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         break;
                 }
                 app.ageGroups.splice(i, 0, {from: from, to: to});
+                this.validateAgeGroups();
                 
                 //rerender table
                 this.renderAgeGroup(this.yearData);                
+            },
+            
+            /*
+             * flags intersections of groups, condition: sorted order of agegroups
+             */
+            validateAgeGroups: function(){       
+                //compare every row with its successor (except last row, it simply has none)
+                var showWarning = false;
+                for(var i = 0; i < app.ageGroups.length-1; i++){
+                    if(//easiest case: same start value
+                       app.ageGroups[i].from === app.ageGroups[i+1].from ||
+                       //if any row except last one has no upper limit it is definitely intersecting with successor
+                       app.ageGroups[i].to === null ||
+                       //group shouldn't have higher upper limit than successor (special sort order assumed here)
+                       app.ageGroups[i+1].to !== null && (app.ageGroups[i].to > app.ageGroups[i+1].to)){
+                        app.ageGroups[i].intersects = showWarning = true;
+                    }
+                    else
+                        app.ageGroups[i].intersects = false;
+                }
+                var warningDiv = this.el.querySelector('#agegroup-warning');
+                if(showWarning){                    
+                    warningDiv.innerHTML = '<span class="glyphicon glyphicon-warning-sign"></span><strong>Achtung!</strong> Es gibt Überschneidungen zwischen dieser und der nachfolgenden Altersgruppe!';
+                    warningDiv.style.display = "block";
+                }
+                else
+                    warningDiv.style.display = "none"
             },
             
             /*
@@ -620,6 +652,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         app.ageGroups.splice(i, 1);
                     }
                 }
+                
+                this.validateAgeGroups();
                 //rerender table
                 this.renderAgeGroup(this.yearData);
             },

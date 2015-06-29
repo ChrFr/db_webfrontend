@@ -16,7 +16,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
                 this.dataHeight = options.dataHeight || 400;
                 this.startPage = options.startPage || 1;
                 this.pageSize = options.pageSize || 20;
-                this.highlight = options.highlight;
+                this.clickable = options.highlight;
                 this.sortBy = options.sortBy;
                 this.render();
                 //this.model.fetch({success: this.render});
@@ -27,7 +27,6 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
             },
 
             render: function() {
-                var _this = this;
                 this.template = _.template(template, {title: this.title,
                     columns: this.columns});
                 this.el.innerHTML = this.template;  
@@ -57,7 +56,8 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
                     data: this.data
                 });
                 
-                if(this.highlight)
+                //row clicked -> highlight
+                if(this.clickable)
                     this.table.on('click','tr',function(e){
                         if(!($(this).hasClass('highlight'))){
                             $(this).addClass('highlight');

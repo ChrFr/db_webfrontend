@@ -611,9 +611,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     else
                         app.ageGroups[i].intersects = false;
                 }
+                var tab = this.el.querySelector('#agegroup-tab');
+                //remove old alerts
+                var warnings = this.el.querySelectorAll('.alert');
+                for(var i = 0; i < warnings.length; i++)
+                    warnings[i].remove();
+                //add new warning, if there is need to
                 if(showWarning){                    
                     var text = '<span class="glyphicon glyphicon-warning-sign"></span><strong>Achtung!</strong> Es gibt Überschneidungen zwischen dieser und der nachfolgenden Altersgruppe!';
-                    this.el.querySelector('#agegroup-tab').appendChild(createAlert('warning', text));
+                    tab.appendChild(createAlert('warning', text));
                 }
             },
             

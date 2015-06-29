@@ -209,7 +209,7 @@ var LineChart = function(options){
             var text = focus.select("text");
             back.style("width", parseInt(text.style("width")) + 10);
             back.style("height", text.style("height"));
-            text.text(yData[i]);
+            text.text(Math.round(yData[i]));
             //var bb = text.getBBox();
         }
 

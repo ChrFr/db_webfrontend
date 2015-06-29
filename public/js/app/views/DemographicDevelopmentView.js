@@ -539,6 +539,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     el: this.el.querySelector("#agegroup-data"),
                     columns: columns,
                     data: data,
+                    dataHeight: 300,
                     title: title + " " + yearData.jahr,
                     highlight: true
                 });

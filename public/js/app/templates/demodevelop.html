@@ -67,10 +67,21 @@
         <div class="tab-content">            
             <div class="tab-pane active" id="agegroup-tab">  
                 <div id="agegroup-data"></div> 
+                <br>                    
+                <label>Altersgruppe</label>
                 <br>
-                <label for="agegroup-input">Altersgruppe</label>
-                <input name="name" type="text" class="form-control" id="agegroup-input" placeholder="Name">
-                <button type="button" class="new-row btn-secondary btn" title="Altersgruppe hinzufügen">Hinzufügen</button>
+                <div class="col-md-2">
+                    <input class="form-control" id="agegroup-from" type="text">
+                </div>
+                <div class="col-xs-1">
+                    <label>_</label>
+                </div>
+                <div class="col-md-2">
+                    <input class="form-control" id="agegroup-to" type="text">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="new-row btn-secondary btn" title="Altersgruppe hinzufügen">Hinzufügen</button>
+                </div>
             </div>
             <div class="tab-pane" id="age-tab">    
                 <div id="age-data"></div>

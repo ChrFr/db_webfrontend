@@ -170,7 +170,8 @@ var LineChart = function(options){
 
         focus.append("circle")
             .attr("r", 4.5)
-            .attr("fill", colorScale(0));
+            .attr("fill", "gold")
+            .attr("stroke", colorScale(0));
     
         // tooltip
         focus.append("rect")

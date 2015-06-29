@@ -202,8 +202,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 }                    
             },
             
-            fillForm: function(dialog, model){    
-                console.log(model)
+            fillForm: function(dialog, model){  
                 var inputs = dialog.find('input, textarea');
                 _.each(inputs, function(input){
                     var input = $(input); 

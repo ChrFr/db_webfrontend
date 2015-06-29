@@ -30,6 +30,10 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     background: lightgrey;
 }
 
+.tab-pane > div{
+    margin-bottom: 5px;
+}
+
 .tab-content, #summary{
     background-color: white;
     width: 100%;
@@ -40,6 +44,11 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     box-shadow: 1px 0px 2px 0px lightgrey;
     margin-top: -1px;
     min-height: 200px;
+}
+
+.grouped{
+    border: solid 1px lightgrey;
+    padding: 10px;
 }
 
 .tab-pane{ 

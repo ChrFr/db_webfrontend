@@ -36,13 +36,17 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
 
             events: {
-                'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
-                'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
                 'click #new-group': 'addAgeGroup',
                 'change #agegroup-from': 'ageInput',
+                'click #delete-agegroups': 'deleteAgeGroups',
+                
+                'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
+                'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
+                'click #agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
                 'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
                 'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
+                
                 'click #play': 'play',
                 'click #visualizations li': 'tabChange',
                 'click #hiddenPng': 'test',
@@ -501,18 +505,19 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 //calc sum over all ages eventually
                 ageGroups.push({from: 0, to: Number.MAX_VALUE})
                 
+                var index = 0;
                 ageGroups.forEach(function(ageGroup){
                     var from = (ageGroup.from !== null) ? ageGroup.from: 0,
                         groupName = from + ((ageGroup.to !== null) ?  " - " + ageGroup.to: "+"),
                         femaleSum, maleSum;
                     maleSum = femaleSum = 0;
                     
-                    //female ages
+                    //sum up female ages
                     var to = (ageGroup.to === null || ageGroup.to >= femaleAges.length) ? femaleAges.length: ageGroup.to;      
                     for(var i = from; i < to; i++)
                         femaleSum += femaleAges[i];
                     
-                    //male ages
+                    //sum up male ages
                     to = (ageGroup.to === null || ageGroup.to >= maleAges.length) ? maleAges.length: ageGroup.to;       
                     for(var i = from; i < to; i++)
                         maleSum += maleAges[i];
@@ -524,11 +529,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     var maleP = (count > 0) ? Math.round((maleSum / count) * 10000) / 100 + '%': '-';
                     
                     rows.push({
+                        index: index,
                         ageGroup: groupName,
                         count: count,
                         female: femaleP,
                         male: maleP
-                    });                             
+                    });                  
+                    index++;
                 });
                 
                 //last row contains sum over all ages
@@ -547,10 +554,14 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     data: rows,
                     dataHeight: 300,
                     title: title + " " + yearData.jahr,
-                    highlight: true
+                    highlight: true,
+                    selectable: true
                 });
             },
             
+            /*
+             * sorted insertion of user defined agegroups (in app)
+             */
             addAgeGroup: function(){                
                 var from = parseInt(this.el.querySelector('#agegroup-from').value),
                     to = parseInt(this.el.querySelector('#agegroup-to').value);
@@ -572,6 +583,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         break;
                 }
                 app.ageGroups.splice(i, 0, {from: from, to: to});
+                
+                //rerender table
                 this.renderAgeGroup(this.yearData);                
             },
             
@@ -588,6 +601,26 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 if(toInput.value && toInput.value <= from){
                     toInput.value = from + 1;
                 }
+            },
+            
+            /*
+             * remove agegroups
+             */
+            deleteAgeGroups: function(){
+                var selections = this.ageGroupTable.getSelections();
+                //mark for deletion
+                selections.forEach(function(ageGroup){
+                    if(ageGroup.index && ageGroup.index < app.ageGroups.length)
+                        app.ageGroups[ageGroup.index] = null;                        
+                });
+                //remove marked entries in reverse order (so splice doesn't mess up the order)
+                for (var i = app.ageGroups.length-1; i >= 0; i--){
+                    if(app.ageGroups[i] === null) {
+                        app.ageGroups.splice(i, 1);
+                    }
+                }
+                //rerender table
+                this.renderAgeGroup(this.yearData);               
             },
             
             changeYear: function(year){ 
@@ -696,6 +729,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
                 //this.currentModel.downloadCsv(this.currentYear, filename);
                 this.rawTable.save();
+            },
+            
+            downloadAgeGroupCsv: function() {
+                //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+                //this.currentModel.downloadCsv(this.currentYear, filename);
+                this.ageGroupTable.save();
             },
             
             downloadAgeTreePng: function(e) {

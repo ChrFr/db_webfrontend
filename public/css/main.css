@@ -117,10 +117,6 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     border: solid 1px gold;
 }
 
-.alert{
-    display: none;
-}
-
 @media (min-width: 768px) {
     
     #mainFrame{

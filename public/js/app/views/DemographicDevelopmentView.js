@@ -38,7 +38,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             events: {
                 'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
                 'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
-                'click #agegroup-tab>.new-row': 'addAgeGroup',
+                'click #new-group': 'addAgeGroup',
+                'change #agegroup-from': 'ageInput',
                 'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
                 'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
@@ -485,73 +486,108 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     title += ' - Prognose';                
                 
                 columns.push({name: "ageGroup", description: "Altersgruppe"});
-                columns.push({name: "sumAll", description: "Anzahl"});
+                columns.push({name: "female", description: "weiblich"});
+                columns.push({name: "male", description: "männlich"});
+                columns.push({name: "count", description: "Anzahl"});
                 columns.push({name: "percentage", description: "gesamt"});
-                //columns.push({name: "perMale", description: "männlich"});
-                //columns.push({name: "perFemale", description: "weiblich"});
-                                
+                
                 var femaleAges = yearData.alter_weiblich;
-                var maleAges = yearData.alter_maennlich;
+                var maleAges = yearData.alter_maennlich;                
+                                
+                var rows = [];
                 
-                var cat2 = 20;
-                var cat3 = 65;
+                //clone ageGroups to add row temporary
+                var ageGroups = JSON.parse(JSON.stringify(app.ageGroups));
+                //calc sum over all ages eventually
+                ageGroups.push({from: 0, to: Number.MAX_VALUE})
                 
-                var cat1Fem, cat2Fem, cat3Fem, cat1Male, cat2Male, cat3Male;
-                cat1Fem = cat2Fem = cat3Fem = cat1Male = cat2Male = cat3Male = 0;
+                ageGroups.forEach(function(ageGroup){
+                    var from = (ageGroup.from !== null) ? ageGroup.from: 0,
+                        groupName = from + ((ageGroup.to !== null) ?  " - " + ageGroup.to: "+"),
+                        femaleSum, maleSum;
+                    maleSum = femaleSum = 0;
+                    
+                    //female ages
+                    var to = (ageGroup.to === null || ageGroup.to >= femaleAges.length) ? femaleAges.length: ageGroup.to;      
+                    for(var i = from; i < to; i++)
+                        femaleSum += femaleAges[i];
+                    
+                    //male ages
+                    to = (ageGroup.to === null || ageGroup.to >= maleAges.length) ? maleAges.length: ageGroup.to;       
+                    for(var i = from; i < to; i++)
+                        maleSum += maleAges[i];
+                    
+                    var count = Math.round(maleSum + femaleSum);
+                    
+                    //round to two decimals
+                    var femaleP = (count > 0) ? Math.round((femaleSum / count) * 10000) / 100 + '%': '-';
+                    var maleP = (count > 0) ? Math.round((maleSum / count) * 10000) / 100 + '%': '-';
+                    
+                    rows.push({
+                        ageGroup: groupName,
+                        count: count,
+                        female: femaleP,
+                        male: maleP
+                    });                             
+                });
                 
-                for(var i = 0; i < femaleAges.length; i++){
-                    if(i < cat2)
-                        cat1Fem += Math.round(femaleAges[i]);
-                    else if(i < cat3)
-                        cat2Fem += Math.round(femaleAges[i]);
-                    else
-                        cat3Fem += Math.round(femaleAges[i]);
-                }
+                //last row contains sum over all ages
+                var lastRow = rows[rows.length-1],
+                    countAll = lastRow.count;
+                lastRow.ageGroup = 'gesamt'
                 
-                for(var i = 0; i < maleAges.length; i++){
-                    if(i < cat2)
-                        cat1Male += Math.round(maleAges[i]);
-                    else if(i < cat3)
-                        cat2Male += Math.round(maleAges[i]);
-                    else
-                        cat3Male += Math.round(maleAges[i]);
-                }
+                //percentage of each row in relation to sum over all ages
+                rows.forEach(function(row){                    
+                    row.percentage = Math.round((row.count / countAll) * 10000) / 100 + '%';
+                });
                 
-                var ageGroup = ["0 - " + cat2, cat2 + " - " + cat3, cat3 + "+", "alle"];
-                var sumAll = [cat1Fem + cat1Male, cat2Fem + cat2Male, cat3Fem + cat3Male];
-                var sum = d3.sum(sumAll);
-                sumAll.push(sum);
-                
-                var percentage = [];                
-                for(var i = 0; i < sumAll.length; i++){
-                    percentage.push(Math.round(sumAll[i] * 100 / sum));
-                }
-                
-                var data = [];                
-                for(var i = 0; i < ageGroup.length; i++){
-                    data.push({
-                        ageGroup: ageGroup[i],
-                        sumAll: sumAll[i],
-                        percentage: percentage[i] + '%'
-                    });
-                }
                 this.ageGroupTable = new TableView({
                     el: this.el.querySelector("#agegroup-data"),
                     columns: columns,
-                    data: data,
+                    data: rows,
                     dataHeight: 300,
                     title: title + " " + yearData.jahr,
                     highlight: true
                 });
             },
             
-            addAgeGroup: function(){
-                var table = this.ageGroupTable.table,
-                    length = table.bootstrapTable('getData').length;
+            addAgeGroup: function(){                
+                var from = parseInt(this.el.querySelector('#agegroup-from').value),
+                    to = parseInt(this.el.querySelector('#agegroup-to').value);
             
-                this.ageGroupTable.table.bootstrapTable('insertRow', {
-                    index: length-1, 
-                    row: {}})
+                //you need at least one input
+                if(isNaN(to) && isNaN(from))
+                    return alert('Sie müssen mindestens ein Feld ausfüllen!');
+                
+                //no 'to' input is treated like 'from' to infinite (from+)
+                if(isNaN(to)) to = null; 
+                ////no 'from' input is treated like 0 to 'from'
+                if(isNaN(from)) from = 0; 
+                
+                //sorted insertion
+                for(var i = 0; i < app.ageGroups.length; i++){
+                    if(from < app.ageGroups[i].from)
+                        break;
+                    if(to && from === app.ageGroups[i].from && to < app.ageGroups[i].to)
+                        break;
+                }
+                app.ageGroups.splice(i, 0, {from: from, to: to});
+                this.renderAgeGroup(this.yearData);                
+            },
+            
+            /*
+             * adjust age input range, if first input field changed
+             */
+            ageInput: function(event){
+                var from = parseInt(event.target.value),
+                    toInput = this.el.querySelector('#agegroup-to'),
+                    to = parseInt(toInput.value);
+                            
+                toInput.setAttribute("min", from + 1);
+                
+                if(toInput.value && toInput.value <= from){
+                    toInput.value = from + 1;
+                }
             },
             
             changeYear: function(year){ 

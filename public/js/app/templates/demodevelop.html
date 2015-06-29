@@ -70,17 +70,17 @@
                 <br>                    
                 <label>Altersgruppe</label>
                 <br>
-                <div class="col-md-2">
-                    <input class="form-control" id="agegroup-from" type="text">
+                <div class="col-md-3">
+                    <input class="form-control" id="agegroup-from" type="number" min="0" max="200">
                 </div>
                 <div class="col-xs-1">
                     <label>_</label>
                 </div>
-                <div class="col-md-2">
-                    <input class="form-control" id="agegroup-to" type="text">
+                <div class="col-md-3">
+                    <input class="form-control" id="agegroup-to" type="number" min="0" max="201">
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="new-row btn-secondary btn" title="Altersgruppe hinzufügen">Hinzufügen</button>
+                    <button type="button" id="new-group" class="btn-secondary btn" title="Altersgruppe hinzufügen">Hinzufügen</button>
                 </div>
             </div>
             <div class="tab-pane" id="age-tab">    

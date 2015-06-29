@@ -122,7 +122,7 @@ var AgeTree = function(options){
             else if(bar.classed('male'))
                 sex = 'männlich';
                             
-            tooltip.html("Geschlecht: " + sex + "<br>Alter: " + bar.attr("age") + "<br><b>Anzahl: " + d +"</b>");
+            tooltip.html("Geschlecht: " + sex + "<br>Alter: " + bar.attr("age") + "<br><b>Anzahl: " + Math.round(d) +"</b>");
             
             tooltip.style("left", (d3.event.pageX + 10) + "px")     
                    .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 

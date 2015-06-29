@@ -11,7 +11,13 @@ function(app, Router, SessionModel, Navbar, PrognosisCollection) {
     });   
     
     //load available prognoses on user change
-    app.prognoses = new PrognosisCollection();    
+    app.prognoses = new PrognosisCollection();  
+                
+    app.ageGroups = [
+        {from: 0, to: 20},
+        {from: 20, to: 65},
+        {from: 65, to: null}
+    ];
     
     function render(){
         app.router = new Router();

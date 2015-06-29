@@ -17,6 +17,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
                 this.startPage = options.startPage || 1;
                 this.pageSize = options.pageSize || 20;
                 this.highlight = options.highlight;
+                this.sortBy = options.sortBy;
                 this.render();
                 //this.model.fetch({success: this.render});
             },
@@ -48,6 +49,9 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
                 
                 if(this.dataHeight)
                     this.table.attr('data-height', this.dataHeight);
+                
+                if(this.sortBy)
+                    this.table.attr('data-sort-name', this.sortBy);
                 
                 this.table.bootstrapTable({
                     data: this.data

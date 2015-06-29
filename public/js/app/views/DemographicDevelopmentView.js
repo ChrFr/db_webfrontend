@@ -610,8 +610,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var selections = this.ageGroupTable.getSelections();
                 //mark for deletion
                 selections.forEach(function(ageGroup){
-                    if(ageGroup.index && ageGroup.index < app.ageGroups.length)
-                        app.ageGroups[ageGroup.index] = null;                        
+                    var index = ageGroup.index;
+                    if(typeof index !== 'undefined' && index < app.ageGroups.length)
+                        app.ageGroups[index] = null;                        
                 });
                 //remove marked entries in reverse order (so splice doesn't mess up the order)
                 for (var i = app.ageGroups.length-1; i >= 0; i--){
@@ -620,7 +621,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     }
                 }
                 //rerender table
-                this.renderAgeGroup(this.yearData);               
+                this.renderAgeGroup(this.yearData);
             },
             
             changeYear: function(year){ 

@@ -32,9 +32,14 @@ define(["app", "jquery", "backbone", "text!templates/prognosis.html"],
                 var text = this.el.querySelector("#description");
                 if(!text)
                     return;
-                if (!pid || pid < 0){
-                    title.innerText = "Bitte eine Prognose im Menü auswählen!";
-                    text.innerHTML = '';
+                if (!app.session.get('user')){
+                    title.innerText = "nicht eingeloggt";
+                    text.innerHTML = 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
+                    return;
+                }
+                else if (!pid || pid < 0){
+                    title.innerText = "keine Prognose ausgewählt";
+                    text.innerHTML = 'Bitte wählen Sie eine Prognose im Menü aus.';
                     return;
                 }
                 else{

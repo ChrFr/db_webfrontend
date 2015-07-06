@@ -125,6 +125,15 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
                         subitem = $('.submenu').find('#prognosis-content').parent();
                     $('#prognosis-menu').addClass('active');
                 }
+                else if(route === 'hhdevelop'){   
+                    //unsatisfying as check is both here and in router
+                    //maybe replace submenu links with pills
+                    if((app.get('activePrognosis') && app.get('activePrognosis') >= 0))
+                        subitem = $('.submenu').find('#hhdevelop').parent();
+                    else
+                        subitem = $('.submenu').find('#prognosis-content').parent();
+                    $('#prognosis-menu').addClass('active');
+                }
                 item.siblings().removeClass('active');
                 item.addClass('active');  
                 subitem.siblings().removeClass('active');

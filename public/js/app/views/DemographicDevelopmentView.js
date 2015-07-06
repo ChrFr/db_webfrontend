@@ -37,7 +37,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
 
             events: {
                 'click #new-group': 'addAgeGroup',
-                'change #agegroup-from': 'ageInput',
+                'change #agegroup-from': 'ageInput', 
                 'click #delete-agegroups': 'deleteAgeGroups',
                 
                 'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
@@ -724,6 +724,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             
             stop: function(){  
                 var btn = this.el.querySelector("#play");
+                if(!btn) return;
                 btn.classList.remove('playing');
                 btn.classList.add('stopped');
                 if(this.timerId){

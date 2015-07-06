@@ -2,9 +2,10 @@
 // ----------------
 define(["app", "backbone", "views/HomeView", 
     "views/LoginView", "views/PrognosisView", "views/AdminView", 
-    "views/DemographicDevelopmentView"],
+    "views/DemographicDevelopmentView", "views/HouseholdsDevelopmentView"],
 
-    function(app, Backbone, Home, Login, Prognosis, Admin, DemographicDevelopmentView) {
+    function(app, Backbone, Home, Login, Prognosis, Admin, 
+            DemographicDevelopmentView, HouseholdsDevelopmentView) {
 
         /**
         * Routes the applications URL's when using hash tags. 
@@ -22,22 +23,22 @@ define(["app", "backbone", "views/HomeView",
                 "prognosen": "prognoses",
                 "login": "login",
                 "admin": "admin",
-                "bevoelkerungsprognose": "demodevelop"
+                "bevoelkerungsprognose": "demodevelop",
+                "haushaltsprognose": "hhdevelop"
             },
 
-            home: function() {   
+            home: function() {  
+                this.resetView();
                 this.view = new Home({el: document.getElementById('mainFrame')});
             },
             
             prognoses: function() {
-               // if (!app.session.get('authenticated')) {
-               //     this.navigate("login", {trigger: true});
-               // } 
-              //  else
+                this.resetView();
                 this.view = new Prognosis({el: document.getElementById('mainFrame')});
             },
             
-            demodevelop: function(bla, blu){
+            demodevelop: function(){
+                this.resetView();
                 if(!app.get('activePrognosis') || app.get('activePrognosis') < 0){
                     this.navigate("prognosen", {trigger: true});
                 }
@@ -45,15 +46,37 @@ define(["app", "backbone", "views/HomeView",
                     this.view = new DemographicDevelopmentView({el: document.getElementById('mainFrame')});
             },
             
-            login: function() {   
+            hhdevelop: function(){
+                this.resetView();
+                if(!app.get('activePrognosis') || app.get('activePrognosis') < 0){
+                    this.navigate("prognosen", {trigger: true});
+                }
+                else
+                    this.view = new HouseholdsDevelopmentView({el: document.getElementById('mainFrame')});
+            },
+            
+            login: function() {
+                this.resetView();
                 this.view = new Login({el: document.getElementById('mainFrame'),
                                        session: this.session});
             },
             
             admin: function(){
+                this.resetView();
                 var user = app.session.get('user');
                 if (user && user.superuser)
                     this.view = new Admin({el: document.getElementById('mainFrame')});
+            },
+            
+            resetView: function(){
+                if(this.view) 
+                    this.view.close(); 
+                //unbinding and removing views removes the parent element too
+                if(!document.getElementById('mainFrame')){
+                    var mainFrame = document.createElement("div");
+                    mainFrame.id = 'mainFrame';
+                    document.body.appendChild(mainFrame);
+                }
             }
 
         });

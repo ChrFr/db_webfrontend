@@ -181,6 +181,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
             
             renderRegion: function(model){
+                this.el.querySelector('#agetree-tab .watch').classList.remove('active');
+                this.fixYear = false;
                 var _this = this;
                 this.stop();                
                 model.fetch({success: function(){      
@@ -280,11 +282,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         evt.stopPropagation();
                         _this.xScale = Math.ceil(value);
                         _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-                        _this.renderTree(_this.yearData, _this.watchedYearData);
+                        _this.renderTree(_this.yearData);
                     });
                     
                     //visualizations
-                    _this.renderTree(_this.yearData, _this.watchedYearData);
+                    _this.renderTree(_this.yearData);
                     _this.renderDevelopment(data);
                     _this.renderBarChart(data);
                     
@@ -295,7 +297,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 }});
             },
             
-            renderTree: function(data, compareTo){
+            renderTree: function(data){
                 
                 var vis = this.el.querySelector("#agetree"),
                     title = this.getRegionName();
@@ -310,7 +312,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 this.ageTree = new AgeTree({
                     el: vis,
                     data: data, 
-                    compareTo: compareTo,
+                    fixYear: this.fixYear,
                     title: title,
                     width: width, 
                     height: height,
@@ -737,17 +739,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             // watch/unwatch the current model
             watchYear: function(event){                
                 var watchBtn = event.target;
-                if(!this.watchedYearData){
-                    watchBtn.classList.add('active');                    
-                    var data = this.currentModel.get('data');
-                    var idx = data.length - 1 - (this.currentModel.get('maxYear') - this.currentYear);
-                    this.watchedYearData = data[idx];
+                if(!this.fixYear){
+                    watchBtn.classList.add('active');  
+                    this.fixYear = true;
                 }
                 else{
                     watchBtn.classList.remove('active');
-                    this.watchedYearData = null;
+                    this.fixYear = false;
                 }
-                this.renderTree(this.yearData, this.watchedYearData);
+                this.renderTree(this.yearData);
             },
         
             fixScale: function(event){                

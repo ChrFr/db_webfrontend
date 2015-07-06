@@ -54,9 +54,13 @@ rect.highlight{
     fill: gold!important;
 }
 
-.outline path{
+.compare path{
     stroke: #00FF00;
     stroke-width: 2;
+}
+
+text.compare{
+    stroke: #00FF00;
 }
 
 /*hide path, else its rendered as black box by some svg viewers like inkscape and imageMagick*/

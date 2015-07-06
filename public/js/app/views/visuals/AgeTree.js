@@ -10,8 +10,10 @@ var AgeTree = function(options){
     this.height = options.height;
     this.maxX = options.maxX;// || 1000;
     this.maxY = options.maxY || 100;
-    this.css = options.css;
-    this.compareTo = options.compareTo;
+    // optional: css is written in svg meta
+    this.css = options.css;    
+    // optional: year data is fixed and will be displayed as outline even on changedata
+    this.fixYear = options.fixYear;
     this.title = options.title || "";
     
     this.render = function(callback){
@@ -83,7 +85,7 @@ var AgeTree = function(options){
             .attr('class', 'title')
             .attr("x", margin.left)             
             .attr("y", 0 - (margin.top / 2))
-            .text(this.title + " " + this.data.jahr);
+            .text(this.title + " - " + this.data.jahr);
 
         // SCALES
 
@@ -155,13 +157,14 @@ var AgeTree = function(options){
             .on("mouseover", mouseOverBar)
             .on("mouseout", mouseOutBar);
 
-        if(this.compareTo){      
+        // OUTLINE FOR COMPARED DATA
+        if(this.fixYear){      
             var femaleOutline = svg.append("g")
                     .attr("transform", translation(pointB, 0))
-                    .attr("class", "outline"),
+                    .attr("class", "compare"),
                 maleOutline = svg.append("g")
                     .attr("transform", translation(pointA, 0))
-                    .attr("class", "outline");
+                    .attr("class", "compare");
 	    
             var femaleLine = [],
                 maleLine = [];
@@ -197,8 +200,6 @@ var AgeTree = function(options){
 	    maleOutline.append("path")
                 .attr("d", lineFunction(maleLine))
                 .attr("fill", "none");
-	  
-            
         }
 
         // AXES
@@ -265,7 +266,14 @@ var AgeTree = function(options){
             .text('Anzahl weiblich')
             .attr("x", 3 * this.width / 4)             
             .attr("y", this.height + 25);
-
+        
+        if(this.fixYear)
+            svg.append("text")   
+                .attr('class', 'compare')
+                .attr("text-anchor", "middle")
+                .text('Vergleichsjahr ' + this.data.jahr)
+                .attr("x", 3 * this.width / 4)             
+                .attr("y", 20);        
         
         svg.selectAll(".domain").style("display", "none");
 

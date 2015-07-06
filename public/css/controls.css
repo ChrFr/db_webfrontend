@@ -7,10 +7,12 @@
     border: solid 1px lightgrey;
 }
 
-#play{
+#play, #fix-scale{
     background-repeat: no-repeat;
     background-size: 50%;
     background-position: center;
+    width: 30px;
+    height: 30px;
 }
 
 #play.stopped{    
@@ -21,12 +23,21 @@
     background-image: url("../img/pause.png");
 }
 
+.watch{    
+    background-image: url("../img/eye_closed.png");
+    background-repeat: no-repeat;
+    background-size: 90%;
+    background-position: center;
+}
+
+.watch.active{    
+    background-image: url("../img/eye_opened.png");
+}
+
 #fix-scale{
     background-repeat: no-repeat;
     background-size: 50%;
     background-position: center;
-    width: 30px;
-    height: 30px;
 }
 
 #fix-scale.locked{    
@@ -53,16 +64,24 @@
 }
 
 .side-controls button, .bottom-controls button {
-    border-radius: 50%;    
-    border: solid 1px lightgrey;
-    background: white;
-}
-
-.side-controls .download-btn{    
+    border-radius: 50%;      
     width: 40px;
     height: 40px;
-    margin-bottom: 40px;
+    border: solid 1px lightgrey;
+    background-color: white;
+}
+
+.side-controls button, .bottom-controls button {
+    width: 40px;
+    height: 40px;
     opacity: 0.8;
+}
+.bottom-controls button{    
+    float: left;
+}
+
+.side-controls .download-btn{  
+    margin-bottom: 40px;
 }
 
 /*align children to center*/
@@ -80,12 +99,6 @@
     background: white;
     opacity: 0.8;
     border: solid 1px lightgrey;
-}
-
-.bottom-controls button{    
-    float: left;
-    width: 30px;
-    height: 30px;
 }
 
 .side-controls button:focus, button:focus{

@@ -11,10 +11,10 @@ var AgeTree = function(options){
     this.maxX = options.maxX;// || 1000;
     this.maxY = options.maxY || 100;
     this.css = options.css;
+    this.compareTo = options.compareTo;
     this.title = options.title || "";
     
     this.render = function(callback){
-        
         //server-side d3 needs to be loaded seperately
         if(!d3)            
             var d3 = require('d3');
@@ -95,23 +95,8 @@ var AgeTree = function(options){
         this.yScale = d3.scale.linear()
             .domain([0, _this.maxY])
             .range([this.height, 0]);
-
-        // BARS                
-        var barHeight = this.height/this.maxY;   
-        
-        var maleGroup = svg.append('g')
-            .attr('class', 'maleGroup')
-            .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
-
-        var femaleGroup = svg.append('g')
-            .attr('class', 'femaleGroup')
-            .attr('transform', translation(pointB, 0));
-
-        var rightBars = femaleGroup.selectAll("g")
-            .data(femaleAges)
-            .enter().append("g")
-            .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * barHeight - barHeight/2); });
     
+        // TOOLTIP
         var mouseOverBar = function(d) {
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
             var bar = d3.select(this);
@@ -132,11 +117,27 @@ var AgeTree = function(options){
             d3.select(this).classed("highlight", false);     
             d3.select('body').selectAll("div.tooltip").remove();
         };
+
+        // BARS                
+        this.barHeight = this.height/this.maxY;   
+        
+        var maleGroup = svg.append('g')
+            .attr('class', 'maleGroup')
+            .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
+
+        var femaleGroup = svg.append('g')
+            .attr('class', 'femaleGroup')
+            .attr('transform', translation(pointB, 0));
+
+        var rightBars = femaleGroup.selectAll("g")
+            .data(femaleAges)
+            .enter().append("g")
+            .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });
     
         rightBars.append("rect")
             .attr('class', 'female')
             .attr("width", this.xScale)
-            .attr("height", barHeight - 1)
+            .attr("height", this.barHeight - 1)
             .attr("age", function(d, i) { return i; })
             .on("mouseover", mouseOverBar)
             .on("mouseout", mouseOutBar);
@@ -144,16 +145,55 @@ var AgeTree = function(options){
         var leftBars = maleGroup.selectAll("g")
             .data(maleAges)
             .enter().append("g")
-            .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * barHeight - barHeight/2); });
+            .attr("transform", function(d, i) { return translation(0, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });
 
         leftBars.append("rect")
             .attr('class', 'male')
-            .attr("width", _this.xScale)
-            .attr("height", barHeight - 1)
+            .attr("width", this.xScale)
+            .attr("height", this.barHeight - 1)
             .attr("age", function(d, i) { return i; })
             .on("mouseover", mouseOverBar)
             .on("mouseout", mouseOutBar);
 
+        if(this.compareTo){      
+            var femaleAgesC = this.compareTo.alter_weiblich;
+            var maleAgesC = this.compareTo.alter_maennlich;
+            
+            var maleGroupC = svg.append('g')
+                .attr('class', 'maleGroupC')
+                .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
+
+            var femaleGroupC = svg.append('g')
+                .attr('class', 'femaleGroupC')
+                .attr('transform', translation(pointB, 0));
+            
+            var rightBarsC = femaleGroupC.selectAll("g")
+                .data(femaleAgesC)
+                .enter().append("g")
+                .attr("transform", function(d, i) { return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });
+
+            rightBarsC.append("rect")
+                .attr('class', 'compare')
+                .attr("width", 2)
+                .attr("height", this.barHeight - 1)
+                .attr("age", function(d, i) { return i; })
+                .on("mouseover", mouseOverBar)
+                .on("mouseout", mouseOutBar);
+
+            var leftBarsC = maleGroupC.selectAll("g")
+                .data(maleAgesC)
+                .enter().append("g")
+                .attr("transform", function(d, i) {return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });
+
+            leftBarsC.append("rect")
+                .attr('class', 'compare')
+                .attr("width", 2)
+                .attr("height", this.barHeight - 1)
+                .attr("age", function(d, i) { return i; })
+                .on("mouseover", mouseOverBar)
+                .on("mouseout", mouseOutBar);
+            
+        }
 
         // AXES
 
@@ -231,7 +271,7 @@ var AgeTree = function(options){
             callback(this.el.innerHTML);
     };
     
-    this.changeData = function(data){
+    this.changeData = function(data, compareData){
         this.data = data;
         var _this = this;
         var title = this.title + " - " + data.jahr;
@@ -246,6 +286,20 @@ var AgeTree = function(options){
         d3el.select('.maleGroup').selectAll("g")
             .data(data.alter_maennlich)
             .select("rect").attr("width", _this.xScale);    
+    
+        if(compareData){
+            d3el.select('.femaleGroupC').selectAll("g")
+                .data(compareData.alter_weiblich)
+                .attr("transform", function(d, i) { return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });    
+
+            d3el.select('.maleGroupC').selectAll("g")
+                .data(compareData.alter_maennlich)
+                .attr("transform", function(d, i) { return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });  
+        }
+        
+        function translation(x,y) {
+          return 'translate(' + x + ',' + y + ')';
+        }
     };    
 };
 //suppress client-side error (different ways to import on client and server)

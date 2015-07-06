@@ -48,6 +48,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
                 
                 'click #play': 'play',
+                'click .watch': 'watch',
                 'click #visualizations li': 'tabChange',
                 'click #hiddenPng': 'test',
                 'click #fix-scale': 'fixScale'
@@ -136,7 +137,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             };  
                         }                        
                     });
-                                            
                 }
                 
                 // basic layer gemeinden
@@ -283,8 +283,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         _this.renderTree(_this.yearData);
                     });
                     
+                    var watchedData, watchedYearData;
+                    if(_this.watchedModel){
+                        watchedData = _this.watchedModel.get('data');
+                        var idx = watchedData.length - 1 - (_this.watchedModel.get('maxYear') - _this.currentYear);
+                        watchedYearData = watchedData[idx];
+                    }
+                    
                     //visualizations
-                    _this.renderTree(_this.yearData);
+                    _this.renderTree(_this.yearData, watchedYearData);
                     _this.renderDevelopment(data);
                     _this.renderBarChart(data);
                     
@@ -295,7 +302,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 }});
             },
             
-            renderTree: function(data){
+            renderTree: function(data, compareTo){
                 
                 var vis = this.el.querySelector("#agetree"),
                     title = this.getRegionName();
@@ -310,6 +317,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 this.ageTree = new AgeTree({
                     el: vis,
                     data: data, 
+                    compareTo: compareTo,
                     title: title,
                     width: width, 
                     height: height,
@@ -666,7 +674,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var data = this.currentModel.get('data');   
                 var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
                 this.yearData = data[idx]; 
-                this.ageTree.changeData(this.yearData);
+                var watchedYearData = (this.watchedModel) ? this.watchedModel.get('data')[idx]: null;
+                this.ageTree.changeData(this.yearData, watchedYearData);
                 this.renderAgeGroup(this.yearData); 
                 this.renderAgeTable(this.yearData); 
             },
@@ -733,6 +742,29 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 }
             },
             
+            // watch/unwatch the current model
+            watch: function(){                
+                var watchBtns = this.el.querySelectorAll('.watch');
+                for(var i = 0; i < watchBtns.length; i++){
+                    if(!this.watchedModel)
+                        watchBtns[i].classList.add('active');
+                    else
+                        watchBtns[i].classList.remove('active');
+                }
+                if (!this.watchedModel)
+                    this.watchedModel = this.currentModel;                
+                else                    
+                    this.watchedModel = null;
+                
+                var watchedData, watchedYearData;
+                if(this.watchedModel){
+                    watchedData = this.watchedModel.get('data');
+                    var idx = watchedData.length - 1 - (this.watchedModel.get('maxYear') - this.currentYear);
+                    watchedYearData = watchedData[idx];
+                }
+                
+                this.renderTree(this.yearData, watchedYearData);
+            },
         
             fixScale: function(event){                
                 var btn = event.target;

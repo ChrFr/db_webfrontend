@@ -74,22 +74,23 @@
 .side-controls button, .bottom-controls button {
     width: 40px;
     height: 40px;
+    margin-bottom: 10px;
     opacity: 0.8;
 }
 .bottom-controls button{    
     float: left;
 }
 
-.side-controls .download-btn{  
-    margin-bottom: 40px;
-}
-
 /*align children to center*/
 .side-controls  > *, #scale-slider-container > *, #fix-wrapper > *{    
     margin-left: auto;
-    margin-right: auto;  
+    margin-right: auto;      
     display: block;
     text-align: center;
+}
+
+#current-scale{
+    margin-top: 40px;
 }
 
 /*unified borders*/

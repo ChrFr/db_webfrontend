@@ -156,42 +156,48 @@ var AgeTree = function(options){
             .on("mouseout", mouseOutBar);
 
         if(this.compareTo){      
-            var femaleAgesC = this.compareTo.alter_weiblich;
-            var maleAgesC = this.compareTo.alter_maennlich;
+            var femaleOutline = svg.append("g")
+                    .attr("transform", translation(pointB, 0))
+                    .attr("class", "outline"),
+                maleOutline = svg.append("g")
+                    .attr("transform", translation(pointA, 0))
+                    .attr("class", "outline");
+	    
+            var femaleLine = [],
+                maleLine = [];
             
-            var maleGroupC = svg.append('g')
-                .attr('class', 'maleGroupC')
-                .attr('transform', translation(pointA, 0) + 'scale(-1,1)');
-
-            var femaleGroupC = svg.append('g')
-                .attr('class', 'femaleGroupC')
-                .attr('transform', translation(pointB, 0));
-            
-            var rightBarsC = femaleGroupC.selectAll("g")
-                .data(femaleAgesC)
-                .enter().append("g")
-                .attr("transform", function(d, i) { return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });
-
-            rightBarsC.append("rect")
-                .attr('class', 'compare')
-                .attr("width", 2)
-                .attr("height", this.barHeight - 1)
-                .attr("age", function(d, i) { return i; })
-                .on("mouseover", mouseOverBar)
-                .on("mouseout", mouseOutBar);
-
-            var leftBarsC = maleGroupC.selectAll("g")
-                .data(maleAgesC)
-                .enter().append("g")
-                .attr("transform", function(d, i) {return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });
-
-            leftBarsC.append("rect")
-                .attr('class', 'compare')
-                .attr("width", 2)
-                .attr("height", this.barHeight - 1)
-                .attr("age", function(d, i) { return i; })
-                .on("mouseover", mouseOverBar)
-                .on("mouseout", mouseOutBar);
+            var lineFunction = d3.svg.line()
+                .x(function(d){ return d.x })
+                .y(function(d){ return d.y })
+                .interpolate("linear");
+                        
+	    for (var i = 0; i < femaleAges.length; i++) {
+	        femaleLine.push({
+                    x: _this.xScale(femaleAges[i]),
+                    y: (_this.maxY - i + 1) * _this.barHeight - _this.barHeight/2
+                });                
+	        femaleLine.push({
+                    x: _this.xScale(femaleAges[i]),
+                    y: (_this.maxY - i) * _this.barHeight - _this.barHeight/2
+                });
+	        maleLine.push({
+                    x: -_this.xScale(maleAges[i]),
+                    y: (_this.maxY - i + 1) * _this.barHeight - _this.barHeight/2
+                });                
+	        maleLine.push({
+                    x: -_this.xScale(maleAges[i]),
+                    y: (_this.maxY - i) * _this.barHeight - _this.barHeight/2
+                });
+	  
+	    }
+	    
+	    femaleOutline.append("path")
+                .attr("d", lineFunction(femaleLine))
+                .attr("fill", "none");
+	    maleOutline.append("path")
+                .attr("d", lineFunction(maleLine))
+                .attr("fill", "none");
+	  
             
         }
 
@@ -285,18 +291,8 @@ var AgeTree = function(options){
 
         d3el.select('.maleGroup').selectAll("g")
             .data(data.alter_maennlich)
-            .select("rect").attr("width", _this.xScale);    
+            .select("rect").attr("width", _this.xScale); 
     
-        if(compareData){
-            d3el.select('.femaleGroupC').selectAll("g")
-                .data(compareData.alter_weiblich)
-                .attr("transform", function(d, i) { return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });    
-
-            d3el.select('.maleGroupC').selectAll("g")
-                .data(compareData.alter_maennlich)
-                .attr("transform", function(d, i) { return translation(_this.xScale(d) - 2, (_this.maxY - i) * _this.barHeight - _this.barHeight/2); });  
-        }
-        
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';
         }

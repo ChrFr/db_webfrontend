@@ -54,10 +54,10 @@ rect.highlight{
     fill: gold!important;
 }
 
-rect.compare{
-    fill: #00FF00;
+.outline path{
+    stroke: #00FF00;
+    stroke-width: 2;
 }
-
 
 /*hide path, else its rendered as black box by some svg viewers like inkscape and imageMagick*/
 .x.axis path.domain, .y.axis path.domain  {

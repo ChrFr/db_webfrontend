@@ -483,6 +483,40 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 });
             },
             
+            calculateAgeGroups: function(){
+                this.groupedData = [];
+                this.currentModel.get('data').forEach(function(yearData){
+                    var groupedYearData = {};
+                    app.ageGroups.forEach(function(ageGroup){
+                        var from = (ageGroup.from !== null) ? ageGroup.from: 0,
+                            groupName = from + ((ageGroup.to !== null) ?  " - " + ageGroup.to: "+"),
+                            femaleSum, maleSum,
+                            femaleAges = yearData.alter_weiblich,
+                            maleAges = yearData.alter_maennlich;
+                        maleSum = femaleSum = 0;
+
+                        //sum up female ages
+                        var to = (ageGroup.to === null || ageGroup.to >= femaleAges.length) ? femaleAges.length: ageGroup.to;      
+                        for(var i = from; i < to; i++)
+                            femaleSum += femaleAges[i];
+
+                        //sum up male ages
+                        to = (ageGroup.to === null || ageGroup.to >= maleAges.length) ? maleAges.length: ageGroup.to;       
+                        for(var i = from; i < to; i++)
+                            maleSum += maleAges[i];
+
+                        var count = Math.round(maleSum + femaleSum);
+                        
+                        groupedYearData.ageGroup = {
+                            ageGroup: groupName,
+                            count: count
+                        };                  
+                        
+                        index++;
+                    });
+                })
+            },
+            
             renderAgeGroup: function(yearData){
                 
                 var columns = [],
@@ -544,6 +578,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     });                  
                     index++;
                 });
+                
+                console.log(rows)
                 
                 //last row contains sum over all ages
                 var lastRow = rows[rows.length-1],

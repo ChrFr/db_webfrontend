@@ -270,9 +270,8 @@ var AgeTree = function(options){
         if(this.fixYear)
             svg.append("text")   
                 .attr('class', 'compare')
-                .attr("text-anchor", "middle")
                 .text('Vergleichsjahr ' + this.data.jahr)
-                .attr("x", 3 * this.width / 4)             
+                .attr("x", margin.left)             
                 .attr("y", 20);        
         
         svg.selectAll(".domain").style("display", "none");

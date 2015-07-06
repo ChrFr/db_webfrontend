@@ -121,21 +121,26 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     border-radius: 50%;    
     border: solid 1px lightgrey;
     background: white;
-    height: 20px;
-    width: 20px;
+    height: 19px;
+    width: 19px;
     margin-right: 5px;
     float: left;
     padding: 2px;
 }
 
 .icon img{
-    height: 80%;
-    width: 80%;
+    height: 100%;
+    width: 100%;
     display: block;
     margin-left: auto;
     margin-right: auto; 
     margin-top: auto; 
     margin-bottom: auto; 
+    opacity: 0.5;
+}
+
+li.active img{
+    opacity: 1.0;
 }
 
 

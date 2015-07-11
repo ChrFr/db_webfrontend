@@ -576,7 +576,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var ageGroups = JSON.parse(JSON.stringify(app.ageGroups));
                 //calc sum over all ages eventually
                 ageGroups.push({from: 0, to: Number.MAX_VALUE});
-                
                 var index = 0;
                 ageGroups.forEach(function(ageGroup){
                     var from = (ageGroup.from !== null) ? ageGroup.from: 0,

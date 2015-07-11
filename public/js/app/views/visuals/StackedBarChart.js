@@ -12,15 +12,7 @@ var StackedBarChart = function(options){
     this.xlabel = options.xlabel || "x";
     this.ylabel = options.ylabel || "y";
     this.title = options.title || "";
-    this.minY = options.minY;
     this.groupLabels = options.groupLabels;
-    if (this.minY === undefined)  
-        this.minY = d3.min(this.data, function(d) { return d3.min(d.jahr); });
-    this.maxY = options.maxY;
-    if (this.maxY === undefined){
-        this.maxY = d3.max(this.data, function(d) { return d3.max(d.jahr); });
-        this.maxY += (this.maxY - this.minY) * 0.1;
-    };
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -33,7 +25,7 @@ var StackedBarChart = function(options){
           top: 30,
           right: 0,
           bottom: 70,
-          left: 40
+          left: 60
         };
 
         var innerwidth = this.width - margin.left - margin.right,
@@ -94,7 +86,7 @@ var StackedBarChart = function(options){
     
         var yScale = d3.scale.linear()
             .rangeRound([innerheight, 0])
-            .domain([ 0, d3.max(this.data, function(d) { return d.total; })]) ;
+            .domain([ 0, d3.max(this.data, function(d) { return d.total; }) * 1.3]) ;
 
         var colorScale = d3.scale.category10()
             .domain(d3.range(this.data.length));

@@ -13,11 +13,12 @@ var StackedBarChart = function(options){
     this.ylabel = options.ylabel || "y";
     this.title = options.title || "";
     this.minY = options.minY;
+    this.groupLabels = options.groupLabels;
     if (this.minY === undefined)  
-        this.minY = d3.min(this.data, function(d) { return d3.min(d.y); });
+        this.minY = d3.min(this.data, function(d) { return d3.min(d.jahr); });
     this.maxY = options.maxY;
     if (this.maxY === undefined){
-        this.maxY = d3.max(this.data, function(d) { return d3.max(d.y); });
+        this.maxY = d3.max(this.data, function(d) { return d3.max(d.jahr); });
         this.maxY += (this.maxY - this.minY) * 0.1;
     };
     
@@ -53,11 +54,11 @@ var StackedBarChart = function(options){
         }
         else{            
             var parsed = "\n"
-            for (var i=0;i<document.styleSheets.length; i++) {
+            for (var i = 0; i < document.styleSheets.length; i++) {
               if(!document.styleSheets[i].href)
                   continue;
               var str = document.styleSheets[i].href.split("/");
-              if (str[str.length-1]=="visuals.css"){
+              if (str[str.length-1] == "visuals.css"){
                 var rules = document.styleSheets[i].rules;
                 for (var j=0; j<rules.length;j++){
                   parsed += (rules[j].cssText + "\n");
@@ -132,16 +133,15 @@ var StackedBarChart = function(options){
             .data(this.data)
             .enter().append("g")
               .attr("class", "g")
-              .attr("transform", function(d) { return translation(xScale(d.jahr), 0); });
-      
-        /*  
+              .attr("transform", function(d) { return translation(xScale(d.jahr), 0); });      
+        
         var mouseOverBar = function(d, i) {
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
             var bar = d3.select(this);
             bar.classed("highlight", true);
             tooltip.style("opacity", .9);     
             var parent = d3.select(this.parentNode); 
-            tooltip.html(_this.groupLabels[i] + "<br>" + _this.xlabel + ": " + parent.datum().label + "<br><b>" + d + "</b>");
+            tooltip.html(_this.xlabel + ": " + d.label + "<br>" + _this.groupLabels[i] + "<br><b>" + d.value + "</b><br>" + "gesamt: " + d.total);
             
             tooltip.style("left", (d3.event.pageX + 10) + "px")     
                    .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 
@@ -150,18 +150,34 @@ var StackedBarChart = function(options){
         var mouseOutBar = function(){
             d3.select(this).classed("highlight", false);     
             d3.select('body').selectAll("div.tooltip").remove();
-        };*/
-      
+        };
+        
+        this.data.forEach(function(d) {
+            d.mapped = [{value: d.values[0], summed: d.values[0], total: d.total, label: d.jahr}];
+            //stack the bars by adding the predecessor to its length
+            for(var i = 1; i < d.values.length; i++){
+                d.mapped.push({
+                    value: d.values[i-1],
+                    summed: d.values[i] + d.mapped[i-1].summed,
+                    total: d.total,
+                    label: d.jahr
+                });
+            }
+            //reverse values, so that the bigger ones are drawn first (smaller ones are in front)
+            d.mapped.reverse();
+        });
+        //reversed values -> labels have to be reversed as well
+        this.groupLabels.reverse();
+                
         groups.selectAll("rect")
-            .data(function(d) { return d.values; })
+            .data(function(d) { return d.mapped; })
             .enter().append("rect")
                 .attr("width", xScale.rangeBand())
-                .attr("y", function(d) { return yScale(d.); })
-                .attr("height", function(d) { return Math.abs(yScale(d) - yScale(0)); })
-                .style("fill", function(d, i) { return colorScale(i); });
-        
-            //.on("mouseover", mouseOverBar)
-            //.on("mouseout", mouseOutBar);
+                .attr("y", function(d, i) { return yScale(d.summed); })
+                .attr("height", function(d, i) { return Math.abs(yScale(d.summed) - yScale(0)); })
+                .style("fill", function(d, i) { return colorScale(i); })        
+            .on("mouseover", mouseOverBar)
+            .on("mouseout", mouseOutBar);
 
         function translation(x,y) {
           return 'translate(' + x + ',' + y + ')';

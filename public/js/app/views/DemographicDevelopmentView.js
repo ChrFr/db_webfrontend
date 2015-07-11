@@ -1,7 +1,8 @@
 define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
     "collections/LayerCollection", "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
     "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
-    "views/visuals/LineChart", "views/visuals/GroupedBarChart", "canvg", "pnglink", "filesaver"],
+    "views/visuals/LineChart", "views/visuals/GroupedBarChart", "views/visuals/StackedBarChart", 
+    "canvg", "pnglink", "filesaver"],
 
     function($, app, Backbone, template, CommunityCollection, LayerCollection, 
             DDCollection, DDAggregate, OptionView, TableView, d3, d3slider){
@@ -284,16 +285,18 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
                         _this.renderTree(_this.yearData);
                     });
-                    
+                    _this.calculateAgeGroups();
                     //visualizations
                     _this.renderTree(_this.yearData);
                     _this.renderDevelopment(data);
-                    _this.renderBarChart(data);
+                    _this.renderBarChart(data); 
+                    _this.renderAgeGroupChart(_this.groupedData);
                     
                     //data tables
-                    _this.renderAgeGroup(_this.yearData);
+                    _this.renderAgeGroupTable(_this.yearData);
                     _this.renderAgeTable(_this.yearData);
                     _this.renderRawData(data);
+                    
                 }});
             },
             
@@ -484,12 +487,16 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
             
             calculateAgeGroups: function(){
+                var _this = this;
                 this.groupedData = [];
+                var ageGroups = JSON.parse(JSON.stringify(app.ageGroups));
+                //calc sum over all ages eventually
+                ageGroups.push({from: 0, to: Number.MAX_VALUE});
+                
                 this.currentModel.get('data').forEach(function(yearData){
-                    var groupedYearData = {};
-                    app.ageGroups.forEach(function(ageGroup){
+                    var groupedYearData = {jahr: yearData.jahr, values:[]};
+                    ageGroups.forEach(function(ageGroup){
                         var from = (ageGroup.from !== null) ? ageGroup.from: 0,
-                            groupName = from + ((ageGroup.to !== null) ?  " - " + ageGroup.to: "+"),
                             femaleSum, maleSum,
                             femaleAges = yearData.alter_weiblich,
                             maleAges = yearData.alter_maennlich;
@@ -507,17 +514,44 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
 
                         var count = Math.round(maleSum + femaleSum);
                         
-                        groupedYearData.ageGroup = {
-                            ageGroup: groupName,
-                            count: count
-                        };                  
-                        
-                        index++;
+                        groupedYearData.values.push(count);    
                     });
+                    groupedYearData.total = groupedYearData.values.pop();
+                    _this.groupedData.push(groupedYearData);
                 })
             },
             
-            renderAgeGroup: function(yearData){
+            
+            renderAgeGroupChart: function(data){        
+                var vis = this.el.querySelector("#agegroupchart"),
+                    title = this.getRegionName();
+            
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);
+                
+                var tabContent = this.el.querySelector(".tab-content");                
+                var width = parseInt(tabContent.offsetWidth) - 70;
+                var height = width * 0.8;     
+                
+                var groupNames = [];
+                app.ageGroups.forEach(function(g){
+                    groupNames.push(g.name);
+                });
+                
+                this.ageGroupChart = new StackedBarChart({
+                    el: vis,
+                    data: data, 
+                    width: width, 
+                    height: height,
+                    title: title + " - Altersgruppen",
+                    xlabel: "Jahr",
+                    ylabel: "Bevölkerungszahl",
+                    groupLabels: groupNames
+                });
+                this.ageGroupChart.render();    
+            },
+            
+            renderAgeGroupTable: function(yearData){
                 
                 var columns = [],
                     title = this.getRegionName();
@@ -579,8 +613,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     index++;
                 });
                 
-                console.log(rows)
-                
                 //last row contains sum over all ages
                 var lastRow = rows[rows.length-1],
                     countAll = lastRow.count;
@@ -607,7 +639,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
              */
             addAgeGroup: function(){                
                 var from = parseInt(this.el.querySelector('#agegroup-from').value),
-                    to = parseInt(this.el.querySelector('#agegroup-to').value);
+                    to = parseInt(this.el.querySelector('#agegroup-to').value,
+                    groupName = from + ((to !== null) ?  " - " + to: "+"));
             
                 //you need at least one input
                 if(isNaN(to) && isNaN(from))
@@ -625,11 +658,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     if(to && from === app.ageGroups[i].from && to < app.ageGroups[i].to)
                         break;
                 }
-                app.ageGroups.splice(i, 0, {from: from, to: to});
+                app.ageGroups.splice(i, 0, {from: from, to: to, name: groupName});
                 this.validateAgeGroups();
+                this.calculateAgeGroups();
                 
-                //rerender table
-                this.renderAgeGroup(this.yearData);                
+                //rerender table and chart
+                this.renderAgeGroupTable(this.yearData);   
+                this.renderAgeGroupChart(this.groupedData);             
             },
             
             /*
@@ -697,7 +732,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 
                 this.validateAgeGroups();
                 //rerender table
-                this.renderAgeGroup(this.yearData);
+                this.renderAgeGroupTable(this.yearData);
             },
             
             changeYear: function(year){ 
@@ -706,7 +741,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
                 this.yearData = data[idx]; 
                 this.ageTree.changeData(this.yearData);
-                this.renderAgeGroup(this.yearData); 
+                this.renderAgeGroupTable(this.yearData); 
                 this.renderAgeTable(this.yearData); 
             },
             
@@ -725,7 +760,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 else{
                     this.yearData = this.currentModel.get('data')[0];
                     this.renderAgeTable(this.yearData);
-                    this.renderAgeGroup(this.yearData);  
+                    this.renderAgeGroupTable(this.yearData);  
                     
                     //no need for changing years
                     this.el.querySelector(".bottom-controls").style.display = 'none';

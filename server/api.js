@@ -577,6 +577,7 @@ module.exports = function(){
         login: function(req, res){
             var name = req.body.name,
                 plainPass = req.body.password,
+                stayLoggedIn = req.body.stayLoggedIn,
                 errMsg = 'falscher Benutzername oder falsches Passwort';
             query("SELECT * from users WHERE name=$1", [name],
             function(err, dbResult){
@@ -596,11 +597,13 @@ module.exports = function(){
                                  name: dbResult[0].name,
                                  email: dbResult[0].email,
                                  superuser: dbResult[0].superuser};    
-                                    
-                    //COOKIES (only used for status check, if page is refreshed)
-                    var maxAge = config.serverconfig.maxCookieAge; 
-                    res.cookie('token', token, { signed: true, maxAge:  maxAge});
-                    res.cookie('id', user.id, { signed: true, maxAge:  maxAge});
+                    
+                    //COOKIES (only used for status check, if page is refreshed)                
+                    if(stayLoggedIn){
+                        var maxAge = config.serverconfig.maxCookieAge; 
+                        res.cookie('token', token, { signed: true, maxAge:  maxAge});
+                        res.cookie('id', user.id, { signed: true, maxAge:  maxAge});
+                    }
 
                     res.statusCode = 200;
                     return res.json({

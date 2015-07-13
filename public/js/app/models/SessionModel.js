@@ -46,6 +46,9 @@ define(["jquery", "backbone"],
             login : function(options){
                 var _this = this;
                 var data = {'name': options.name, 'password': options.password};
+                if(options.stayLoggedIn)
+                    data.stayLoggedIn = true;
+                
                 var login = $.ajax({
                     url : this.url,
                     data : data,

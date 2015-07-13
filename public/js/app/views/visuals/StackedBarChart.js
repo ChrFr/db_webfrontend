@@ -86,7 +86,7 @@ var StackedBarChart = function(options){
     
         var yScale = d3.scale.linear()
             .rangeRound([innerheight, 0])
-            .domain([ 0, d3.max(this.data, function(d) { return d.total; }) * 1.3]) ;
+            .domain([ 0, d3.max(this.data, function(d) { return d.total; }) * 1.1]) ;
 
         var colorScale = d3.scale.category10()
             .domain(d3.range(this.data.length));
@@ -133,7 +133,7 @@ var StackedBarChart = function(options){
             bar.classed("highlight", true);
             tooltip.style("opacity", .9);     
             var parent = d3.select(this.parentNode); 
-            tooltip.html(_this.xlabel + ": " + d.label + "<br>" + _this.groupLabels[i] + "<br><b>" + d.value + "</b><br>" + "gesamt: " + d.total);
+            tooltip.html(_this.xlabel + ": " + d.label + "<br>" + _this.groupLabels[i] + ": <b>" + d.value + "</b><br>" + "gesamt: " + d.total);
             
             tooltip.style("left", (d3.event.pageX + 10) + "px")     
                    .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 
@@ -145,7 +145,7 @@ var StackedBarChart = function(options){
         };
         
         this.data.forEach(function(d) {
-            d.mapped = [{value: d.values[0], summed: d.values[0], total: d.total, label: d.jahr}];
+            d.mapped = [{value: d.values[0] || [0], summed: d.values[0] || [0], total: d.total, label: d.jahr}];
             //stack the bars by adding the predecessor to its length
             for(var i = 1; i < d.values.length; i++){
                 d.mapped.push({
@@ -164,35 +164,35 @@ var StackedBarChart = function(options){
         groups.selectAll("rect")
             .data(function(d) { return d.mapped; })
             .enter().append("rect")
-                .attr("width", xScale.rangeBand())
+                .attr("width", xScale.rangeBand()*0.75)
                 .attr("y", function(d, i) { return yScale(d.summed); })
                 .attr("height", function(d, i) { return Math.abs(yScale(d.summed) - yScale(0)); })
                 .style("fill", function(d, i) { return colorScale(i); })        
             .on("mouseover", mouseOverBar)
             .on("mouseout", mouseOutBar);
-
-        function translation(x,y) {
-          return 'translate(' + x + ',' + y + ')';
-        }
         
         var legend = svg.selectAll(".legend")
             .data(_this.groupLabels.slice())
             .enter().append("g")
                 .attr("class", "legend")
-                .attr("transform", function(d, i) { return translation(0, innerheight + 20 + i * 15); });
+                // mod operations move all uneven numbers to line below even numbers
+                .attr("transform", function(d, i) { return translation((i - (i % 2)) * 40, innerheight + 20 + 25 * (i % 2)); });
 
         legend.append("rect")
-            .attr("x", innerwidth - 18)
+            .attr("x", 0)
             .attr("width", 10)
             .attr("height", 10)
             .style("fill", function(d, i) { return colorScale(i); });
 
         legend.append("text")
-            .attr("x", innerwidth - 24)
+            .attr("x", 12)
             .attr("y", 9)
             .attr("dy", ".35em")
-            .style("text-anchor", "end")
-            .text(function(d) { return d; });
+            .text(function(d) { return d; });    
+    
+        function translation(x,y) {
+          return 'translate(' + x + ',' + y + ')';
+        }
 
         if(callback)
             callback(this.el.innerHTML);

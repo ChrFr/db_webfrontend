@@ -293,7 +293,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     _this.renderAgeGroupChart(_this.groupedData);
                     
                     //data tables
-                    _this.renderAgeGroupTable(_this.yearData);
+                    _this.renderAgeGroupTable(_this.currentYear);
                     _this.renderAgeTable(_this.yearData);
                     _this.renderRawData(data);
                     
@@ -494,7 +494,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 ageGroups.push({from: 0, to: Number.MAX_VALUE});
                 
                 this.currentModel.get('data').forEach(function(yearData){
-                    var groupedYearData = {jahr: yearData.jahr, values:[]};
+                    var groupedYearData = {jahr: yearData.jahr, values: [], female: [], male: []};
                     ageGroups.forEach(function(ageGroup){
                         var from = (ageGroup.from !== null) ? ageGroup.from: 0,
                             femaleSum, maleSum,
@@ -515,8 +515,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         var count = Math.round(maleSum + femaleSum);
                         
                         groupedYearData.values.push(count);    
+                        groupedYearData.female.push(femaleSum);    
+                        groupedYearData.male.push(maleSum);    
                     });
                     groupedYearData.total = groupedYearData.values.pop();
+                    groupedYearData.maleTotal = groupedYearData.male.pop();
+                    groupedYearData.femaleTotal = groupedYearData.female.pop();                    
                     _this.groupedData.push(groupedYearData);
                 })
             },
@@ -545,18 +549,18 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     height: height,
                     title: title + " - Altersgruppen",
                     xlabel: "Jahr",
-                    ylabel: "Bevölkerungszahl",
+                    ylabel: "Summe",
                     groupLabels: groupNames
                 });
                 this.ageGroupChart.render();    
             },
             
-            renderAgeGroupTable: function(yearData){
+            renderAgeGroupTable: function(year){
                 
                 var columns = [],
                     title = this.getRegionName();
 
-                if(yearData.jahr == this.currentModel.get('minYear'))
+                if(year == this.currentModel.get('minYear'))
                     title += ' - Basisjahr';
                 else
                     title += ' - Prognose';                
@@ -565,61 +569,54 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 columns.push({name: "female", description: "weiblich"});
                 columns.push({name: "male", description: "männlich"});
                 columns.push({name: "count", description: "Anzahl"});
-                columns.push({name: "percentage", description: "gesamt"});
+                columns.push({name: "percentage", description: "Anteil gesamt"});
                 
-                var femaleAges = yearData.alter_weiblich;
-                var maleAges = yearData.alter_maennlich;                
-                                
+                // find precalculated agegroups for given year
+                var yearData;
+                for(var i = 0; i < this.groupedData.length; i++){
+                    if(this.groupedData[i].jahr == year){                        
+                        yearData = this.groupedData[i];
+                        break;
+                    }
+                };
+                // return if no data found
+                if(!yearData) return;
+                
+                console.log(yearData)
+                
                 var rows = [];
-                
-                //clone ageGroups to add row temporary
-                var ageGroups = JSON.parse(JSON.stringify(app.ageGroups));
-                //calc sum over all ages eventually
-                ageGroups.push({from: 0, to: Number.MAX_VALUE});
                 var index = 0;
-                ageGroups.forEach(function(ageGroup){
-                    var from = (ageGroup.from !== null) ? ageGroup.from: 0,
-                        groupName = from + ((ageGroup.to !== null) ?  " - " + ageGroup.to: "+"),
-                        femaleSum, maleSum;
-                    maleSum = femaleSum = 0;
-                    
+                app.ageGroups.forEach(function(ageGroup){
+                    var groupName = ageGroup.name;
                     if(ageGroup.intersects)
                         groupName += '&nbsp&nbsp<span class="glyphicon glyphicon-warning-sign"></span>';
                     
-                    //sum up female ages
-                    var to = (ageGroup.to === null || ageGroup.to >= femaleAges.length) ? femaleAges.length: ageGroup.to;      
-                    for(var i = from; i < to; i++)
-                        femaleSum += femaleAges[i];
-                    
-                    //sum up male ages
-                    to = (ageGroup.to === null || ageGroup.to >= maleAges.length) ? maleAges.length: ageGroup.to;       
-                    for(var i = from; i < to; i++)
-                        maleSum += maleAges[i];
-                    
-                    var count = Math.round(maleSum + femaleSum);
-                    
-                    //round to two decimals
-                    var femaleP = (count > 0) ? Math.round((femaleSum / count) * 10000) / 100 + '%': '-';
-                    var maleP = (count > 0) ? Math.round((maleSum / count) * 10000) / 100 + '%': '-';
-                    
+                    var count = yearData.values[index],
+                        femaleSum = yearData.female[index],
+                        maleSum = yearData.male[index],
+                        femaleP = (count > 0) ? Math.round((femaleSum / count) * 1000) / 10 + '%': '-',
+                        maleP = (count > 0) ? Math.round((maleSum / count) * 1000) / 10 + '%': '-';
+                        
                     rows.push({
                         index: index,
                         ageGroup: groupName,
                         count: count,
                         female: femaleP,
                         male: maleP
-                    });                  
+                    });         
                     index++;
                 });
                 
-                //last row contains sum over all ages
-                var lastRow = rows[rows.length-1],
-                    countAll = lastRow.count;
-                lastRow.ageGroup = 'gesamt'
+                rows.push({
+                        index: index,
+                        ageGroup: 'gesamt',
+                        count: yearData.total,
+                        female: Math.round((yearData.femaleTotal / yearData.total) * 1000) / 10,
+                        male: Math.round((yearData.maleTotal / yearData.total) * 1000) / 10
+                });
                 
-                //percentage of each row in relation to sum over all ages
                 rows.forEach(function(row){                    
-                    row.percentage = Math.round((row.count / countAll) * 10000) / 100 + '%';
+                    row.percentage = Math.round((row.count / yearData.total) * 1000) / 10 + '%';
                 });
                 
                 this.ageGroupTable = new TableView({
@@ -638,8 +635,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
              */
             addAgeGroup: function(){                
                 var from = parseInt(this.el.querySelector('#agegroup-from').value),
-                    to = parseInt(this.el.querySelector('#agegroup-to').value,
-                    groupName = from + ((to !== null) ?  " - " + to: "+"));
+                    to = parseInt(this.el.querySelector('#agegroup-to').value),
+                    groupName = from + ((to === null || isNaN(to)) ? "+": " - " + to);
             
                 //you need at least one input
                 if(isNaN(to) && isNaN(from))
@@ -662,7 +659,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 this.calculateAgeGroups();
                 
                 //rerender table and chart
-                this.renderAgeGroupTable(this.yearData);   
+                this.renderAgeGroupTable(this.currentYear);   
                 this.renderAgeGroupChart(this.groupedData);             
             },
             
@@ -730,8 +727,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 }
                 
                 this.validateAgeGroups();
-                //rerender table
-                this.renderAgeGroupTable(this.yearData);
+                this.calculateAgeGroups();
+                
+                //rerender table and chart
+                this.renderAgeGroupTable(this.currentYear);   
+                this.renderAgeGroupChart(this.groupedData);   
             },
             
             changeYear: function(year){ 
@@ -740,7 +740,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
                 this.yearData = data[idx]; 
                 this.ageTree.changeData(this.yearData);
-                this.renderAgeGroupTable(this.yearData); 
+                this.renderAgeGroupTable(this.currentYear); 
                 this.renderAgeTable(this.yearData); 
             },
             
@@ -759,7 +759,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 else{
                     this.yearData = this.currentModel.get('data')[0];
                     this.renderAgeTable(this.yearData);
-                    this.renderAgeGroupTable(this.yearData);  
+                    this.renderAgeGroupTable(this.currentYear);  
                     
                     //no need for changing years
                     this.el.querySelector(".bottom-controls").style.display = 'none';

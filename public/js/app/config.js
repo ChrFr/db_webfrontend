@@ -25,6 +25,10 @@ require.config({
       
       "tableexport": "../libs/tableExport.min",
       
+      "stackblur": "../libs/StackBlur",
+      
+      "rgbcolor": "../libs/rgbcolor",
+      
       "canvg": "../libs/canvg",
       
       "pnglink": "../libs/jquery.pnglink",
@@ -61,7 +65,12 @@ require.config({
       
       "d3slider": ["d3"],
       
-      "pnglink": ["jquery"]
+      "rgbcolor": ["pnglink"],
+      "stackblur": ["pnglink"],
+      
+      "pnglink": ["jquery"],
+      
+      
 
   }
 

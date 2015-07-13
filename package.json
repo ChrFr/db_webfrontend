@@ -22,7 +22,6 @@
     "d3": "3.5.x",
     "jsdom": "3.1.2",
     "express": "4.x",
-    "csurf": "1.x",
     "cookie-parser": "1.x",
     "body-parser": "1.x",
     "express-session": "1.x",

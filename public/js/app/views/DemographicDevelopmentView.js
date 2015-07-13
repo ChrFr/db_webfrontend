@@ -518,7 +518,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         groupedYearData.female.push(femaleSum);    
                         groupedYearData.male.push(maleSum);    
                     });
-                    groupedYearData.total = groupedYearData.values.pop();
+                    groupedYearData.count = groupedYearData.values.pop();
                     groupedYearData.maleTotal = groupedYearData.male.pop();
                     groupedYearData.femaleTotal = groupedYearData.female.pop();                    
                     _this.groupedData.push(groupedYearData);
@@ -550,7 +550,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     title: title + " - Altersgruppen",
                     xlabel: "Jahr",
                     ylabel: "Summe",
-                    groupLabels: groupNames
+                    stackLabels: groupNames,
+                    bandName: 'jahr'
                 });
                 this.ageGroupChart.render();    
             },
@@ -582,8 +583,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 // return if no data found
                 if(!yearData) return;
                 
-                console.log(yearData)
-                
                 var rows = [];
                 var index = 0;
                 app.ageGroups.forEach(function(ageGroup){
@@ -610,13 +609,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 rows.push({
                         index: index,
                         ageGroup: 'gesamt',
-                        count: yearData.total,
-                        female: Math.round((yearData.femaleTotal / yearData.total) * 1000) / 10,
-                        male: Math.round((yearData.maleTotal / yearData.total) * 1000) / 10
+                        count: yearData.count,
+                        female: Math.round((yearData.femaleTotal / yearData.count) * 1000) / 10,
+                        male: Math.round((yearData.maleTotal / yearData.count) * 1000) / 10
                 });
                 
                 rows.forEach(function(row){                    
-                    row.percentage = Math.round((row.count / yearData.total) * 1000) / 10 + '%';
+                    row.percentage = Math.round((row.count / yearData.count) * 1000) / 10 + '%';
                 });
                 
                 this.ageGroupTable = new TableView({

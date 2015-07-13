@@ -47,6 +47,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
                 'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
+                'click #agegroupchart-tab .download-btn.png': 'downloadAgeGroupChartPng',
                 
                 'click #play': 'play',
                 'click #agetree-tab .watch': 'watchYear',
@@ -518,7 +519,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         groupedYearData.female.push(femaleSum);    
                         groupedYearData.male.push(maleSum);    
                     });
-                    groupedYearData.total = groupedYearData.values.pop();
+                    groupedYearData.count = groupedYearData.values.pop();
                     groupedYearData.maleTotal = groupedYearData.male.pop();
                     groupedYearData.femaleTotal = groupedYearData.female.pop();                    
                     _this.groupedData.push(groupedYearData);
@@ -550,7 +551,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     title: title + " - Altersgruppen",
                     xlabel: "Jahr",
                     ylabel: "Summe",
-                    groupLabels: groupNames
+                    stackLabels: groupNames,
+                    bandName: 'jahr'
                 });
                 this.ageGroupChart.render();    
             },
@@ -582,8 +584,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 // return if no data found
                 if(!yearData) return;
                 
-                console.log(yearData)
-                
                 var rows = [];
                 var index = 0;
                 app.ageGroups.forEach(function(ageGroup){
@@ -610,13 +610,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 rows.push({
                         index: index,
                         ageGroup: 'gesamt',
-                        count: yearData.total,
-                        female: Math.round((yearData.femaleTotal / yearData.total) * 1000) / 10,
-                        male: Math.round((yearData.maleTotal / yearData.total) * 1000) / 10
+                        count: yearData.count,
+                        female: Math.round((yearData.femaleTotal / yearData.count) * 1000) / 10,
+                        male: Math.round((yearData.maleTotal / yearData.count) * 1000) / 10
                 });
                 
                 rows.forEach(function(row){                    
-                    row.percentage = Math.round((row.count / yearData.total) * 1000) / 10 + '%';
+                    row.percentage = Math.round((row.count / yearData.count) * 1000) / 10 + '%';
                 });
                 
                 this.ageGroupTable = new TableView({
@@ -874,6 +874,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 downloadPng(svgDiv, filename, {width: 2, height: 2});
             },
             
+            downloadAgeGroupChartPng: function(e) {
+                var filename = this.getRegionName() + "-altersgruppen.png";
+                var svgDiv = $("#agegroupchart>svg");                
+                downloadPng(svgDiv, filename, {width: 2, height: 2});
+            },
+            
             downloadDevelopmentPng: function(e) {
                 var filename = this.getRegionName() + "-bevoelkerungsentwicklung_absolut.png";
                 var svgDiv = $("#absolute>svg");                
@@ -899,8 +905,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         
             //change scale
             if (scale){
-                svgDiv.height(scale.width * oldWidth);
-                svgDiv.width(scale.height * oldHeight);
+                svgDiv.width(scale.width * oldWidth);
+                svgDiv.height(scale.height * oldHeight);
                 svgDiv.attr('transform', 'scale(' + scale.width + ' ' + scale.height + ')');
             }
 

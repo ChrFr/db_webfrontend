@@ -47,6 +47,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
                 'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
                 'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
+                'click #agegroupchart-tab .download-btn.png': 'downloadAgeGroupChartPng',
                 
                 'click #play': 'play',
                 'click #agetree-tab .watch': 'watchYear',
@@ -873,6 +874,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 downloadPng(svgDiv, filename, {width: 2, height: 2});
             },
             
+            downloadAgeGroupChartPng: function(e) {
+                var filename = this.getRegionName() + "-altersgruppen.png";
+                var svgDiv = $("#agegroupchart>svg");                
+                downloadPng(svgDiv, filename, {width: 2, height: 2});
+            },
+            
             downloadDevelopmentPng: function(e) {
                 var filename = this.getRegionName() + "-bevoelkerungsentwicklung_absolut.png";
                 var svgDiv = $("#absolute>svg");                
@@ -898,8 +905,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         
             //change scale
             if (scale){
-                svgDiv.height(scale.width * oldWidth);
-                svgDiv.width(scale.height * oldHeight);
+                svgDiv.width(scale.width * oldWidth);
+                svgDiv.height(scale.height * oldHeight);
                 svgDiv.attr('transform', 'scale(' + scale.width + ' ' + scale.height + ')');
             }
 

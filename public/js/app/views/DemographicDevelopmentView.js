@@ -487,6 +487,21 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 });
             },
             
+            renderMap: function(mapData){
+                var vis = this.el.querySelector("#map");
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);
+                              
+                var width = parseInt(vis.parentNode.offsetWidth) - 70;
+                var height = width * 0.8;
+                this.map = new Map({
+                    el: vis,
+                    data: mapData, 
+                    width: width, 
+                    height: height
+                });
+            },
+            
             calculateAgeGroups: function(){
                 var _this = this;
                 this.groupedData = [];

@@ -18,6 +18,7 @@
   },
   "main": "./server/server",
   "devDependencies": {
+    "topojson": "1.6.x",
     "ejs": "2.x",
     "d3": "3.5.x",
     "jsdom": "3.1.2",

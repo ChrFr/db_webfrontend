@@ -8,7 +8,8 @@ module.exports = function(){
         child_proc = require('child_process'),  
         query = require('./pgquery').pgQuery,   
         pbkdf2Hash = require('./pbkdf2_hash'),    
-        config = require('./config');
+        config = require('./config'),
+        path = require('path');
     
     //Mapping taken from express examples https://github.com/strongloop/express
     api.map = function(a, route){
@@ -268,6 +269,10 @@ module.exports = function(){
                     function(err, result){
                         return res.status(200).send(result[0]);
                 });
+            },
+            
+            map: function(req, res){
+                res.sendFile(path.join(__dirname, 'test2.json'));
             }
         },
     }
@@ -628,10 +633,13 @@ module.exports = function(){
         '/layers': {
             get: layers.list, 
             '/gemeinden':{
-                get: layers.gemeinden.list, 
+                get: layers.gemeinden.list,
+                '/map':{
+                    get: layers.gemeinden.map
+                }, 
                 '/:rs': {                
                     get: layers.gemeinden.get
-                }
+                }                      
             },
             '/:id': {                
                 get: layers.get

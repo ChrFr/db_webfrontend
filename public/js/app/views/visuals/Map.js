@@ -6,9 +6,10 @@
 var Map = function(options){
     this.el = options.el || document;
     // data will be modified
-    this.url = options.url;
+    this.source = options.source;
     this.width = options.width;
     this.height = options.height;
+    this.units = options.units || [];
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -36,13 +37,16 @@ var Map = function(options){
             .attr('height', this.height);  
     
 
-        d3.json(this.url, function(error, map) {
+        d3.json(this.source, function(error, map) {
             if (error) return console.error(error);
-            console.log(map)
+            var subunits = {type: "GeometryCollection"};
+            subunits.geometries = map.objects.subunits.geometries.filter( function( el ) {
+                return _this.units.indexOf( el.id ) >= 0;
+            });
             
             var projection = d3.geo.mercator()
                 .center([10.5, 51.35])
-                .scale(innerwidth * 4)
+                .scale(2000)
                 .translate([innerwidth / 2, innerheight / 2]);
         
             var path = d3.geo.path()
@@ -54,7 +58,6 @@ var Map = function(options){
                 bar.classed("highlight", true);
                 tooltip.style("opacity", .9);     
                 //var parent = d3.select(this.parentNode); 
-                console.log(d.properties.name)
                 tooltip.html(d.properties.name);
 
                 tooltip.style("left", (d3.event.pageX + 10) + "px")     
@@ -68,7 +71,7 @@ var Map = function(options){
         
             // FEATURE-SHAPES
             svg.selectAll(".subunit")
-                .data(topojson.feature(map, map.objects.test).features)
+                .data(topojson.feature(map, subunits).features)
               .enter().append("path")
                 .attr("class", function(d) { return "subunit rs" + d.id; })
                 .attr("d", path)
@@ -77,7 +80,7 @@ var Map = function(options){
         
             // INTERIOR BOUNDARIES
             svg.append("path")
-                .datum(topojson.mesh(map, map.objects.test, function(a, b) {return a !== b }))
+                .datum(topojson.mesh(map, subunits, function(a, b) {return a !== b }))
                 .attr("d", path)
                 .attr("class", "subunit-boundary");        
         

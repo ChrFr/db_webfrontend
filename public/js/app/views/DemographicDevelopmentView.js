@@ -493,13 +493,21 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 while (vis.firstChild) 
                     vis.removeChild(vis.firstChild);
                               
-                var width = parseInt(vis.parentNode.offsetWidth) - 70;
-                var height = width * 0.8;
+                var width = parseInt(vis.parentNode.offsetWidth) - 70,
+                    height = width * 0.8,
+                    units = [];
+            
+                this.communities.each(function(model){
+                    units.push(model.get('rs'));
+                });
+                
                 this.map = new Map({
                     el: vis,
-                    url: '/api/layers/gemeinden/map', 
+                    source: "./shapes/gemeinden.json", //'/api/layers/gemeinden/map', 
+                    units: units,
                     width: width, 
-                    height: height
+                    height: height,
+                    
                 });
                 this.map.render();
             },

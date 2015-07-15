@@ -272,7 +272,7 @@ module.exports = function(){
             },
             
             map: function(req, res){
-                res.sendFile(path.join(__dirname, 'shapes', 'landkreise.json'));
+                res.sendFile(path.join(__dirname, 'shapes', 'gemeinden.json'));
             }
         },
     }

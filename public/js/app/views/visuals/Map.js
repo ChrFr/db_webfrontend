@@ -10,6 +10,7 @@ var Map = function(options){
     this.width = options.width;
     this.height = options.height;
     this.units = options.units || [];
+    this.aggregates = options.aggregates;
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -21,10 +22,10 @@ var Map = function(options){
         var _this = this;                       
         
         var margin = {
-          top: 30,
+          top: 0,
           right: 0,
-          bottom: 70,
-          left: 60
+          bottom: 0,
+          left: 0
         };
 
         var innerwidth = this.width - margin.left - margin.right,
@@ -46,8 +47,8 @@ var Map = function(options){
 
         var mouseover = function(d, i) {
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
-            var bar = d3.select(this);
-            bar.classed("highlight", true);
+            var key = d3.select(this).attr('key');
+            d3.selectAll('.key' + key).classed("highlight", true);
             tooltip.style("opacity", .9);     
             //var parent = d3.select(this.parentNode); 
             tooltip.html(d.properties.name);
@@ -56,8 +57,9 @@ var Map = function(options){
                    .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px"); 
         };     
 
-        var mouseout = function(){
-            d3.select(this).classed("highlight", false);     
+        var mouseout = function(){            
+            //d3.select(this).classed("highlight", false); 
+            d3.selectAll('.subunit').classed("highlight", false);
             d3.select('body').selectAll("div.tooltip").remove();
             };
             
@@ -68,7 +70,7 @@ var Map = function(options){
             .attr('height', this.height);  
     
         var g = svg.append("g")
-        .call(zoom);
+            .call(zoom);
 
         g.append("rect")
             .attr("class", "background")
@@ -77,19 +79,42 @@ var Map = function(options){
 
         d3.json(this.source, function(error, map) {
             if (error) return console.error(error);
+            
+            // only draw required shapes
             var subunits = {type: "GeometryCollection"};
             subunits.geometries = map.objects.subunits.geometries.filter( function( el ) {
                 return _this.units.indexOf( el.id ) >= 0;
             });
             
+            // join shapes
+            if(_this.aggregates){
+                
+                var aggregationMap = {};
+                _this.aggregates.forEach(function(aggr){
+                    aggr.rs.forEach(function(rs){                        
+                        aggregationMap[rs] = aggr.id;
+                    });
+                });
+                subunits.geometries.map( function( el ) {
+                    el.id = aggregationMap[el.id];
+                });
+            }
+            
+            // TOP-LEVEL
+            g.append("g")
+              .selectAll(".toplevel")
+                .data(topojson.feature(map, map.objects.toplevel).features)
+              .enter().append("path")
+                .attr("class", "toplevel id")
+                .attr("d", path);
         
             // FEATURE-SHAPES
             g.append("g")
-                .attr("id", "Deutschland")
               .selectAll(".subunit")
                 .data(topojson.feature(map, subunits).features)
               .enter().append("path")
-                .attr("class", function(d) { return "subunit rs" + d.id; })
+                .attr("class",  function(d){return "subunit key" + d.id;})
+                .attr("key", function(d){return d.id})
                 .attr("d", path)
                 .on("mouseover", mouseover)
                 .on("mouseout", mouseout);

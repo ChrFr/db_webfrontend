@@ -38,10 +38,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
 
             events: {
+                
+                //age group controls
                 'click #new-group': 'addAgeGroup',
                 'change #agegroup-from': 'ageInput', 
                 'click #delete-agegroups': 'deleteAgeGroups',
                 
+                // download buttons clicked
                 'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
                 'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
                 'click #agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
@@ -103,8 +106,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     var allRegions = [];
                     this.communities.each(function(region){   
                         allRegions.push(region.get('rs'));
-                    });
+                    });               
+                    
+                    var aggregates = [{id: '0', name: 'Gesamtgebiet', rs: allRegions}];
+                    _this.renderMap(aggregates);     
                     this.renderRegion(this.getAggregateRegion(allRegions, 'Gesamtgebiet'));
+                        
                 }
                                 
                 // specific layer
@@ -119,7 +126,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             
                             var rsArr = [];
                             var i = 0;
-                            layer.get('regionen').forEach(function(region){ 
+                            var aggregates = layer.get('regionen');
+                            aggregates.forEach(function(region){ 
                                 new OptionView({
                                     el: regionSelector,
                                     name: region.name, 
@@ -128,7 +136,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                                 rsArr.push(region.rs);
                                 i++;
                             });
-
+                            
+                            _this.renderMap(aggregates);
+                            
                             regionSelector.onchange = function(e) { 
                                 if (e.target.value !== null){
                                     var rs = rsArr[e.target.value];
@@ -139,7 +149,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                                 }
                             };  
                         }                        
-                    });
+                    });            
                 }
                 
                 // basic layer gemeinden
@@ -156,6 +166,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             value: community.get('rs')
                         });
                     });
+                    // in every case: render map (specific to layer)
+                    _this.renderMap();    
 
                     regionSelector.onchange = function(e) { 
                         if (e.target.value > 0){
@@ -166,6 +178,32 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         }
                     };  
                 }
+                    
+            },            
+            
+            renderMap: function(aggregates){
+                
+                var vis = this.el.querySelector("#map");
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);
+                              
+                var width = parseInt(vis.offsetWidth),
+                    height = width,
+                    units = [];
+            
+                this.communities.each(function(model){
+                    units.push(model.get('rs'));
+                });
+                
+                this.map = new Map({
+                    el: vis,
+                    source: "./shapes/gemeinden.json", //'/api/layers/gemeinden/map', 
+                    units: units,
+                    width: width, 
+                    height: height,
+                    aggregates: aggregates
+                });
+                this.map.render();
             },
             
             //get an aggregated region from the collection or create it (as cache)
@@ -298,7 +336,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     _this.renderAgeGroupTable(_this.currentYear);
                     _this.renderAgeTable(_this.yearData);
                     _this.renderRawData(data);
-                    _this.renderMap();
                 }});
             },
             
@@ -487,31 +524,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     highlight: true
                 });
             },
-            
-            renderMap: function(){
-                var vis = this.el.querySelector("#map");
-                while (vis.firstChild) 
-                    vis.removeChild(vis.firstChild);
-                              
-                var width = parseInt(vis.parentNode.offsetWidth) - 70,
-                    height = width * 0.8,
-                    units = [];
-            
-                this.communities.each(function(model){
-                    units.push(model.get('rs'));
-                });
-                
-                this.map = new Map({
-                    el: vis,
-                    source: "./shapes/gemeinden.json", //'/api/layers/gemeinden/map', 
-                    units: units,
-                    width: width, 
-                    height: height,
-                    
-                });
-                this.map.render();
-            },
-            
+                        
             calculateAgeGroups: function(){
                 var _this = this;
                 this.groupedData = [];
@@ -784,7 +797,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 else{
                     this.yearData = this.currentModel.get('data')[0];
                     this.renderAgeTable(this.yearData);
-                    this.renderAgeGroupTable(this.currentYear);  
+                    this.renderAgeGroupTable(this.yearData.jahr);  
                     
                     //no need for changing years
                     this.el.querySelector(".bottom-controls").style.display = 'none';

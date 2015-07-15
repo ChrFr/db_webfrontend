@@ -1,23 +1,21 @@
 <link rel="stylesheet" type="text/css" href="../../../css/visuals.css">
 <div class="container-fluid">    
-    <div class="col-md-2"> 
-        <label> Gliederungsebene </label>
-        <select class="form-control" id="layer-select"> </select> <br>
-        
-        <label id="region-label" style="display: none"> Region </label>
-        <select class="form-control" id="region-select" style="display: none"> </select><br>
-        
-        
-        
+    <div class="col-md-3"> 
+         <div class="row">
+            <div class="col-md-5"> 
+                <label> Gliederungsebene </label>
+                <select class="form-control" id="layer-select"> </select> <br>
+            </div>
+            <div class="col-md-7"> 
+                <label id="region-label" style="display: none"> Region </label>
+                <select class="form-control" id="region-select" style="display: none"> </select><br>
+            </div>
+        </div>
+        <div id="map"> </div>  
     </div>
     <div id="visualizations" class="col-md-5">    
         <ul class="nav nav-pills">
             <li class="active">
-                <a href="#map-tab" data-toggle="tab">   
-                    Karte
-                </a>
-            </li>
-            <li>
                 <a href="#development-tab" data-toggle="tab">     
                     <div class = "icon">
                         <img src="../../../img/linechart.png">
@@ -52,9 +50,8 @@
         </ul>
         <div class="tab-content">                     
             <div class="tab-pane active" id="map-tab">     
-                <div id="map"> </div>     
             </div>
-            <div class="tab-pane" id="development-tab">            
+            <div class="tab-pane active" id="development-tab">            
                 <div id="absolute"></div>         
                 <div id="relative"></div>
                 <div class="side-controls"> 

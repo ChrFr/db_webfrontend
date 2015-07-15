@@ -1,9 +1,13 @@
-.subunit{
-    fill: #D1D1D1;
-}
-
 rect.background{
     fill: white;
+}
+
+.subunit{
+    fill: #99FF99;
+}
+
+.toplevel {
+    fill: #E6E6E6;
 }
 
 .subunit-boundary {
@@ -26,5 +30,7 @@ rect.background{
 }
 
 .subunit.active{
-    fill: gold;
+    stroke-width: 2px;
+    stroke: gold;
+    stroke-linejoin: round;
 }

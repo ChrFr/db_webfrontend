@@ -223,7 +223,7 @@ module.exports = function(){
                     subquery;
                 
                 //grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
-                var queryStr = "SELECT {key}, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
+                var queryStr = "SELECT {key} as id, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
                 
                 //for which communities does data exist belonging to this prognosis?
                 var progId = req.query.progId;

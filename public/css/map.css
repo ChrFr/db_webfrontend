@@ -2,11 +2,22 @@
     fill: #D1D1D1;
 }
 
+rect.background{
+    fill: white;
+}
+
 .subunit-boundary {
   fill: none;
   stroke-width: 1px;
-  stroke: black;
+  stroke: white;
   stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+}
+
+.outer-boundary {
+  fill: none;
+  stroke-width: 1px;
+  stroke: darkgrey;
   stroke-linejoin: round;
 }
 

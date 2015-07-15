@@ -16,8 +16,8 @@ define(["backbone", "models/DDModel"],
                 this.url = this.url.replace('{progId}', this.progId);
             },    
             
-            //Override
-            //calculate additional data after successful fetch from server
+            // Override
+            // set the url to each model matching the id of current prognosis
             fetch: function(options){
                 options || (options = {});
                 var callback = options.success;

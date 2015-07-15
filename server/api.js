@@ -272,7 +272,7 @@ module.exports = function(){
             },
             
             map: function(req, res){
-                res.sendFile(path.join(__dirname, 'test2.json'));
+                res.sendFile(path.join(__dirname, 'shapes', 'landkreise.json'));
             }
         },
     }

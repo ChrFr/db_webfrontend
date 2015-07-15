@@ -6,6 +6,7 @@ define(["backbone"],
         var CommunityCollection = Backbone.Collection.extend({
             
             url: 'api/layers/gemeinden',
+            
 
             initialize: function(){   
             },    

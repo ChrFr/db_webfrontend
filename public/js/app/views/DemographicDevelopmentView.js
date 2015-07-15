@@ -1,8 +1,8 @@
 define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
     "collections/LayerCollection", "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
-    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
+    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", "views/visuals/Map", 
     "views/visuals/LineChart", "views/visuals/GroupedBarChart", "views/visuals/StackedBarChart", 
-    "canvg", "pnglink", "filesaver"],
+    "canvg", "pnglink", "filesaver", "topojson"],
 
     function($, app, Backbone, template, CommunityCollection, LayerCollection, 
             DDCollection, DDAggregate, OptionView, TableView, d3, d3slider){
@@ -16,7 +16,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var progId = app.get('activePrognosis');
                 
                 if(progId){
-                    // container for all demographic developments (aggregated too)
+                    // container for all demographic developments (aggregated regions too)
                     // serves as cache
                     this.collection = new DDCollection({progId: progId});
                     //available comunities (base entity)
@@ -25,6 +25,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     this.layers = new LayerCollection();
                     
                     // nested fetch collections and finally render (all coll.'s needed for rendering)
+                    // TODO: message to user on error
                     this.collection.fetch({success: function(){    
                         _this.layers.fetch({success: function(){
                             _this.communities.fetch({
@@ -297,7 +298,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     _this.renderAgeGroupTable(_this.currentYear);
                     _this.renderAgeTable(_this.yearData);
                     _this.renderRawData(data);
-                    
+                    _this.renderMap();
                 }});
             },
             
@@ -487,7 +488,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 });
             },
             
-            renderMap: function(mapData){
+            renderMap: function(){
                 var vis = this.el.querySelector("#map");
                 while (vis.firstChild) 
                     vis.removeChild(vis.firstChild);
@@ -496,10 +497,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var height = width * 0.8;
                 this.map = new Map({
                     el: vis,
-                    data: mapData, 
+                    url: '/api/layers/gemeinden/map', 
                     width: width, 
                     height: height
                 });
+                this.map.render();
             },
             
             calculateAgeGroups: function(){

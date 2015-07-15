@@ -8,15 +8,16 @@
         <select class="form-control" id="region-select" style="display: none"> </select><br>
         
         
-    <div class="grouped"> 
-        <label> Karte </label>
-        <div id="map"> </div>        
-    </div>
         
     </div>
     <div id="visualizations" class="col-md-5">    
         <ul class="nav nav-pills">
             <li class="active">
+                <a href="#map-tab" data-toggle="tab">   
+                    Karte
+                </a>
+            </li>
+            <li>
                 <a href="#development-tab" data-toggle="tab">     
                     <div class = "icon">
                         <img src="../../../img/linechart.png">
@@ -49,8 +50,11 @@
                 </a>
             </li>
         </ul>
-        <div class="tab-content">            
-            <div class="tab-pane active" id="development-tab">            
+        <div class="tab-content">                     
+            <div class="tab-pane active" id="map-tab">     
+                <div id="map"> </div>     
+            </div>
+            <div class="tab-pane" id="development-tab">            
                 <div id="absolute"></div>         
                 <div id="relative"></div>
                 <div class="side-controls"> 

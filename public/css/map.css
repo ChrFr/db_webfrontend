@@ -1,0 +1,19 @@
+.subunit{
+    fill: #D1D1D1;
+}
+
+.subunit-boundary {
+  fill: none;
+  stroke-width: 1px;
+  stroke: black;
+  stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+}
+
+.subunit.highlight{
+    fill: gold;
+}
+
+.subunit.active{
+    fill: gold;
+}

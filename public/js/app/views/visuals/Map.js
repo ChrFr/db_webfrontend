@@ -11,6 +11,7 @@ var Map = function(options){
     this.height = options.height;
     this.units = options.units || [];
     this.aggregates = options.aggregates;
+    this.onClick = options.onClick;
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -46,6 +47,9 @@ var Map = function(options){
             .on("zoom", zoomed);
 
         var mouseover = function(d, i) {
+            // ignore unmapped areas
+            if(typeof d.id === 'undefined') return;
+            
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
             var key = d3.select(this).attr('key');
             d3.selectAll('.key' + key).classed("highlight", true);
@@ -92,12 +96,16 @@ var Map = function(options){
                 var aggregationMap = {};
                 _this.aggregates.forEach(function(aggr){
                     aggr.rs.forEach(function(rs){                        
-                        aggregationMap[rs] = aggr.id;
+                        aggregationMap[rs] = {id: aggr.id, name: aggr.name};
                     });
                 });
                 subunits.geometries.map( function( el ) {
-                    el.id = aggregationMap[el.id];
+                    var mapped = aggregationMap[el.id];
+                    // unmapped areas (not belonging to any aggregate) will be ignored later
+                    el.id = mapped? mapped.id: null;
+                    el.properties.name = mapped? mapped.name: null;
                 });
+                
             }
             
             // TOP-LEVEL

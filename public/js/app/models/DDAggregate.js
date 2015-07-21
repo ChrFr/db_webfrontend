@@ -9,8 +9,9 @@ define(["backbone", "models/DDModel"],
             url: 'api/prognosen/{progId}/bevoelkerungsprognose/aggregiert?{rs}',
 
             initialize: function(options) {
-                this.setURL(options.progId, options.rs);
+                this.setURL(options.progId, options.rsAggr);
                 this.set('name', options.name);
+                this.id = options.id;
             },
             
             setURL: function(progId, rs) {

@@ -108,9 +108,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         allRegions.push(region.get('rs'));
                     });               
                     
-                    var aggregates = [{id: '0', name: 'Gesamtgebiet', rs: allRegions}];
+                    var aggregates = [{id: 0, name: 'Gesamtgebiet', rs: allRegions}];
                     _this.renderMap(aggregates);     
-                    this.renderRegion(this.getAggregateRegion(allRegions, 'Gesamtgebiet'));
+                    this.renderRegion(this.getAggregateRegion(0, allRegions, 'Gesamtgebiet'));
                         
                 }
                                 
@@ -124,16 +124,16 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             _this.el.querySelector("#region-label").style.display = "block";
                             new OptionView({el: regionSelector, name: 'Bitte wählen', value: null}); 
                             
-                            var rsArr = [];
+                            var rsMap = {};
                             var i = 0;
                             var aggregates = layer.get('regionen');
                             aggregates.forEach(function(region){ 
                                 new OptionView({
                                     el: regionSelector,
                                     name: region.name, 
-                                    value: i
+                                    value: region.id
                                 });
-                                rsArr.push(region.rs);
+                                rsMap[region.id] = region.rs;
                                 i++;
                             });
                             
@@ -141,11 +141,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             
                             regionSelector.onchange = function(e) { 
                                 if (e.target.value !== null){
-                                    var rs = rsArr[e.target.value];
+                                    var rsAggr = rsMap[e.target.value];
                                     var name = e.target.selectedOptions[0].innerHTML;
                                     //id suffix (there may be other layers with same names)
                                     name += '_' + layerId;
-                                    _this.renderRegion(_this.getAggregateRegion(rs, name));
+                                    _this.renderRegion(_this.getAggregateRegion(e.target.value, rsAggr, name));
                                 }
                             };  
                         }                        
@@ -182,6 +182,16 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },            
             
             renderMap: function(aggregates){
+                var _this = this;
+                
+                var onClick = function(rs, name, rsAggr) {
+                    var model;
+                    if(rsAggr)
+                        model = _this.getAggregateRegion(rs, rsAggr, name)
+                    else
+                        model = _this.collection.get(rs)
+                }
+                
                 
                 var vis = this.el.querySelector("#map");
                 while (vis.firstChild) 
@@ -201,20 +211,24 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     units: units,
                     width: width, 
                     height: height,
-                    aggregates: aggregates
+                    aggregates: aggregates,
+                    onClick: onClick
                 });
                 this.map.render();
             },
             
             //get an aggregated region from the collection or create it (as cache)
-            getAggregateRegion: function(rs, name){
+            getAggregateRegion: function(id, rsAggr, name){
+                //TODO: doesn't find them (doesn't add them anyway, but it's waste of resources)
                 var region = this.collection.find(function(model) { 
-                    return model.get('name') == name; });
+                    return model.get(id)
+                });
                 if(!region){
                     region = new DDAggregate({
+                        id: id,
                         name: name,
                         progId: this.collection.progId, 
-                        rs: rs
+                        rsAggr: rsAggr
                     });   
                     this.collection.add(region);
                 };

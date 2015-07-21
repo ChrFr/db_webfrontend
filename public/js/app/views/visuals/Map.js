@@ -96,7 +96,7 @@ var Map = function(options){
                 var aggregationMap = {};
                 _this.aggregates.forEach(function(aggr){
                     aggr.rs.forEach(function(rs){                        
-                        aggregationMap[rs] = {id: aggr.id, name: aggr.name};
+                        aggregationMap[rs] = {id: aggr.id, rsArr: aggr.rs, name: aggr.name};
                     });
                 });
                 subunits.geometries.map( function( el ) {
@@ -104,6 +104,7 @@ var Map = function(options){
                     // unmapped areas (not belonging to any aggregate) will be ignored later
                     el.id = mapped? mapped.id: null;
                     el.properties.name = mapped? mapped.name: null;
+                    el.properties.rsArr = mapped? mapped.rsArr: null;
                 });
                 
             }
@@ -111,21 +112,26 @@ var Map = function(options){
             // TOP-LEVEL
             g.append("g")
               .selectAll(".toplevel")
-                .data(topojson.feature(map, map.objects.toplevel).features)
+                    .data(topojson.feature(map, map.objects.toplevel).features)
               .enter().append("path")
-                .attr("class", "toplevel id")
-                .attr("d", path);
+                    .attr("class", "toplevel id")
+                    .attr("d", path);
         
             // FEATURE-SHAPES
             g.append("g")
               .selectAll(".subunit")
-                .data(topojson.feature(map, subunits).features)
+                    .data(topojson.feature(map, subunits).features)
               .enter().append("path")
-                .attr("class",  function(d){return "subunit key" + d.id;})
-                .attr("key", function(d){return d.id})
-                .attr("d", path)
-                .on("mouseover", mouseover)
-                .on("mouseout", mouseout);
+                    .attr("class",  function(d){return "subunit key" + d.id;})
+                    .attr("key", function(d){return d.id})
+                    .attr("d", path)
+                    .on("mouseover", mouseover)
+                    .on("mouseout", mouseout)
+                    .on("click", function(d) {
+                        // aggregated?
+                        var rsArr = d.properties.rsArr? d.properties.rsArr: d.id;
+                        _this.onClick(d.id, d.properties.name, rsArr);
+                    });
         
             // INTERIOR BOUNDARIES
             g.append("path")

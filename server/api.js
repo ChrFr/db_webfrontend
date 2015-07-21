@@ -165,7 +165,7 @@ module.exports = function(){
                     return callback(err, 500); 
                 if (result.length === 0)
                     return callback('not found', 404);
-                if (!user.superuser && result[0].users.indexOf(user.id) < 0)
+                if (!user.superuser && result[0].users.indexOf(parseInt(user.id)) < 0)
                     return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
                 //don't send the permissions
                 delete result[0].users;

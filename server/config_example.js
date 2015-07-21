@@ -14,7 +14,8 @@ module.exports = function(){
             password: "password",
             host: "the adress of the database server (if using unix sockets: the path to the socket file)",
             port: "port the database listens to (default: 5432)",
-            database: "name of the database"
+            database: "name of the database",
+            ssl: "true/false",
         }
     };
     return config;

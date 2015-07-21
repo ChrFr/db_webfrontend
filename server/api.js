@@ -228,7 +228,7 @@ module.exports = function(){
                 //for which communities does data exist belonging to this prognosis?
                 var progId = req.query.progId;
                 if(progId){
-                    subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1)";
+                    subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden WHERE prognose_id=$1)";
                     params.push(progId);
                 }
                 //take the table as is, if no prognosis id is given
@@ -254,7 +254,8 @@ module.exports = function(){
                 //get gemeinden for specific prognosis
                 var progId = req.query.progId;
                 if(progId)
-                    query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
+                    // take all gemeinden belonging to requested prognosis where populationdata is available
+                    query("SELECT prognose_id, rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [progId], function(err, result){
                         return res.status(200).send(result);
                     });
                 else{
@@ -301,7 +302,6 @@ module.exports = function(){
                     queryString += " AND rs=$" + i;
                     params.push(req.params.rs);
                 }
-                
                 //specific year queried or all years?   
                 if (year){
                     queryString += " AND jahr=$3 ";
@@ -311,6 +311,7 @@ module.exports = function(){
                     queryString += ' ORDER BY jahr';                    
                 };
                 
+                console.log(queryString)
                 query(queryString, params, function(err, result){  
                     if (err || result.length === 0)
                         return res.sendStatus(404);
@@ -470,7 +471,7 @@ module.exports = function(){
                     return res.status(status).send(err);
                 if(!user.superuser)
                     return res.status(401);
-                query("SELECT id, name, email, superuser from users", [],
+                query("SELECT id, name, email, superuser from users;", [],
                 function(err, result){
                     if(err)
                         return res.sendStatus(500);
@@ -486,7 +487,7 @@ module.exports = function(){
                     return res.status(status).send(err);
                 if(!user.superuser)
                     return res.status(401);
-                query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
+                query("SELECT id, name, email, superuser from users WHERE id=$1;", [req.params.id], 
                 function(err, result){
                     if (err || result.length === 0)
                         return res.sendStatus(404);

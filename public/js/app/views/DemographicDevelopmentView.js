@@ -23,10 +23,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     this.communities = new CommunityCollection();
                     //layers for community-aggregations
                     this.layers = new LayerCollection();
-                    
                     // nested fetch collections and finally render (all coll.'s needed for rendering)
                     // TODO: message to user on error
-                    this.collection.fetch({success: function(){    
+                    this.collection.fetch({success: function(){   
                         _this.layers.fetch({success: function(){
                             _this.communities.fetch({
                                 data: {progId: progId},
@@ -61,7 +60,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
 
             render: function() {
-                var _this = this;
+                var _this = this; 
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;   
                 var layerSelector = this.el.querySelector("#layer-select");
@@ -110,8 +109,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     
                     var aggregates = [{id: 0, name: 'Gesamtgebiet', rs: allRegions}];
                     _this.renderMap(aggregates);     
-                    this.renderRegion(this.getAggregateRegion(0, allRegions, 'Gesamtgebiet'));
-                        
+                    this.renderRegion(this.getAggregateRegion(0, allRegions, 'Gesamtgebiet'));                        
                 }
                                 
                 // specific layer
@@ -186,11 +184,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 
                 var onClick = function(rs, name, rsAggr) {
                     var model;
+                    console.log(rs)
+                    console.log(name)
+                    console.log(rsAggr)
                     if(rsAggr)
-                        model = _this.getAggregateRegion(rs, rsAggr, name)
+                        model = _this.getAggregateRegion(rs, rsAggr, name);
                     else
-                        model = _this.collection.get(rs)
-                }
+                        model = _this.collection.get(rs);
+                    _this.renderRegion(model);
+                };
                 
                 
                 var vis = this.el.querySelector("#map");

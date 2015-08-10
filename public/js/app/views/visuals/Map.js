@@ -83,7 +83,6 @@ var Map = function(options){
 
         d3.json(this.source, function(error, map) {
             if (error) return console.error(error);
-            console.log(map)
             
             // only draw required shapes
             var subunits = {type: "GeometryCollection"};

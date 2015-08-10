@@ -965,7 +965,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             }
 
             //get svg plain text (eventually scaled)
-            var svg = svgDiv[0].outerHTML,
+            var svg = new XMLSerializer().serializeToString(svgDiv[0]),
                 canvas = document.getElementById('pngRenderer');
         
             //reset scale

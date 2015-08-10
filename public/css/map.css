@@ -1,0 +1,35 @@
+rect.background{
+    fill: white;
+}
+
+.subunit{
+    fill: #454545;
+}
+
+.toplevel {
+    fill: #E6E6E6;
+}
+
+/* ZOOM TO BOUNDING BOX MESSES UP STROKE STYLES!*/
+.subunit-boundary {
+  fill: none;
+  stroke: white;
+  /*stroke-width: 1px;
+  stroke-dasharray: 2,2;*/
+  stroke-linejoin: round;
+}
+
+.outer-boundary {
+  fill: none;
+  /*stroke-width: 1px;*/
+  stroke: darkgrey;
+  stroke-linejoin: round;
+}
+
+.subunit.highlight{
+    fill: gold;
+}
+
+.subunit.selected{
+    fill: gold;
+}

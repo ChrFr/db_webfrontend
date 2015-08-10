@@ -955,7 +955,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         function downloadPng(svgDiv, filename, scale) {
             var oldWidth = svgDiv.width(),
                 oldHeight = svgDiv.height(),
-                oldScale = svgDiv.attr('transform');
+                oldScale = svgDiv.attr('transform') || '';
         
             //change scale
             if (scale){

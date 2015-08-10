@@ -26,7 +26,7 @@ var StackedBarChart = function(options){
         
         // preprocess data
         this.data.forEach(function(d) {
-            d.total =  d.values.reduce(function(a, b) {return a + b;});
+            d.total = d.values.length? d.values.reduce(function(a, b) {return a + b;}): 0;
             d.mapped = [];
             //stack the bars by adding the predecessor to its length
             for(var i = 0; i < d.values.length; i++){
@@ -77,7 +77,7 @@ var StackedBarChart = function(options){
                   continue;
               var str = document.styleSheets[i].href.split("/");
               if (str[str.length-1] == "visuals.css"){
-                var rules = document.styleSheets[i].rules;
+                var rules = document.styleSheets[i].cssRules;
                 for (var j=0; j<rules.length;j++){
                   parsed += (rules[j].cssText + "\n");
                 }

@@ -31,7 +31,9 @@ require.config({
       
       "canvg": "../libs/canvg",
       
-      "pnglink": "../libs/jquery.pnglink",
+      "pnglink": "../libs/jquery.pnglink",      
+      
+      "topojson": "../libs/topojson.v1.min",
 
       // Plugins
       // -------

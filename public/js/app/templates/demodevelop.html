@@ -1,19 +1,24 @@
-<link rel="stylesheet" type="text/css" href="../../../css/visuals.css">
+<link rel="stylesheet" type="text/css" href="css/visuals.css">
 <div class="container-fluid">    
-    <div class="col-md-2"> 
-        <label> Gliederungsebene </label>
-        <select class="form-control" id="layer-select"> </select> <br>
-        
-        <label id="region-label" style="display: none"> Region </label>
-        <select class="form-control" id="region-select" style="display: none"> </select><br>
-        
+    <div class="col-md-3"> 
+         <div class="row">
+            <div class="col-md-5"> 
+                <label> Gliederungsebene </label>
+                <select class="form-control" id="layer-select"> </select> <br>
+            </div>
+            <div class="col-md-7"> 
+                <label id="region-label" style="display: none"> Region </label>
+                <select class="form-control" id="region-select" style="display: none"> </select><br>
+            </div>
+        </div>
+        <div id="map"> </div>  
     </div>
     <div id="visualizations" class="col-md-5">    
         <ul class="nav nav-pills">
             <li class="active">
                 <a href="#development-tab" data-toggle="tab">     
                     <div class = "icon">
-                        <img src="../../../img/linechart.png">
+                        <img src="img/linechart.png">
                     </div>
                     Entwicklung
                 </a>
@@ -21,7 +26,7 @@
             <li>
                 <a href="#agegroupchart-tab" data-toggle="tab">          
                     <div class = "icon">
-                        <img src="../../../img/barchart.png">
+                        <img src="img/barchart.png">
                     </div>
                     Altersgruppen
                 </a>
@@ -29,7 +34,7 @@
             <li>
                 <a href="#barchart-tab" data-toggle="tab">          
                     <div class = "icon">
-                        <img src="../../../img/groupedbarchart.png">
+                        <img src="img/groupedbarchart.png">
                     </div>
                     Bar Chart
                 </a>
@@ -37,19 +42,21 @@
             <li id="ageTreeBtn">
                 <a href="#agetree-tab" data-toggle="tab">                    
                     <div class = "icon">
-                        <img src="../../../img/agetree.png">
+                        <img src="img/agetree.png">
                     </div>
                     Bevölkerungspyramide
                 </a>
             </li>
         </ul>
-        <div class="tab-content">            
+        <div class="tab-content">                     
+            <div class="tab-pane active" id="map-tab">     
+            </div>
             <div class="tab-pane active" id="development-tab">            
                 <div id="absolute"></div>         
                 <div id="relative"></div>
                 <div class="side-controls"> 
                     <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="../../../img/camera-black.png"> 
+                        <img src="img/camera-black.png"> 
                     </button>
                 </div>
             </div>          
@@ -57,7 +64,7 @@
                 <div id="agegroupchart"></div>
                 <div class="side-controls"> 
                     <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="../../../img/camera-black.png"> 
+                        <img src="img/camera-black.png"> 
                     </button>
                 </div>
             </div>  
@@ -65,7 +72,7 @@
                 <div id="barchart"></div>
                 <div class="side-controls"> 
                     <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="../../../img/camera-black.png"> 
+                        <img src="img/camera-black.png"> 
                     </button>
                 </div>
             </div>
@@ -73,7 +80,7 @@
                 <div id="agetree"></div>
                 <div class="side-controls"> 
                     <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="../../../img/camera-black.png"> 
+                        <img src="img/camera-black.png"> 
                     </button>
                     <button class="watch" title="Aktuelles Jahr beobachten"> 
                     </button>
@@ -142,6 +149,6 @@
     </div>
 </div>
 
-<div id="pngWrapper">
+<div id="pngWrapper" style="display: none">
   <canvas id="pngRenderer"></canvas>
 </div>

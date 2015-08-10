@@ -9,6 +9,7 @@ module.exports = {
     pgQuery: function(queryString, parameters, callback){
         pg.connect(config.dbconfig, function(err, client, done) {
             if(err) {
+                console.log(err);
                 return callback(err);
             }
             client.query(queryString, parameters, function(err, result) {

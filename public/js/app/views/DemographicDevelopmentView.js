@@ -1,8 +1,8 @@
 define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",  
     "collections/LayerCollection", "collections/DDCollection", "models/DDAggregate", "views/OptionView", 
-    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", 
+    "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", "views/visuals/Map", 
     "views/visuals/LineChart", "views/visuals/GroupedBarChart", "views/visuals/StackedBarChart", 
-    "canvg", "pnglink", "filesaver"],
+    "canvg", "pnglink", "filesaver", "topojson"],
 
     function($, app, Backbone, template, CommunityCollection, LayerCollection, 
             DDCollection, DDAggregate, OptionView, TableView, d3, d3slider){
@@ -16,16 +16,16 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 var progId = app.get('activePrognosis');
                 
                 if(progId){
-                    // container for all demographic developments (aggregated too)
+                    // container for all demographic developments (aggregated regions too)
                     // serves as cache
                     this.collection = new DDCollection({progId: progId});
                     //available comunities (base entity)
                     this.communities = new CommunityCollection();
                     //layers for community-aggregations
                     this.layers = new LayerCollection();
-                    
                     // nested fetch collections and finally render (all coll.'s needed for rendering)
-                    this.collection.fetch({success: function(){    
+                    // TODO: message to user on error
+                    this.collection.fetch({success: function(){   
                         _this.layers.fetch({success: function(){
                             _this.communities.fetch({
                                 data: {progId: progId},
@@ -37,10 +37,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
 
             events: {
+                
+                //age group controls
                 'click #new-group': 'addAgeGroup',
                 'change #agegroup-from': 'ageInput', 
                 'click #delete-agegroups': 'deleteAgeGroups',
                 
+                // download buttons clicked
                 'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
                 'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
                 'click #agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
@@ -57,7 +60,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             },
 
             render: function() {
-                var _this = this;
+                var _this = this; 
                 this.template = _.template(template, {});
                 this.el.innerHTML = this.template;   
                 var layerSelector = this.el.querySelector("#layer-select");
@@ -102,8 +105,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     var allRegions = [];
                     this.communities.each(function(region){   
                         allRegions.push(region.get('rs'));
-                    });
-                    this.renderRegion(this.getAggregateRegion(allRegions, 'Gesamtgebiet'));
+                    });               
+                    
+                    var aggregates = [{id: 0, name: 'Gesamtgebiet', rs: allRegions}];
+                    _this.renderMap(aggregates);     
+                    this.renderRegion(this.getAggregateRegion(0, allRegions, 'Gesamtgebiet'));                        
                 }
                                 
                 // specific layer
@@ -116,29 +122,32 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             _this.el.querySelector("#region-label").style.display = "block";
                             new OptionView({el: regionSelector, name: 'Bitte wählen', value: null}); 
                             
-                            var rsArr = [];
+                            var rsMap = {};
                             var i = 0;
-                            layer.get('regionen').forEach(function(region){ 
+                            var aggregates = layer.get('regionen');
+                            aggregates.forEach(function(region){ 
                                 new OptionView({
                                     el: regionSelector,
                                     name: region.name, 
-                                    value: i
+                                    value: region.id
                                 });
-                                rsArr.push(region.rs);
+                                rsMap[region.id] = region.rs;
                                 i++;
                             });
-
+                            
+                            _this.renderMap(aggregates);
+                            
                             regionSelector.onchange = function(e) { 
                                 if (e.target.value !== null){
-                                    var rs = rsArr[e.target.value];
+                                    var rsAggr = rsMap[e.target.value];
                                     var name = e.target.selectedOptions[0].innerHTML;
                                     //id suffix (there may be other layers with same names)
                                     name += '_' + layerId;
-                                    _this.renderRegion(_this.getAggregateRegion(rs, name));
+                                    _this.renderRegion(_this.getAggregateRegion(e.target.value, rsAggr, name));
                                 }
                             };  
                         }                        
-                    });
+                    });            
                 }
                 
                 // basic layer gemeinden
@@ -155,6 +164,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             value: community.get('rs')
                         });
                     });
+                    // in every case: render map (specific to layer)
+                    _this.renderMap();    
 
                     regionSelector.onchange = function(e) { 
                         if (e.target.value > 0){
@@ -165,17 +176,61 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         }
                     };  
                 }
+                    
+            },            
+            
+            renderMap: function(aggregates){
+                var _this = this;
+                
+                var onClick = function(rs, name, rsAggr) {
+                    var model;
+                    console.log(rs)
+                    console.log(name)
+                    console.log(rsAggr)
+                    if(rsAggr)
+                        model = _this.getAggregateRegion(rs, rsAggr, name);
+                    else
+                        model = _this.collection.get(rs);
+                    _this.renderRegion(model);
+                };
+                
+                
+                var vis = this.el.querySelector("#map");
+                while (vis.firstChild) 
+                    vis.removeChild(vis.firstChild);
+                              
+                var width = parseInt(vis.offsetWidth),
+                    height = width,
+                    units = [];
+            
+                this.communities.each(function(model){
+                    units.push(model.get('rs'));
+                });
+                
+                this.map = new Map({
+                    el: vis,
+                    source: "./shapes/gemeinden.json", //'/api/layers/gemeinden/map', 
+                    units: units,
+                    width: width, 
+                    height: height,
+                    aggregates: aggregates,
+                    onClick: onClick
+                });
+                this.map.render();
             },
             
             //get an aggregated region from the collection or create it (as cache)
-            getAggregateRegion: function(rs, name){
+            getAggregateRegion: function(id, rsAggr, name){
+                //TODO: doesn't find them (doesn't add them anyway, but it's waste of resources)
                 var region = this.collection.find(function(model) { 
-                    return model.get('name') == name; });
+                    return model.get(id)
+                });
                 if(!region){
                     region = new DDAggregate({
+                        id: id,
                         name: name,
                         progId: this.collection.progId, 
-                        rs: rs
+                        rsAggr: rsAggr
                     });   
                     this.collection.add(region);
                 };
@@ -297,7 +352,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     _this.renderAgeGroupTable(_this.currentYear);
                     _this.renderAgeTable(_this.yearData);
                     _this.renderRawData(data);
-                    
                 }});
             },
             
@@ -486,7 +540,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     highlight: true
                 });
             },
-            
+                        
             calculateAgeGroups: function(){
                 var _this = this;
                 this.groupedData = [];
@@ -759,7 +813,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 else{
                     this.yearData = this.currentModel.get('data')[0];
                     this.renderAgeTable(this.yearData);
-                    this.renderAgeGroupTable(this.currentYear);  
+                    this.renderAgeGroupTable(this.yearData.jahr);  
                     
                     //no need for changing years
                     this.el.querySelector(".bottom-controls").style.display = 'none';
@@ -865,7 +919,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             downloadAgeTreePng: function(e) {
                 var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png";
                 var svgDiv = $("#agetree>svg");                
-                downloadPng(svgDiv, filename, {width: 2, height: 2});
+                downloadPng(svgDiv, filename);//, {width: 2, height: 2});
             },
             
             downloadBarChartPng: function(e) {
@@ -901,7 +955,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         function downloadPng(svgDiv, filename, scale) {
             var oldWidth = svgDiv.width(),
                 oldHeight = svgDiv.height(),
-                oldScale = svgDiv.attr('transform');
+                oldScale = svgDiv.attr('transform') || '';
         
             //change scale
             if (scale){
@@ -911,7 +965,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             }
 
             //get svg plain text (eventually scaled)
-            var svg = svgDiv[0].outerHTML,
+            var svg = new XMLSerializer().serializeToString(svgDiv[0]),
                 canvas = document.getElementById('pngRenderer');
         
             //reset scale
@@ -925,11 +979,38 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             canvg(canvas, svg);
 
             //save canvas to file
-            var image = canvas.toDataURL('image/png');        
+            var dataURL = canvas.toDataURL('image/png');   
             var link = document.createElement("a");
+            
+            var blob = dataURItoBlob(dataURL);
+            window.saveAs(blob, filename);
+            
+            /*
+            //Chrome only
             link.download = filename;
-            link.href = image;
-            link.click();
+            link.href = dataURL;            
+            link.click();*/
+        };
+        
+        //http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+        function dataURItoBlob(dataURI) {
+            // convert base64/URLEncoded data component to raw binary data held in a string
+            var byteString;
+            if (dataURI.split(',')[0].indexOf('base64') >= 0)
+                byteString = atob(dataURI.split(',')[1]);
+            else
+                byteString = unescape(dataURI.split(',')[1]);
+
+            // separate out the mime component
+            var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+            // write the bytes of the string to a typed array
+            var ia = new Uint8Array(byteString.length);
+            for (var i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+
+            return new Blob([ia], {type:mimeString});
         };
         
         function createAlert(type, text) {

@@ -51,6 +51,10 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     padding: 10px;
 }
 
+#map{
+    border: solid 1px lightgrey;
+}
+
 .tab-pane{ 
     overflow: auto;
 }

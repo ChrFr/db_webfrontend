@@ -8,7 +8,8 @@ module.exports = function(){
         child_proc = require('child_process'),  
         query = require('./pgquery').pgQuery,   
         pbkdf2Hash = require('./pbkdf2_hash'),    
-        config = require('./config');
+        config = require('./config'),
+        path = require('path');
     
     //Mapping taken from express examples https://github.com/strongloop/express
     api.map = function(a, route){
@@ -164,7 +165,7 @@ module.exports = function(){
                     return callback(err, 500); 
                 if (result.length === 0)
                     return callback('not found', 404);
-                if (!user.superuser && result[0].users.indexOf(user.id) < 0)
+                if (!user.superuser && result[0].users.indexOf(parseInt(user.id)) < 0)
                     return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
                 //don't send the permissions
                 delete result[0].users;
@@ -222,12 +223,12 @@ module.exports = function(){
                     subquery;
                 
                 //grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
-                var queryStr = "SELECT {key}, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
+                var queryStr = "SELECT {key} as id, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
                 
                 //for which communities does data exist belonging to this prognosis?
                 var progId = req.query.progId;
                 if(progId){
-                    subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1)";
+                    subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden WHERE prognose_id=$1)";
                     params.push(progId);
                 }
                 //take the table as is, if no prognosis id is given
@@ -253,7 +254,8 @@ module.exports = function(){
                 //get gemeinden for specific prognosis
                 var progId = req.query.progId;
                 if(progId)
-                    query("SELECT DISTINCT rs, name FROM gemeinden NATURAL LEFT JOIN bevoelkerungsprognose WHERE prognose_id=$1;", [progId], function(err, result){
+                    // take all gemeinden belonging to requested prognosis where populationdata is available
+                    query("SELECT prognose_id, rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [progId], function(err, result){
                         return res.status(200).send(result);
                     });
                 else{
@@ -268,6 +270,10 @@ module.exports = function(){
                     function(err, result){
                         return res.status(200).send(result[0]);
                 });
+            },
+            
+            map: function(req, res){
+                res.sendFile(path.join(__dirname, 'shapes', 'gemeinden.json'));
             }
         },
     }
@@ -296,7 +302,6 @@ module.exports = function(){
                     queryString += " AND rs=$" + i;
                     params.push(req.params.rs);
                 }
-                
                 //specific year queried or all years?   
                 if (year){
                     queryString += " AND jahr=$3 ";
@@ -306,6 +311,7 @@ module.exports = function(){
                     queryString += ' ORDER BY jahr';                    
                 };
                 
+                console.log(queryString)
                 query(queryString, params, function(err, result){  
                     if (err || result.length === 0)
                         return res.sendStatus(404);
@@ -465,7 +471,7 @@ module.exports = function(){
                     return res.status(status).send(err);
                 if(!user.superuser)
                     return res.status(401);
-                query("SELECT id, name, email, superuser from users", [],
+                query("SELECT id, name, email, superuser from users;", [],
                 function(err, result){
                     if(err)
                         return res.sendStatus(500);
@@ -481,7 +487,7 @@ module.exports = function(){
                     return res.status(status).send(err);
                 if(!user.superuser)
                     return res.status(401);
-                query("SELECT id, name, email, superuser from users WHERE id=$1", [req.params.id], 
+                query("SELECT id, name, email, superuser from users WHERE id=$1;", [req.params.id], 
                 function(err, result){
                     if (err || result.length === 0)
                         return res.sendStatus(404);
@@ -577,6 +583,7 @@ module.exports = function(){
         login: function(req, res){
             var name = req.body.name,
                 plainPass = req.body.password,
+                stayLoggedIn = req.body.stayLoggedIn,
                 errMsg = 'falscher Benutzername oder falsches Passwort';
             query("SELECT * from users WHERE name=$1", [name],
             function(err, dbResult){
@@ -596,11 +603,13 @@ module.exports = function(){
                                  name: dbResult[0].name,
                                  email: dbResult[0].email,
                                  superuser: dbResult[0].superuser};    
-                                    
-                    //COOKIES (only used for status check, if page is refreshed)
-                    var maxAge = config.serverconfig.maxCookieAge; 
-                    res.cookie('token', token, { signed: true, maxAge:  maxAge});
-                    res.cookie('id', user.id, { signed: true, maxAge:  maxAge});
+                    
+                    //COOKIES (only used for status check, if page is refreshed)                
+                    if(stayLoggedIn){
+                        var maxAge = config.serverconfig.maxCookieAge; 
+                        res.cookie('token', token, { signed: true, maxAge:  maxAge});
+                        res.cookie('id', user.id, { signed: true, maxAge:  maxAge});
+                    }
 
                     res.statusCode = 200;
                     return res.json({
@@ -625,10 +634,13 @@ module.exports = function(){
         '/layers': {
             get: layers.list, 
             '/gemeinden':{
-                get: layers.gemeinden.list, 
+                get: layers.gemeinden.list,
+                '/map':{
+                    get: layers.gemeinden.map
+                }, 
                 '/:rs': {                
                     get: layers.gemeinden.get
-                }
+                }                      
             },
             '/:id': {                
                 get: layers.get

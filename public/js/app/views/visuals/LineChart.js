@@ -58,7 +58,7 @@ var LineChart = function(options){
                   continue;
               var str = document.styleSheets[i].href.split("/");
               if (str[str.length-1]=="visuals.css"){
-                var rules = document.styleSheets[i].rules;
+                var rules = document.styleSheets[i].cssRules;
                 for (var j=0; j<rules.length;j++){
                   parsed += (rules[j].cssText + "\n");
                 }

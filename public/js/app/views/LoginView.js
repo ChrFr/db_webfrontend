@@ -40,7 +40,8 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
                 
                 // Dynamically updates the UI with the view's template
                 this.$el.html(this.template); 
-                if (app.session.get('user')){                 
+                if (app.session.get('user')){           
+                    $(this.el).find('.checkbox').hide();      
                     $(this.el).find('#login-button').text('Ausloggen');
                     //no changes wanted 
                     $(this.el).find("input").prop('disabled', true);       
@@ -57,6 +58,7 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
                 }
                 else{
                     $(this.el).find('#email').hide();
+                    $(this.el).find('.checkbox').show();
                     $(this.el).find('#mail-label').hide();      
                     $(this.el).find('#login-button').text('Einloggen');
                 }
@@ -69,11 +71,13 @@ define(["app","jquery", "backbone", "text!templates/login.html"],
             login: function() {
                 var _this = this;
                 if($(this.el).find('#login-button').text() === 'Einloggen'){
-                    var name = $(this.el).find('#name').val() || '';      
-                    var password = $(this.el).find('#password').val() || '';
+                    var name = $(this.el).find('#name').val() || '',      
+                        password = $(this.el).find('#password').val() || '',
+                        stayLoggedIn = $(this.el).find('#stay-check').is(":checked");  
                     app.session.login({
                         name: name,
                         password: password,
+                        stayLoggedIn: stayLoggedIn,
                         error: function(response){
                             $(_this.el).find('#status').text(response);
                         }

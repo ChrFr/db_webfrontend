@@ -3,7 +3,7 @@ define(["backbone", "models/DDModel"],
     function(Backbone, DDModel) {
 
         var DemographicDevelopmentAggregate = DDModel.extend({
-            idAttribute: 'rs',
+            //idAttribute: 'rs',
             
             urlRoot: null,
             url: 'api/prognosen/{progId}/bevoelkerungsprognose/aggregiert?{rs}',

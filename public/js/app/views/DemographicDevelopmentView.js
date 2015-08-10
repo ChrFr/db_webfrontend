@@ -184,13 +184,19 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 
                 var onClick = function(rs, name, rsAggr) {
                     var model;
-                    console.log(rs)
-                    console.log(name)
-                    console.log(rsAggr)
                     if(rsAggr)
                         model = _this.getAggregateRegion(rs, rsAggr, name);
-                    else
-                        model = _this.collection.get(rs);
+                    else{
+                        model = _this.collection.get(rs);                        
+                        model.set('name', name);
+                    }
+                    var regionSelector = _this.el.querySelector("#region-select");
+                    for(var i = 0, j = regionSelector.options.length; i < j; ++i) {
+                        if(regionSelector.options[i].innerHTML === name) {
+                            regionSelector.selectedIndex = i;
+                            break;
+                    }
+    }
                     _this.renderRegion(model);
                 };
                 
@@ -250,7 +256,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         minYear = model.get('minYear'),
                         data = model.get('data');
                     _this.currentModel = model;
-                    
+                    var id = model.get('id');
+                    //id undefined for not aggregated layers
+                    if(typeof(id) == 'undefined')
+                        id = model.get('rs');
+                    _this.map.select(id);
                     //draw first year if not assigned yet
                     if(!_this.currentYear){
                         _this.yearData = data[0];
@@ -979,14 +989,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             canvg(canvas, svg);
 
             //save canvas to file
-            var dataURL = canvas.toDataURL('image/png');   
-            var link = document.createElement("a");
-            
+            var dataURL = canvas.toDataURL('image/png');               
             var blob = dataURItoBlob(dataURL);
             window.saveAs(blob, filename);
             
             /*
             //Chrome only
+            var link = document.createElement("a");
             link.download = filename;
             link.href = dataURL;            
             link.click();*/

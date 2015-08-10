@@ -311,7 +311,6 @@ module.exports = function(){
                     queryString += ' ORDER BY jahr';                    
                 };
                 
-                console.log(queryString)
                 query(queryString, params, function(err, result){  
                     if (err || result.length === 0)
                         return res.sendStatus(404);

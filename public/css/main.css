@@ -45,6 +45,11 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     margin-top: -1px;
     min-height: 200px;
 }
+.nav-tabs{
+    border: solid 1px lightgrey;
+    box-shadow: 1px 0px 2px 0px lightgrey;
+    border-bottom: 0;
+}
 
 .grouped{
     border: solid 1px lightgrey;
@@ -59,7 +64,11 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     overflow: auto;
 }
 
-.nav-pills > li > a{
+.nav-tabs{    
+    background-color: #F7F7F3;
+}
+/* DEACTIVATED CUSTOM NAVTABS
+.nav-tabs > li > a{
     z-index: 1;
     background-color: white;
     color: lightgrey;
@@ -71,11 +80,11 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     box-shadow: 1px 0px 1px 0px lightgrey;
 }
 
-.nav-pills > li + li{
+.nav-tabs > li + li{
     margin-left: -1px;
 }
 
-.nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus{
+.nav-tabs > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus{
     background-color: white;
     color: black;
     z-index: 100; 
@@ -84,11 +93,12 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     box-shadow: 1px -1px 2px 0px lightgrey;
 }
 
-.nav-pills > li > a:hover{
+.nav-tabs > li > a:hover{
     background-color: white;    
     height: 40px;
     margin-top: 5px;
 }
+*/
 
 #rsSelect {
     width: 100%;

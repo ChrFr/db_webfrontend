@@ -10,7 +10,7 @@ rect.background{
     fill: #E6E6E6;
 }
 
-/* ZOOM TO BOUNDING BOX MESSES UP STROKE STYLES!*/
+/* ZOOM MESSES UP STROKE STYLES!*/
 .subunit-boundary {
   fill: none;
   stroke: white;
@@ -27,7 +27,8 @@ rect.background{
 }
 
 .subunit.highlight{
-    fill: gold;
+    stroke-width: 1px;
+    stroke: gold;
 }
 
 .subunit.selected{

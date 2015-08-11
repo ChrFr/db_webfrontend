@@ -88,11 +88,10 @@ var Map = function(options){
                 .style("width", innerwidth + 'px');
     
         var slideZoom = function(event, value){
-            zoom.scale(maxZoom * value / 100)
-              .event(g);
+            zoom.scale(maxZoom * value / 100).event(g);
         };
     
-        var zoomSlider = d3slider().axis(d3.svg.axis().orient("top"))
+        var zoomSlider = d3slider().axis(d3.svg.axis())
                 .min(100 * minZoom/maxZoom).max(100)
                 .on("slide", slideZoom);
                                 
@@ -174,14 +173,14 @@ var Map = function(options){
                 .attr("d", path)
                 .attr("class", "outer-boundary");    
             var bounds = path.bounds(outerPath),
-                dx = bounds[1][0] - bounds[0][0],
-                dy = bounds[1][1] - bounds[0][1],
-                x = (bounds[0][0] + bounds[1][0]) / 2,
-                y = (bounds[0][1] + bounds[1][1]) / 2,
-                scale = .9 / Math.max(dx / innerwidth, dy / innerheight),
-                translate = [innerwidth / 2 - scale * x, innerheight / 2 - scale * y];  
+                bdx = bounds[1][0] - bounds[0][0],
+                bdy = bounds[1][1] - bounds[0][1],
+                bx = (bounds[0][0] + bounds[1][0]) / 2,
+                by = (bounds[0][1] + bounds[1][1]) / 2,
+                bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
+                translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];  
                 
-            g.style("stroke-width", 1 / scale + "px").attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+            g.style("stroke-width", 1 / bscale + "px").attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
         
             if(callback)
                 callback(this.el.innerHTML);
@@ -189,13 +188,16 @@ var Map = function(options){
             if(this.selectedId)
                 this.select(selectedId);
         });
-        
+        var timerId;
         //ZOOM EVENT
         function zoomed() {
-            projection.translate(d3.event.translate).scale(d3.event.scale);
-            g.selectAll("path").attr("d", path);
-            console.log(100 * d3.event.scale / maxZoom)
-            //zoomSlider.value(100 * maxZoom / d3.event.scale);
+            var scale = d3.event.scale;
+            projection.translate(d3.event.translate).scale(scale);
+            g.selectAll("path").attr("d", path); 
+            //if you zoom in and out too fast, d3 can't set the values properly and throws error
+            //timer prevents this
+            clearTimeout(timerId);
+            timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
         }
         
         function translation(x,y) {

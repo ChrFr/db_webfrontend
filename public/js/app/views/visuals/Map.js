@@ -34,7 +34,7 @@ var Map = function(options){
         };
 
         var innerwidth = this.width - margin.left - margin.right,
-            innerheight = this.height - margin.top - margin.bottom ;     
+            innerheight = this.height - margin.top - margin.bottom;     
             
         var projection = d3.geo.mercator()
             .center([13, 54])
@@ -174,8 +174,6 @@ var Map = function(options){
                         .on("mouseover", mouseover)
                         .on("mouseout", mouseout)
                         .on("click", function(d) {
-                            // aggregated?
-                            //var rsArr = d.properties.rsArr? d.properties.rsArr: d.id;
                             _this.onClick(d.id, d.properties.name, d.properties.rsArr);
                         });
 
@@ -218,7 +216,8 @@ var Map = function(options){
                     .on("mouseover", mouseover)
                     .on("mouseout", mouseout)
                     .on("click", function(d) {
-                        _this.onClick(d.id, d.properties.name, d.properties.rsArr);
+                        if(d.id)
+                            _this.onClick(d.id, d.properties.name, d.properties.rsArr);
                     }); 
                     
                 //TODO: BOUNDING BOX!
@@ -227,9 +226,8 @@ var Map = function(options){
             zoomLabel.text(Math.round(100 * zoom.scale() / maxZoom) + '%');
             if(callback)
                 callback(this.el.innerHTML);
-            
-            if(this.selectedId)
-                this.select(selectedId);
+            if(this.selectedIds)
+                this.select(selectedIds);
         };
 
         //load from source if no map-geometries are given
@@ -260,10 +258,13 @@ var Map = function(options){
             return 'translate(' + x + ',' + y + ')';
         }
     };
-    this.select = function(id){
-        this.selectedId = id;
+    this.select = function(ids){
+        if (!(ids instanceof Array)) ids = [ids];        
+        this.selectedIds = ids;     
         d3.selectAll('.subunit').classed("selected", false);
-        d3.selectAll('.key' + id).classed("selected", true);
+        ids.forEach(function(id){       
+            d3.selectAll('.key' + id).classed("selected", true);
+        })
     };
     
     

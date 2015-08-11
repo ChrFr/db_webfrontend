@@ -107,8 +107,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         allRegions.push(region.get('rs'));
                     });               
                     
-                    var aggregates = [{id: 0, name: 'Gesamtgebiet', rs: allRegions}];
-                    _this.renderMap(aggregates);     
+                    var model = [{id: 0, name: 'Gesamtgebiet', rs: allRegions}];
+                    _this.renderMap(model);     
+                    _this.map.select(0);
                     this.renderRegion(this.getAggregateRegion(0, allRegions, 'Gesamtgebiet'));                        
                 }
                                 
@@ -143,7 +144,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                                     var name = e.target.selectedOptions[0].innerHTML;
                                     //id suffix (there may be other layers with same names)
                                     name += '_' + layerId;
-                                    _this.renderRegion(_this.getAggregateRegion(e.target.value, rsAggr, name));
+                                    var model = _this.getAggregateRegion(e.target.value, rsAggr, name);
+                                    _this.map.select(model.id);
+                                    _this.renderRegion(model);
                                 }
                             };  
                         }                        
@@ -164,12 +167,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                             value: community.get('rs')
                         });
                     });
-                    // in every case: render map (specific to layer)
                     _this.renderMap();    
 
                     regionSelector.onchange = function(e) { 
                         if (e.target.value > 0){
-                            var rsAggr = [], model, names = [];
+                            var rsAggr = [], model, names = [], ids;
                             for (var i=0, len=regionSelector.options.length; i<len; i++) {
                                 var opt = regionSelector.options[i];
 
@@ -181,12 +183,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                                 }
                             }
                             if(rsAggr.length > 1){
-                                model = _this.getAggregateRegion(rsAggr.join('-'), rsAggr, names.join())
+                                model = _this.getAggregateRegion(rsAggr.join('-'), rsAggr, names.join());
+                                ids = rsAggr;
                             }
                             else{
                                 model = _this.collection.get(rsAggr[0]);
                                 model.set('name', names[0]);
+                                ids = model.get('rs');
                             }
+                            _this.map.select(ids);
                             _this.renderRegion(model);
                         }
                     };  
@@ -205,6 +210,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         model = _this.collection.get(rs);                        
                         model.set('name', name);
                     }
+                    
+                    if(d3.event.ctrlKey) 
+                        console.log('strg')
+                    _this.map.select(rs);
+                    //update selector to match clicked region
                     var regionSelector = _this.el.querySelector("#region-select");
                     for(var i = 0, j = regionSelector.options.length; i < j; ++i) {
                         if(regionSelector.options[i].innerHTML === name) {
@@ -220,7 +230,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 while (vis.firstChild) 
                     vis.removeChild(vis.firstChild);
                               
-                var width = parseInt(vis.offsetWidth),
+                var width = parseInt(vis.offsetWidth) - 10,
                     height = width,
                     units = [];
             
@@ -289,11 +299,6 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         minYear = model.get('minYear'),
                         data = model.get('data');
                     _this.currentModel = model;
-                    var id = model.get('id');
-                    //id undefined for not aggregated layers
-                    if(typeof(id) == 'undefined')
-                        id = model.get('rs');
-                    _this.map.select(id);
                     //draw first year if not assigned yet
                     if(!_this.currentYear){
                         _this.yearData = data[0];

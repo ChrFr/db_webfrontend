@@ -57,6 +57,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 }
 
 #map{
+    background: white;
     border: solid 1px lightgrey;
 }
 

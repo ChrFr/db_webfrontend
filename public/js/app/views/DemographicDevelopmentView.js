@@ -169,9 +169,24 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
 
                     regionSelector.onchange = function(e) { 
                         if (e.target.value > 0){
-                            var name = e.target.selectedOptions[0].innerHTML;
-                            var model = _this.collection.get(e.target.value);
-                            model.set('name', name);
+                            var rsAggr = [], model, names = [];
+                            for (var i=0, len=regionSelector.options.length; i<len; i++) {
+                                var opt = regionSelector.options[i];
+
+                                // check if selected
+                                if ( opt.selected ) {
+                                    rsAggr.push(opt.value);
+                                    names.push(opt.innerHTML);
+                                    //names.push(opt.)
+                                }
+                            }
+                            if(rsAggr.length > 1){
+                                model = _this.getAggregateRegion(rsAggr.join('-'), rsAggr, names.join())
+                            }
+                            else{
+                                model = _this.collection.get(rsAggr[0]);
+                                model.set('name', names[0]);
+                            }
                             _this.renderRegion(model);
                         }
                     };  

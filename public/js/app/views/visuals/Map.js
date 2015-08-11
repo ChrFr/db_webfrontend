@@ -129,7 +129,7 @@ var Map = function(options){
         var loadMap = function(map, isTopojson){
             // only draw required shapes            
             var subunits = {type: "GeometryCollection"},
-            geometries = isTopojson? map.objects.subunits.geometries: map.features;
+                geometries = _this.isTopoJSON? map.objects.subunits.geometries: map.features;
 
             subunits.geometries = geometries.filter( function( el ) {
                 return _this.units.indexOf( el.id ) >= 0;
@@ -154,7 +154,7 @@ var Map = function(options){
                 
             };
             
-            if(isTopojson){
+            if(_this.isTopoJSON){
                 // TOP-LEVEL
                 g.append("g")
                     .selectAll(".toplevel")

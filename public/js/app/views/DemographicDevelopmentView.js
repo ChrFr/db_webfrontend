@@ -195,8 +195,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                         if(regionSelector.options[i].innerHTML === name) {
                             regionSelector.selectedIndex = i;
                             break;
+                        }
                     }
-    }
                     _this.renderRegion(model);
                 };
                 
@@ -209,14 +209,31 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     height = width,
                     units = [];
             
+                //build geojson object
+                var topology = {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            
                 this.communities.each(function(model){
                     units.push(model.get('rs'));
+                    var feature = {
+                        "type": "Feature",
+                        "geometry": JSON.parse(model.get('geom_json')),
+                        "id": model.get('rs'),
+                        "properties": {
+                            "name": model.get('name')
+                        },
+                    };
+                    topology.features.push(feature);
                 });
                 
                 this.map = new Map({
                     el: vis,
+                    topology: topology,
                     //source: "./shapes/gemeinden.json", 
-                    source: '/api/layers/gemeinden/map', 
+                    //source: '/api/layers/gemeinden/map', 
+                    isTopoJSON: false,
                     units: units,
                     width: width, 
                     height: height,

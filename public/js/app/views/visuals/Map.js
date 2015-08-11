@@ -6,12 +6,14 @@
 var Map = function(options){
     this.el = options.el || document;
     // data will be modified
+    this.map = options.topology;
     this.source = options.source;
     this.width = options.width;
     this.height = options.height;
     this.units = options.units || [];
     this.aggregates = options.aggregates;
     this.onClick = options.onClick;
+    this.isTopoJSON = options.isTopoJSON;
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -35,15 +37,15 @@ var Map = function(options){
             innerheight = this.height - margin.top - margin.bottom ;     
             
         var projection = d3.geo.mercator()
-            .center([10.5, 51.35])
-            .scale(2000)
+            .center([13, 54])
+            .scale(10000)
             .translate([innerwidth / 2, innerheight / 2]);
 
         var path = d3.geo.path()
             .projection(projection);
 
-        var minZoom = this.height,
-            maxZoom = 20 * minZoom;
+        var minZoom = innerheight,
+            maxZoom = 100 * minZoom;
 
         var zoom = d3.behavior.zoom()
             .translate(projection.translate())
@@ -53,7 +55,7 @@ var Map = function(options){
 
         var mouseover = function(d, i) {
             // ignore unmapped areas
-            if(typeof d.id === 'undefined') return;
+            if(typeof d.id === 'undefined' || d.id === null) return;
             
             var tooltip = d3.select('body').append("div").attr("class", "tooltip");
             var key = d3.select(this).attr('key');
@@ -123,13 +125,13 @@ var Map = function(options){
             .attr("class", "background")
             .attr("width", innerwidth)
             .attr("height", innerheight);
+    
+        var loadMap = function(map, isTopojson){
+            // only draw required shapes            
+            var subunits = {type: "GeometryCollection"},
+            geometries = isTopojson? map.objects.subunits.geometries: map.features;
 
-        d3.json(this.source, function(error, map) {
-            if (error) return console.error(error);
-            
-            // only draw required shapes
-            var subunits = {type: "GeometryCollection"};
-            subunits.geometries = map.objects.subunits.geometries.filter( function( el ) {
+            subunits.geometries = geometries.filter( function( el ) {
                 return _this.units.indexOf( el.id ) >= 0;
             });
             
@@ -152,57 +154,75 @@ var Map = function(options){
                 
             };
             
-            // TOP-LEVEL
-            g.append("g")
-                .selectAll(".toplevel")
-                    .data(topojson.feature(map, map.objects.toplevel).features)
-                .enter().append("path")
-                    .attr("class", "toplevel id")
-                    .attr("d", path);
-        
-            // FEATURE-SHAPES
-            g.append("g")
-                .selectAll(".subunit")
-                    .data(topojson.feature(map, subunits).features)
-                .enter().append("path")
+            if(isTopojson){
+                // TOP-LEVEL
+                g.append("g")
+                    .selectAll(".toplevel")
+                        .data(topojson.feature(map, map.objects.toplevel).features)
+                    .enter().append("path")
+                        .attr("class", "toplevel id")
+                        .attr("d", path);
+
+                // FEATURE-SHAPES
+                g.append("g")
+                    .selectAll(".subunit")
+                        .data(topojson.feature(map, subunits).features)
+                    .enter().append("path")
+                        .attr("class",  function(d){return "subunit key" + d.id;})
+                        .attr("key", function(d){return d.id})
+                        .attr("d", path)
+                        .on("mouseover", mouseover)
+                        .on("mouseout", mouseout)
+                        .on("click", function(d) {
+                            // aggregated?
+                            //var rsArr = d.properties.rsArr? d.properties.rsArr: d.id;
+                            _this.onClick(d.id, d.properties.name, d.properties.rsArr);
+                        });
+
+                // INTERIOR BOUNDARIES
+                g.append("path")
+                    .datum(topojson.mesh(map, subunits, function(a, b) {return a !== b }))
+                    .attr("d", path)
+                    .attr("class", "subunit-boundary");        
+
+                // DRAW OUTER BOUNDARY
+                var outerPath = topojson.mesh(map, subunits, function(a, b) {return a === b });
+                g.append("path")
+                    .datum(outerPath)
+                    .attr("d", path)
+                    .attr("class", "outer-boundary");           
+
+                //ZOOM TO BOUNDING BOX OF OUTER PATH
+                g.append("path")
+                    .datum(outerPath)
+                    .attr("d", path)
+                    .attr("class", "outer-boundary");    
+                var bounds = path.bounds(outerPath),
+                    bdx = bounds[1][0] - bounds[0][0],
+                    bdy = bounds[1][1] - bounds[0][1],
+                    bx = (bounds[0][0] + bounds[1][0]) / 2,
+                    by = (bounds[0][1] + bounds[1][1]) / 2,
+                    bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
+                    translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];  
+
+                g.style("stroke-width", 1 / bscale + "px").attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
+            }
+            
+            else {
+                g.append("g").selectAll("path")
+                    .data(subunits.geometries)
+                    .enter().append("path") 
                     .attr("class",  function(d){return "subunit key" + d.id;})
                     .attr("key", function(d){return d.id})
                     .attr("d", path)
                     .on("mouseover", mouseover)
                     .on("mouseout", mouseout)
                     .on("click", function(d) {
-                        // aggregated?
-                        //var rsArr = d.properties.rsArr? d.properties.rsArr: d.id;
                         _this.onClick(d.id, d.properties.name, d.properties.rsArr);
-                    });
-        
-            // INTERIOR BOUNDARIES
-            g.append("path")
-                .datum(topojson.mesh(map, subunits, function(a, b) {return a !== b }))
-                .attr("d", path)
-                .attr("class", "subunit-boundary");        
-        
-            // DRAW OUTER BOUNDARY
-            var outerPath = topojson.mesh(map, subunits, function(a, b) {return a === b });
-            g.append("path")
-                .datum(outerPath)
-                .attr("d", path)
-                .attr("class", "outer-boundary");           
-        
-            //ZOOM TO BOUNDING BOX OF OUTER PATH
-            g.append("path")
-                .datum(outerPath)
-                .attr("d", path)
-                .attr("class", "outer-boundary");    
-            var bounds = path.bounds(outerPath),
-                bdx = bounds[1][0] - bounds[0][0],
-                bdy = bounds[1][1] - bounds[0][1],
-                bx = (bounds[0][0] + bounds[1][0]) / 2,
-                by = (bounds[0][1] + bounds[1][1]) / 2,
-                bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-                translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];  
-                
-            g.style("stroke-width", 1 / bscale + "px").attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
+                    }); 
+                    
+                //TODO: BOUNDING BOX!
+            }
         
             zoomLabel.text(Math.round(100 * zoom.scale() / maxZoom) + '%');
             if(callback)
@@ -210,7 +230,18 @@ var Map = function(options){
             
             if(this.selectedId)
                 this.select(selectedId);
-        });
+        };
+
+        //load from source if no map-geometries are given
+        if(!this.map)
+            d3.json(this.source, function(error, map) {
+                if (error) return console.error(error);
+                loadMap(map, this.isTopoJSON);            
+            });
+        //load from given geometries
+        else
+            loadMap(this.map, this.isTopoJSON);
+        
         //var timerId;
         //ZOOM EVENT
         function zoomed() {

@@ -272,7 +272,7 @@ module.exports = function(){
                 });
             },
             
-            map: function(req, res){
+            map: function(req, res){                
                 res.sendFile(path.join(__dirname, 'shapes', 'gemeinden.json'));
             }
         },

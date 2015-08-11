@@ -17,6 +17,8 @@ var Map = function(options){
         //server-side d3 needs to be loaded seperately
         if(!d3)            
             var d3 = require('d3');
+        if(!d3slider)
+            var d3slider = require('d3slider');
         if(!topojson)            
             var topojson = require('topojson');
         
@@ -40,10 +42,13 @@ var Map = function(options){
         var path = d3.geo.path()
             .projection(projection);
 
+        var minZoom = this.height,
+            maxZoom = 20 * minZoom;
+
         var zoom = d3.behavior.zoom()
             .translate(projection.translate())
             .scale(projection.scale())
-            .scaleExtent([this.height, 150 * this.height]) //max zoom 150
+            .scaleExtent([minZoom, maxZoom])
             .on("zoom", zoomed);
 
         var mouseover = function(d, i) {
@@ -66,7 +71,8 @@ var Map = function(options){
             d3.selectAll('.subunit').classed("highlight", false);
             d3.select('body').selectAll("div.tooltip").remove();
             };
-            
+        
+        
         var svg = d3.select(this.el).append('svg')
             .attr('xmlns', "http://www.w3.org/2000/svg")
             .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
@@ -75,7 +81,44 @@ var Map = function(options){
     
         var g = svg.append("g")
             .call(zoom);
-
+    
+        svg.append("line")
+            .attr("x1", 20)
+            .attr("y1", 20)
+            .attr("x2", 40)
+            .attr("y2", 40)
+            .style("stroke", "black")
+            .style("stroke-width", "2");
+    
+        svg.append("circle")
+            .attr("cx", 20)
+            .attr("cy", 20)
+            .attr("r", 15)
+            .style("fill", "white")
+            .style("stroke", "black");
+    
+        var zoomLabel = svg.append("text")
+            .attr("x", 20)             
+            .attr("y", 20)
+            .style("text-anchor", "middle")
+            .attr("dy", ".3em");
+                
+/* ZOOM DOESN'T CENTER!
+        var slideDiv = d3.select(this.el).append('div')
+                .attr("id", "zoom-slider")
+                .style("position", "absolute")
+                .style("width", innerwidth + 'px');
+        
+        var slideZoom = function(event, value){
+            zoom.scale(maxZoom * value / 100).event(g);
+        };
+    
+        var zoomSlider = d3slider().axis(d3.svg.axis())
+                .min(100 * minZoom/maxZoom).max(100)
+                .on("slide", slideZoom);
+                                
+        slideDiv.call(zoomSlider);
+        */
         g.append("rect")
             .attr("class", "background")
             .attr("width", innerwidth)
@@ -107,21 +150,21 @@ var Map = function(options){
                     el.properties.rsArr = mapped? mapped.rsArr: null;
                 });
                 
-            }
+            };
             
             // TOP-LEVEL
             g.append("g")
-              .selectAll(".toplevel")
+                .selectAll(".toplevel")
                     .data(topojson.feature(map, map.objects.toplevel).features)
-              .enter().append("path")
+                .enter().append("path")
                     .attr("class", "toplevel id")
                     .attr("d", path);
         
             // FEATURE-SHAPES
             g.append("g")
-              .selectAll(".subunit")
+                .selectAll(".subunit")
                     .data(topojson.feature(map, subunits).features)
-              .enter().append("path")
+                .enter().append("path")
                     .attr("class",  function(d){return "subunit key" + d.id;})
                     .attr("key", function(d){return d.id})
                     .attr("d", path)
@@ -129,8 +172,8 @@ var Map = function(options){
                     .on("mouseout", mouseout)
                     .on("click", function(d) {
                         // aggregated?
-                        var rsArr = d.properties.rsArr? d.properties.rsArr: d.id;
-                        _this.onClick(d.id, d.properties.name, rsArr);
+                        //var rsArr = d.properties.rsArr? d.properties.rsArr: d.id;
+                        _this.onClick(d.id, d.properties.name, d.properties.rsArr);
                     });
         
             // INTERIOR BOUNDARIES
@@ -139,26 +182,59 @@ var Map = function(options){
                 .attr("d", path)
                 .attr("class", "subunit-boundary");        
         
-            // OUTER BOUNDARY
+            // DRAW OUTER BOUNDARY
+            var outerPath = topojson.mesh(map, subunits, function(a, b) {return a === b });
             g.append("path")
-                .datum(topojson.mesh(map, subunits, function(a, b) {return a === b }))
+                .datum(outerPath)
+                .attr("d", path)
+                .attr("class", "outer-boundary");           
+        
+            //ZOOM TO BOUNDING BOX OF OUTER PATH
+            g.append("path")
+                .datum(outerPath)
                 .attr("d", path)
                 .attr("class", "outer-boundary");    
+            var bounds = path.bounds(outerPath),
+                bdx = bounds[1][0] - bounds[0][0],
+                bdy = bounds[1][1] - bounds[0][1],
+                bx = (bounds[0][0] + bounds[1][0]) / 2,
+                by = (bounds[0][1] + bounds[1][1]) / 2,
+                bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
+                translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];  
+                
+            g.style("stroke-width", 1 / bscale + "px").attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
         
+            zoomLabel.text(Math.round(100 * zoom.scale() / maxZoom) + '%');
             if(callback)
                 callback(this.el.innerHTML);
             
+            if(this.selectedId)
+                this.select(selectedId);
         });
-        
+        //var timerId;
+        //ZOOM EVENT
         function zoomed() {
-            projection.translate(d3.event.translate).scale(d3.event.scale);
-            g.selectAll("path").attr("d", path);
+            var scale = d3.event.scale;
+            projection.translate(d3.event.translate).scale(scale);
+            g.selectAll("path").attr("d", path); 
+            zoomLabel.text(Math.round(100 * scale / maxZoom) + '%');
+            //ZOOM SLIDER DEACTIVATED (DOESN'T CENTER)
+            //if you zoom in and out too fast, d3 can't set the values properly and throws error
+            //timer prevents this
+            //clearTimeout(timerId);
+            //timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
         }
         
         function translation(x,y) {
             return 'translate(' + x + ',' + y + ')';
         }
     };
+    this.select = function(id){
+        this.selectedId = id;
+        d3.selectAll('.subunit').classed("selected", false);
+        d3.selectAll('.key' + id).classed("selected", true);
+    };
+    
     
 };
 //suppress client-side error (different ways to import on client and server)

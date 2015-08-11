@@ -3,34 +3,34 @@ rect.background{
 }
 
 .subunit{
-    fill: #99FF99;
+    fill: #454545;
 }
 
 .toplevel {
     fill: #E6E6E6;
 }
 
+/* ZOOM MESSES UP STROKE STYLES!*/
 .subunit-boundary {
   fill: none;
-  stroke-width: 1px;
   stroke: white;
-  stroke-dasharray: 2,2;
+  /*stroke-width: 1px;
+  stroke-dasharray: 2,2;*/
   stroke-linejoin: round;
 }
 
 .outer-boundary {
   fill: none;
-  stroke-width: 1px;
+  /*stroke-width: 1px;*/
   stroke: darkgrey;
   stroke-linejoin: round;
 }
 
 .subunit.highlight{
-    fill: gold;
+    stroke-width: 1px;
+    stroke: gold;
 }
 
-.subunit.active{
-    stroke-width: 2px;
-    stroke: gold;
-    stroke-linejoin: round;
+.subunit.selected{
+    fill: gold;
 }

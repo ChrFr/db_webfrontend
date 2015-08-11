@@ -81,12 +81,34 @@ var Map = function(options){
     
         var g = svg.append("g")
             .call(zoom);
-
+    
+        svg.append("line")
+            .attr("x1", 20)
+            .attr("y1", 20)
+            .attr("x2", 40)
+            .attr("y2", 40)
+            .style("stroke", "black")
+            .style("stroke-width", "2");
+    
+        svg.append("circle")
+            .attr("cx", 20)
+            .attr("cy", 20)
+            .attr("r", 15)
+            .style("fill", "white")
+            .style("stroke", "black");
+    
+        var zoomLabel = svg.append("text")
+            .attr("x", 20)             
+            .attr("y", 20)
+            .style("text-anchor", "middle")
+            .attr("dy", ".3em");
+                
+/* ZOOM DOESN'T CENTER!
         var slideDiv = d3.select(this.el).append('div')
                 .attr("id", "zoom-slider")
                 .style("position", "absolute")
                 .style("width", innerwidth + 'px');
-    
+        
         var slideZoom = function(event, value){
             zoom.scale(maxZoom * value / 100).event(g);
         };
@@ -96,7 +118,7 @@ var Map = function(options){
                 .on("slide", slideZoom);
                                 
         slideDiv.call(zoomSlider);
-        
+        */
         g.append("rect")
             .attr("class", "background")
             .attr("width", innerwidth)
@@ -182,22 +204,25 @@ var Map = function(options){
                 
             g.style("stroke-width", 1 / bscale + "px").attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
         
+            zoomLabel.text(Math.round(100 * zoom.scale() / maxZoom) + '%');
             if(callback)
                 callback(this.el.innerHTML);
             
             if(this.selectedId)
                 this.select(selectedId);
         });
-        var timerId;
+        //var timerId;
         //ZOOM EVENT
         function zoomed() {
             var scale = d3.event.scale;
             projection.translate(d3.event.translate).scale(scale);
             g.selectAll("path").attr("d", path); 
+            zoomLabel.text(Math.round(100 * scale / maxZoom) + '%');
+            //ZOOM SLIDER DEACTIVATED (DOESN'T CENTER)
             //if you zoom in and out too fast, d3 can't set the values properly and throws error
             //timer prevents this
-            clearTimeout(timerId);
-            timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
+            //clearTimeout(timerId);
+            //timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
         }
         
         function translation(x,y) {

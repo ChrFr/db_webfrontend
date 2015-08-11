@@ -215,8 +215,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 
                 this.map = new Map({
                     el: vis,
-                    //source: "./shapes/gemeinden.json", 
-                    source: '/api/layers/gemeinden/map', 
+                    source: "./shapes/gemeinden.json", 
+                    //source: '/api/layers/gemeinden/map', 
                     units: units,
                     width: width, 
                     height: height,

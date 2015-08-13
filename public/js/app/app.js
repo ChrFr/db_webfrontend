@@ -38,7 +38,7 @@ define(['backbone'],
     app.set = function (attribute, value, doIgnore) {
       attributes[attribute] = value;
       if (!doIgnore && callbacks[attribute])
-        callbacks[attribute]();
+        callbacks[attribute](value);
     }
 
     // get the value of an attribute

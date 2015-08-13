@@ -1,16 +1,31 @@
 <!doctype html>
 <br><br>
-
-<div class="col-md-2"> </div>
-
-<div class="col-md-4"> 
-    <div class="text-body">
-        <h2 id="title" ></h2>
-        <p id="description">
-        </p>
+<div class='container-fluid'>    
+  <div class='col-md-3' id='map-wrapper'> 
+    <div class='row' id='map-header'>
+      <div class='col-md-5'> 
+        Gliederungsebene
+        <select class='form-control' id='layer-select'> </select> <br>
+      </div>
+      <div class='col-md-7'> 
+        <div id='region-label' style='display: none'> Region </div>
+        <select id='region-select' style='display: none' multiple> </select><br>
+      </div>
     </div>
+    <div class='row' id='map'></div>  
+  </div>
+  <div class="col-md-4"> 
+      <div class="text-body">
+          <h2 id="title" ></h2>
+          <p id="description">
+          </p>
+      </div>
+      <div class="text-body">
+          <h2>Bevölkerungsprognose</h2>
+      </div>
+      <div class="text-body">
+          <h2>Haushaltsprognose</h2>
+      </div>
+  </div>
 </div>
-
-<div class="col-md-4"> </div>
-<br><br>
 

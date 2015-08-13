@@ -1,10 +1,10 @@
-define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collections/CommunityCollection",
-  "collections/LayerCollection", "collections/DDCollection", "models/DDAggregate", "views/OptionView",
-  "views/TableView", "d3", "d3slider", "bootstrap", "views/visuals/AgeTree", "views/visuals/Map",
-  "views/visuals/LineChart", "views/visuals/GroupedBarChart", "views/visuals/StackedBarChart",
-  "canvg", "pnglink", "filesaver", "topojson"],
-  function ($, app, Backbone, template, CommunityCollection, LayerCollection,
-          DDCollection, DDAggregate, OptionView, TableView, d3, d3slider) {
+define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection', 
+  'models/DDAggregate', 'views/OptionView',
+  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visuals/AgeTree', 'views/visuals/Map',
+  'views/visuals/LineChart', 'views/visuals/GroupedBarChart', 'views/visuals/StackedBarChart',
+  'canvg', 'pnglink', 'filesaver', 'topojson'],
+  function ($, app, Backbone, template, DDCollection, 
+    DDAggregate, OptionView, TableView, d3, d3slider) {
             
     /** 
     * @author Christoph Franke
@@ -22,7 +22,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         _.bindAll(this, 'render');
         var _this = this;
 
-        // you need an active prognosis to proceed (else nothing to show)
+        // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
         var progId = app.get('activePrognosis');
         if (progId) {
           // container for all demographic developments (aggregated regions too)
@@ -41,7 +41,8 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                     success: _this.render
                   });
                 }});
-            }});
+            }
+          });
         }
       },
       
@@ -73,255 +74,21 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
       render: function () {
         var _this = this;
         this.template = _.template(template, {});
-        this.el.innerHTML = this.template;
+        this.el.innerHTML = this.template;        
         
-        // create options for layer selection
-        var layerSelector = this.el.querySelector("#layer-select");
-        new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
-        new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});
-        new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
-
-        this.layers.each(function (layer) {
-          new OptionView({
-            el: layerSelector,
-            name: layer.get('name'),
-            value: layer.get('id')
-          });
-        });
-
-        this.communities.comparator = 'name';
-        this.communities.sort();
-
-        // change layer on selection of different one
-        layerSelector.onchange = function (e) {
-          if (e.target.value !== null) {
-            _this.changeLayer(e.target.value);
-          }
-        };
         this.validateAgeGroups();
         return this;
       },
       
-      // change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
-      // gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
-      changeLayer: function (layerId) {
-        var _this = this;
-        var progId = app.get('activePrognosis');
-        var regionSelector = this.el.querySelector("#region-select");
-
-        while (regionSelector.firstChild)
-          regionSelector.removeChild(regionSelector.firstChild);
-
-        // special case: WHOLE area (all communities summed up); needs no region-selection
-        if (layerId == -2) {
-          var _this = this;
-          regionSelector.style.display = "none";
-          this.el.querySelector("#region-label").style.display = "none";
-          var allCommunities = [];
-          this.communities.each(function (region) {
-            allCommunities.push(region.get('rs'));
-          });
-
-          // create aggregation over all available regions
-          var model = [{id: 0, name: 'Gesamtgebiet', rs: allCommunities}];
-          _this.renderMap(model); // update map
-          _this.map.select(0); // select area on map
-          this.renderRegion(this.getAggregateRegion(0, allCommunities, 'Gesamtgebiet')); // render data
-        }
-        
-        // BASIC layer gemeinden (community, smallest enitity)
-        else if (layerId == -1) {
-          _this.el.querySelector("#region-label").innerHTML = 'Gemeinde';
-          regionSelector.style.display = "block";
-          this.el.querySelector("#region-label").style.display = "block";
-
-          // selector for entity (single region)
-          new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2});
-          this.communities.each(function (community) {
-            new OptionView({
-              el: regionSelector,
-              name: community.get('name'),
-              value: community.get('rs')
-            });
-          });
-          _this.renderMap();
-
-          // multiple selector
-          regionSelector.onchange = function (e) {
-            if (e.target.value > 0) {
-              var rsAggr = [], model, names = [], ids;
-              
-              // check which regions are selected
-              for (var i = 0, len = regionSelector.options.length; i < len; i++) {
-                var opt = regionSelector.options[i];
-                if (opt.selected) {
-                  rsAggr.push(opt.value);
-                  names.push(opt.innerHTML);
-                }
-              }
-              
-              // multiple regions are selected -> aggregate regions
-              if (rsAggr.length > 1) {
-                model = _this.getAggregateRegion(rsAggr.join('-'), rsAggr, names.join());
-                ids = rsAggr;
-              }
-              // get single region model
-              else {
-                model = _this.collection.get(rsAggr[0]);
-                model.set('name', names[0]);
-                ids = model.get('rs');
-              }
-              
-              _this.map.select(ids);
-              _this.renderRegion(model);
-            }
-          };
-        }
-
-        // SPECIFIC custom layer (e.g. landkreise)
-        else if (layerId > 0) {
-
-          this.layers.get(layerId).fetch({
-            data: {progId: progId}, success: function (layer) {
-              // selector for entity (single region)
-              _this.el.querySelector("#region-label").innerHTML = layer.get('name');
-              regionSelector.style.display = "block";
-              _this.el.querySelector("#region-label").style.display = "block";
-              new OptionView({el: regionSelector, name: 'Bitte wählen', value: null});
-
-              // aggregate smallest entities to regions
-              var rsMap = {}; // relate enitity ids to id of aggregation of those entities
-              var aggregates = layer.get('regionen');
-              aggregates.forEach(function (region) {
-                new OptionView({ // options for selector
-                  el: regionSelector,
-                  name: region.name,
-                  value: region.id
-                });
-                rsMap[region.id] = region.rs; 
-              });
-              
-              _this.renderMap(aggregates);
-
-              // listen to selection
-              regionSelector.onchange = function (e) {
-                if (e.target.value !== null) {
-                  var rsAggr = rsMap[e.target.value];
-                  var name = e.target.selectedOptions[0].innerHTML;
-                  name += '_' + layerId; //id suffix (there may be other layers with same names); must be removed to get name
-                  var model = _this.getAggregateRegion(e.target.value, rsAggr, name);
-                  _this.map.select(model.id);
-                  _this.renderRegion(model);
-                }
-              };
-            }
-          });
-        }      
-      },
-      
-      // render the map of regions
-      // aggregates: array of objects with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
-      renderMap: function (aggregates) {
-        var _this = this;
-
-        // click handler, if map is clicked, render data of selected region
-        var onClick = function (rs, name, rsAggr) {
-          var model;
-          // get existing model or aggregate (if higher layer)
-          if (rsAggr)
-            model = _this.getAggregateRegion(rs, rsAggr, name);
-          else {
-            model = _this.collection.get(rs);
-            model.set('name', name);
-          }
-
-          // TODO: multiselect on map with ctrl+click
-          if (d3.event.ctrlKey)
-            console.log('strg')
-          
-          _this.map.select(rs);
-          //update selector to match clicked region
-          var regionSelector = _this.el.querySelector("#region-select");
-          for (var i = 0, j = regionSelector.options.length; i < j; ++i) {
-            if (regionSelector.options[i].innerHTML === name) {
-              regionSelector.selectedIndex = i;
-              break;
-            }
-          }
-          _this.renderRegion(model); // render region-data
-        };
-
-        var vis = this.el.querySelector("#map");
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
-
-        var width = parseInt(vis.offsetWidth) - 10, // rendering exceeds given limits -> 10px less
-            height = width,
-            units = [];
-
-        // build geojson object from geometries attached to the communities
-        var topology = {
-          "type": "FeatureCollection",
-          "features": []
-        };        
-        this.communities.each(function (model) {
-          units.push(model.get('rs'));
-          var feature = {
-            "type": "Feature",
-            "geometry": JSON.parse(model.get('geom_json')),
-            "id": model.get('rs'),
-            "properties": {
-              "name": model.get('name')
-            }
-          };
-          topology.features.push(feature);
-        });
-
-        // create and render map
-        this.map = new Map({
-          el: vis,
-          topology: topology,
-          //source: "./shapes/gemeinden.json", 
-          //source: '/api/layers/gemeinden/map', 
-          isTopoJSON: false,
-          units: units,
-          width: width,
-          height: height,
-          aggregates: aggregates,
-          onClick: onClick
-        });
-        this.map.render();
-      },
-      
-      // get an aggregated region from the collection or create it (as cache)
-      // id: the id of the aggregate region you look for ( respectively a newly created one gets, if not exists)
-      // rsAggr: array of the keys of the regions (= rs) the aggregate consists of
-      // name: the name the newly created aggregate gets if id not found
-      getAggregateRegion: function (id, rsAggr, name) {
-        var region = this.collection.find(function (model) {
-          return model.get('id') == id;
-        });
-        if (!region) {
-          region = new DDAggregate({
-            id: id,
-            name: name,
-            progId: this.collection.progId,
-            rsAggr: rsAggr
-          });
-          this.collection.add(region);
-        }
-        ;
-        return region;
-      },
-      
+      /* ToDo: trigger stuff in here by event! (model changed)
       renderRegion: function (model) {
         this.el.querySelector('#agetree-tab .watch').classList.remove('active');
         this.fixYear = false;
         var _this = this;
         this.stop();
         model.fetch({success: function () {
-            _this.el.querySelector("#visualizations").style.display = 'block';
-            _this.el.querySelector("#tables").style.display = 'block';
+            _this.el.querySelector('#visualizations').style.display = 'block';
+            _this.el.querySelector('#tables').style.display = 'block';
             var data = model.get('data')[0];
             var maxYear = model.get('maxYear'),
                     minYear = model.get('minYear'),
@@ -347,21 +114,21 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
               }
             }
             // UPDATE SLIDERS    
-            var tabContent = _this.el.querySelector(".tab-content");
+            var tabContent = _this.el.querySelector('.tab-content');
             var width = parseInt(tabContent.offsetWidth) - 90;
-            var sliderDiv = _this.el.querySelector("#year-slider");
+            var sliderDiv = _this.el.querySelector('#year-slider');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
-            //var btnWidth = parseInt(_this.el.querySelector("#play").clientWidth; returns 0, why?
-            sliderDiv.style.width = width - 30 + "px";
+            //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
+            sliderDiv.style.width = width - 30 + 'px';
             var yearStep = Math.floor((maxYear - minYear) / 4);
 
             _this.yearSlider = d3slider()
                     .axis(
-                      d3.svg.axis().orient("down")
+                      d3.svg.axis().orient('down')
                         //4 ticks
                         .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
-                        .tickFormat(d3.format("d"))
+                        .tickFormat(d3.format('d'))
                         .ticks(maxYear - minYear)
                         .tickSize(10)
                     )
@@ -372,13 +139,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
 
             d3.select('#year-slider').call(_this.yearSlider);
 
-            _this.yearSlider.on("slide", function (evt, value) {
+            _this.yearSlider.on('slide', function (evt, value) {
               evt.stopPropagation();
               _this.changeYear(value);
             });
 
-            sliderDiv = _this.el.querySelector("#scale-slider");
-            var locked = (_this.el.querySelector("#fix-scale").className === 'locked');
+            sliderDiv = _this.el.querySelector('#scale-slider');
+            var locked = (_this.el.querySelector('#fix-scale').className === 'locked');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
 
@@ -407,12 +174,12 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
 
             var scaleSlider = d3slider().scale(xScale)
                     .value(_this.xScale)
-                    .axis(d3.svg.axis().orient("right").tickFormat(d3.format("")).ticks(10).tickFormat(""))
-                    .orientation("vertical");
+                    .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
+                    .orientation('vertical');
 
             d3.select('#scale-slider').call(scaleSlider);
 
-            scaleSlider.on("slide", function (evt, value) {
+            scaleSlider.on('slide', function (evt, value) {
               evt.stopPropagation();
               _this.xScale = Math.ceil(value);
               _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
@@ -430,17 +197,38 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             _this.renderAgeTable(_this.yearData);
             _this.renderRawData(data);
           }});
+      },*/
+      //ToDo: move to collection
+      // get an aggregated region from the collection or create it (as cache)
+      // id: the id of the aggregate region you look for ( respectively a newly created one gets, if not exists)
+      // rsAggr: array of the keys of the regions (= rs) the aggregate consists of
+      // name: the name the newly created aggregate gets if id not found
+      getAggregateRegion: function (id, rsAggr, name) {
+        var region = this.collection.find(function (model) {
+          return model.get('id') == id;
+        });
+        if (!region) {
+          region = new DDAggregate({
+            id: id,
+            name: name,
+            progId: this.collection.progId,
+            rsAggr: rsAggr
+          });
+          this.collection.add(region);
+        }
+        ;
+        return region;
       },
       
       renderTree: function (data) {
 
-        var vis = this.el.querySelector("#agetree"),
+        var vis = this.el.querySelector('#agetree'),
                 title = this.getRegionName();
 
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector(".tab-content");
+        var tabContent = this.el.querySelector('.tab-content');
         var width = parseInt(tabContent.offsetWidth) - 70;
         //width / height ratio is 1 : 1.2
         var height = width * 0.8;
@@ -469,16 +257,16 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           years.push(d.jahr);
         });
 
-        var dataAbs = {label: "",
+        var dataAbs = {label: '',
           x: years,
           y: total
         };
 
-        var vis = this.el.querySelector("#absolute");
+        var vis = this.el.querySelector('#absolute');
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector(".tab-content");
+        var tabContent = this.el.querySelector('.tab-content');
         var width = parseInt(tabContent.offsetWidth) - 30;
         var height = width * 0.5;
         this.absoluteChart = new LineChart({
@@ -486,9 +274,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           data: [dataAbs],
           width: width,
           height: height,
-          title: title + " - Bevölkerungsentwicklung absolut",
-          xlabel: "Jahr",
-          ylabel: "Gesamtbevölkerung in absoluten Zahlen",
+          title: title + ' - Bevölkerungsentwicklung absolut',
+          xlabel: 'Jahr',
+          ylabel: 'Gesamtbevölkerung in absoluten Zahlen',
           minY: 0
         });
         this.absoluteChart.render();
@@ -506,7 +294,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         }
         ;
 
-        vis = this.el.querySelector("#relative");
+        vis = this.el.querySelector('#relative');
 
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
@@ -516,9 +304,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           data: [dataRel],
           width: width,
           height: height,
-          title: title + " - Bevölkerungsentwicklung relativ",
-          xlabel: "Jahr",
-          ylabel: "Gesamtbevölkerung in Prozent (relativ zu " + dataRel.x[0] + ")"
+          title: title + ' - Bevölkerungsentwicklung relativ',
+          xlabel: 'Jahr',
+          ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')'
         });
 
         this.relativeChart.render();
@@ -540,11 +328,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
 
 
-        var vis = this.el.querySelector("#barchart");
+        var vis = this.el.querySelector('#barchart');
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector(".tab-content");
+        var tabContent = this.el.querySelector('.tab-content');
         var width = parseInt(tabContent.offsetWidth) - 70;
         var height = width * 0.8;
         this.barChart = new GroupedBarChart({
@@ -552,11 +340,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           data: dataSets,
           width: width,
           height: height,
-          title: title + " - Bevölkerungsentwicklung",
-          xlabel: "Jahr",
-          groupLabels: ["A: Geburten - Sterbefälle", "B: Zuwanderung - Abwanderung", "gesamt: A + B"],
-          ylabel: "Zuwachs",
-          yNegativeLabel: "Abnahme"
+          title: title + ' - Bevölkerungsentwicklung',
+          xlabel: 'Jahr',
+          groupLabels: ['A: Geburten - Sterbefälle', 'B: Zuwanderung - Abwanderung', 'gesamt: A + B'],
+          ylabel: 'Zuwachs',
+          yNegativeLabel: 'Abnahme'
         });
         this.barChart.render();
       },
@@ -570,9 +358,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           title += ' - Prognose';
 
         // adapt age data to build table (arrays to single entries)
-        columns.push({name: "age", description: "Alter"});
-        columns.push({name: "female", description: "Anzahl weiblich"});
-        columns.push({name: "male", description: "Anzahl männlich"});
+        columns.push({name: 'age', description: 'Alter'});
+        columns.push({name: 'female', description: 'Anzahl weiblich'});
+        columns.push({name: 'male', description: 'Anzahl männlich'});
 
         var femaleAges = yearData.alter_weiblich;
         var maleAges = yearData.alter_maennlich;
@@ -590,9 +378,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         var state = (this.ageTable) ? this.ageTable.getState() : {};
 
         this.ageTable = new TableView({
-          el: this.el.querySelector("#age-data"),
+          el: this.el.querySelector('#age-data'),
           columns: columns,
-          title: title + " " + yearData.jahr,
+          title: title + ' ' + yearData.jahr,
           data: data,
           dataHeight: 400,
           pagination: false,
@@ -608,10 +396,10 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
 
         this.rawTable = new TableView({
-          el: this.el.querySelector("#raw-data"),
+          el: this.el.querySelector('#raw-data'),
           columns: columns,
           data: data,
-          title: this.getRegionName() + " - " + data[0].jahr + "-" + data[data.length - 1].jahr,
+          title: this.getRegionName() + ' - ' + data[0].jahr + '-' + data[data.length - 1].jahr,
           highlight: true
         });
       },
@@ -654,13 +442,13 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         })
       },
       renderAgeGroupChart: function (data) {
-        var vis = this.el.querySelector("#agegroupchart"),
+        var vis = this.el.querySelector('#agegroupchart'),
                 title = this.getRegionName();
 
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector(".tab-content");
+        var tabContent = this.el.querySelector('.tab-content');
         var width = parseInt(tabContent.offsetWidth) - 70;
         var height = width * 0.8;
 
@@ -674,9 +462,9 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           data: data,
           width: width,
           height: height,
-          title: title + " - Altersgruppen",
-          xlabel: "Jahr",
-          ylabel: "Summe",
+          title: title + ' - Altersgruppen',
+          xlabel: 'Jahr',
+          ylabel: 'Summe',
           stackLabels: groupNames,
           bandName: 'jahr'
         });
@@ -692,11 +480,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         else
           title += ' - Prognose';
 
-        columns.push({name: "ageGroup", description: "Altersgruppe"});
-        columns.push({name: "female", description: "weiblich"});
-        columns.push({name: "male", description: "männlich"});
-        columns.push({name: "count", description: "Anzahl"});
-        columns.push({name: "percentage", description: "Anteil gesamt"});
+        columns.push({name: 'ageGroup', description: 'Altersgruppe'});
+        columns.push({name: 'female', description: 'weiblich'});
+        columns.push({name: 'male', description: 'männlich'});
+        columns.push({name: 'count', description: 'Anzahl'});
+        columns.push({name: 'percentage', description: 'Anteil gesamt'});
 
         // find precalculated agegroups for given year
         var yearData;
@@ -747,11 +535,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
 
         this.ageGroupTable = new TableView({
-          el: this.el.querySelector("#agegroup-data"),
+          el: this.el.querySelector('#agegroup-data'),
           columns: columns,
           data: rows,
           dataHeight: 300,
-          title: title + " " + yearData.jahr,
+          title: title + ' ' + yearData.jahr,
           clickable: true,
           selectable: true
         });
@@ -762,7 +550,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
       addAgeGroup: function () {
         var from = parseInt(this.el.querySelector('#agegroup-from').value),
                 to = parseInt(this.el.querySelector('#agegroup-to').value),
-                groupName = from + ((to === null || isNaN(to)) ? "+" : " - " + to);
+                groupName = from + ((to === null || isNaN(to)) ? '+' : ' - ' + to);
 
         //you need at least one input
         if (isNaN(to) && isNaN(from))
@@ -829,7 +617,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 toInput = this.el.querySelector('#agegroup-to'),
                 to = parseInt(toInput.value);
 
-        toInput.setAttribute("min", from + 1);
+        toInput.setAttribute('min', from + 1);
 
         if (toInput.value && toInput.value <= from) {
           toInput.value = from + 1;
@@ -876,11 +664,11 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
        */
       tabChange: function (event) {
         this.stop();
-        if (event.target.getAttribute('href') === "#agetree-tab") {
+        if (event.target.getAttribute('href') === '#agetree-tab') {
           // age tree can render multiple years -> render data of current one  
           this.changeYear(this.currentYear);
           // age tree needs slider to change years                    
-          this.el.querySelector("#play-controls").style.display = 'block';
+          this.el.querySelector('#play-controls').style.display = 'block';
         }
         //the others render summary over years -> render data of first year (thats the year the predictions base on)
         else {
@@ -889,7 +677,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           this.renderAgeGroupTable(this.yearData.jahr);
 
           //no need for changing years
-          this.el.querySelector("#play-controls").style.display = 'none';
+          this.el.querySelector('#play-controls').style.display = 'none';
         }
 
       },
@@ -921,7 +709,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           this.stop();
       },
       stop: function () {
-        var btn = this.el.querySelector("#play");
+        var btn = this.el.querySelector('#play');
         if (!btn)
           return;
         btn.classList.remove('playing');
@@ -967,41 +755,41 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         return name;
       },
       downloadAgeTableCsv: function () {
-        //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+        //var filename = this.getRegionName() + '-' + this.currentYear + '-bevoelkerungsprognose.csv'
         //this.currentModel.downloadCsv(this.currentYear, filename);
         this.ageTable.save();
       },
       downloadRawCsv: function () {
-        //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+        //var filename = this.getRegionName() + '-' + this.currentYear + '-bevoelkerungsprognose.csv'
         //this.currentModel.downloadCsv(this.currentYear, filename);
         this.rawTable.save();
       },
       downloadAgeGroupCsv: function () {
-        //var filename = this.getRegionName() + "-" + this.currentYear + "-bevoelkerungsprognose.csv"
+        //var filename = this.getRegionName() + '-' + this.currentYear + '-bevoelkerungsprognose.csv'
         //this.currentModel.downloadCsv(this.currentYear, filename);
         this.ageGroupTable.save();
       },
       downloadAgeTreePng: function (e) {
-        var filename = this.getRegionName() + "-" + this.currentYear + "-alterspyramide.png";
-        var svgDiv = $("#agetree>svg");
+        var filename = this.getRegionName() + '-' + this.currentYear + '-alterspyramide.png';
+        var svgDiv = $('#agetree>svg');
         downloadPng(svgDiv, filename);//, {width: 2, height: 2});
       },
       downloadBarChartPng: function (e) {
-        var filename = this.getRegionName() + "-barchart.png";
-        var svgDiv = $("#barchart>svg");
+        var filename = this.getRegionName() + '-barchart.png';
+        var svgDiv = $('#barchart>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
       },
       downloadAgeGroupChartPng: function (e) {
-        var filename = this.getRegionName() + "-altersgruppen.png";
-        var svgDiv = $("#agegroupchart>svg");
+        var filename = this.getRegionName() + '-altersgruppen.png';
+        var svgDiv = $('#agegroupchart>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
       },
       downloadDevelopmentPng: function (e) {
-        var filename = this.getRegionName() + "-bevoelkerungsentwicklung_absolut.png";
-        var svgDiv = $("#absolute>svg");
+        var filename = this.getRegionName() + '-bevoelkerungsentwicklung_absolut.png';
+        var svgDiv = $('#absolute>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
-        var filename = this.getRegionName() + "-bevoelkerungsentwicklung_relativ.png";
-        var svgDiv = $("#relative>svg");
+        var filename = this.getRegionName() + '-bevoelkerungsentwicklung_relativ.png';
+        var svgDiv = $('#relative>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
       },
       //remove the view
@@ -1046,7 +834,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
 
       /*
        //Chrome only
-       var link = document.createElement("a");
+       var link = document.createElement('a');
        link.download = filename;
        link.href = dataURL;            
        link.click();*/

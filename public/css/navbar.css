@@ -69,6 +69,8 @@
 
 #prognosis-menu{
     background-color: #454545;
+    height: 60px;
+    padding-top: 5px;
 }
 
 #admin-menu{
@@ -86,7 +88,6 @@
 
 #prognosis-menu .active a, #prognosis-menu a:hover{
     background-color: #454545;
-    height: 50px;
     box-sizing: border-box;
     //background: linear-gradient( to top, gold 10%, #454545 25%);
     border-bottom: solid 5px gold;

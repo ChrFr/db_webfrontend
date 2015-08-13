@@ -3,4 +3,5 @@ node_modules/
 Testdaten/
 entwurf/
 /nbproject/
+/temp
 /*.log

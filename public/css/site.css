@@ -1,0 +1,172 @@
+/* 
+    Created on : 17.03.2015, 9:31:53
+    Author     : Christoph Franke
+*/
+
+html, body {
+}
+
+body {
+    /*background-color: #F5F5F5;*/
+    
+   background-image: url('../img/back2.png');
+}
+
+#visualizations, #tables{
+    display: none;
+}
+
+.centered{
+    text-align: center;
+}
+
+.text-body{
+    //background-color: white;
+    padding: 10px;
+    border: solid 1px lightgrey;
+    box-shadow: 1px 0px 2px 0px lightgrey;
+    background-color: white;
+}
+
+table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+    background: lightgrey;
+}
+
+.tab-pane > div{
+    margin-bottom: 5px;
+}
+
+.tab-content, #summary{
+    background-color: white;
+    width: 100%;
+    border: solid 1px lightgrey;
+    z-index: 10;
+    padding: 10px;
+    padding-bottom: 20px; 
+    box-shadow: 1px 0px 2px 0px lightgrey;
+    margin-top: -1px;
+    min-height: 200px;
+}
+.nav-tabs{
+    border: solid 1px lightgrey;
+    box-shadow: 1px 0px 2px 0px lightgrey;
+    border-bottom: 0;
+}
+
+.grouped{
+    border: solid 1px lightgrey;
+    padding: 10px;
+}
+
+#map{
+    background: white;
+    border: solid 1px lightgrey;
+    box-shadow: 1px 0px 2px 0px lightgrey;
+}
+
+.tab-pane{ 
+    overflow: auto;
+}
+
+.nav-tabs{    
+    background-color: #F7F7F3;
+}
+/* DEACTIVATED CUSTOM NAVTABS
+.nav-tabs > li > a{
+    z-index: 1;
+    background-color: white;
+    color: lightgrey;
+    border: solid 1px lightgrey;
+    border-radius: 5px 5px 0px 0px;
+    border-bottom: 0px; 
+    margin-top: 15px;
+    height: 30px;
+    box-shadow: 1px 0px 1px 0px lightgrey;
+}
+
+.nav-tabs > li + li{
+    margin-left: -1px;
+}
+
+.nav-tabs > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus{
+    background-color: white;
+    color: black;
+    z-index: 100; 
+    margin-top: 5px;
+    height: 41px;
+    box-shadow: 1px -1px 2px 0px lightgrey;
+}
+
+.nav-tabs > li > a:hover{
+    background-color: white;    
+    height: 40px;
+    margin-top: 5px;
+}
+*/
+
+#rsSelect {
+    width: 100%;
+}
+
+#prognosis-data td{
+    padding: 1px 5px 1px 5px !important;
+    //line-height: 0.5;
+}
+
+.modal{
+    top: 50px;
+}
+
+.form-control.invalid{
+    box-shadow: 0px 0px 3px 0px red;
+    border-color: red;
+}
+
+.modal #status{
+    color: red;
+}
+
+.csv {
+    margin: 0 auto;
+}
+
+.form-control:focus{    
+    box-shadow: 0px 0px 2px 1px gold;
+    border: solid 1px gold;
+}
+
+.icon {
+    border-radius: 50%;    
+    border: solid 1px lightgrey;
+    background: white;
+    height: 19px;
+    width: 19px;
+    margin-right: 5px;
+    float: left;
+    padding: 2px;
+}
+
+.icon img{
+    height: 100%;
+    width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto; 
+    margin-top: auto; 
+    margin-bottom: auto; 
+    opacity: 0.5;
+}
+
+li.active img{
+    opacity: 1.0;
+}
+
+
+
+@media (min-width: 768px) {
+    
+    #mainFrame{
+        padding-left: 10px;
+        margin-top: 80px;
+    }    
+}

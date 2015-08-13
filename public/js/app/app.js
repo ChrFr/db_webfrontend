@@ -1,31 +1,51 @@
-//used to store globals of the app
-define(["backbone"],
-function(Backbone) {
+/** 
+ * @author Christoph Franke
+ * 
+ * @desc app singleton that is supposed to hold globals such as active session;
+ * attributes can be set and monitored (set, get, bind), no direct access
+ */
+
+define(['backbone'],
+  function (Backbone) {
 
     var app = {
-        root : "/",                     // The root path to run the application through.
-        URL : "/",                      // Base application URL
-        API : "/api",                   // Base API URL (used by models & collections)
-        session : null,
-        activePrognosis : null,
-        callbacks : {},
-        attributes : {}
-    };    
+      root: '/', // root path of the application
+      URL: '/', // base application URL
+      API: '/api', // base Rest-API URL
+    };
     
-    app.bind = function(attribute, callback){
-        app.callbacks[attribute] = callback;
+    // closure (private variables)
+    var callbacks = {},
+        attributes = {};
+
+    // DEFAULTS      
+    attributes.ageGroups =  [ // predefined age groups (may be varied by user)
+      {from: 0, to: 20, name: '0 - 20'},
+      {from: 20, to: 65, name: '20 - 65'},
+      {from: 65, to: null, name: '65+'}
+    ];
+    attributes.session = null;
+    attributes.activePrognosis = null;
+    
+
+    // bind an attribute to a callback (is called on change)
+    app.bind = function (attribute, callback) {
+      callbacks[attribute] = callback;
     }
-    
-    app.set = function(attribute, value){
-        app.attributes[attribute] = value;
-        if(app.callbacks[attribute])
-            app.callbacks[attribute]();
+
+    // set value of an attribute, bound callback is called 
+    // (callbacks can be suppressed by passing doIgnore = true)
+    app.set = function (attribute, value, doIgnore) {
+      attributes[attribute] = value;
+      if (!doIgnore && callbacks[attribute])
+        callbacks[attribute]();
     }
-    
-    app.get = function(attribute){
-        return app.attributes[attribute];
+
+    // get the value of an attribute
+    app.get = function (attribute) {
+      return attributes[attribute];
     }
 
     return app;
-
-});
+  }
+);

@@ -55,13 +55,20 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 
 .grouped{
     border: solid 1px lightgrey;
-    padding: 10px;
+    padding: 10px;    
+    box-shadow: 1px 0px 2px 0px lightgrey;
+    border: solid 1px lightgrey;
+    background: #F7F7F3;
 }
 
-#map{
+#map, #map-header{
     background: white;
     border: solid 1px lightgrey;
     box-shadow: 1px 0px 2px 0px lightgrey;
+}
+
+#map-header{
+    background: #F7F7F3;
 }
 
 .tab-pane{ 
@@ -71,6 +78,11 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 .nav-tabs{    
     background-color: #F7F7F3;
 }
+
+.nav-tabs > li > a{    
+    border-radius: 0 0 0 0;
+}
+
 /* DEACTIVATED CUSTOM NAVTABS
 .nav-tabs > li > a{
     z-index: 1;

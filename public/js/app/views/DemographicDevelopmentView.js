@@ -122,7 +122,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             allCommunities.push(region.get('rs'));
           });
 
-          // create aggregation over all 
+          // create aggregation over all available regions
           var model = [{id: 0, name: 'Gesamtgebiet', rs: allCommunities}];
           _this.renderMap(model); // update map
           _this.map.select(0); // select area on map
@@ -200,14 +200,15 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
                 });
                 rsMap[region.id] = region.rs; 
               });
-
+              
               _this.renderMap(aggregates);
 
+              // listen to selection
               regionSelector.onchange = function (e) {
                 if (e.target.value !== null) {
                   var rsAggr = rsMap[e.target.value];
                   var name = e.target.selectedOptions[0].innerHTML;
-                  name += '_' + layerId; //id suffix (there may be other layers with same names)
+                  name += '_' + layerId; //id suffix (there may be other layers with same names); must be removed to get name
                   var model = _this.getAggregateRegion(e.target.value, rsAggr, name);
                   _this.map.select(model.id);
                   _this.renderRegion(model);
@@ -219,11 +220,14 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
       },
       
       // render the map of regions
+      // aggregates: array of objects with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
       renderMap: function (aggregates) {
         var _this = this;
 
+        // click handler, if map is clicked, render data of selected region
         var onClick = function (rs, name, rsAggr) {
           var model;
+          // get existing model or aggregate (if higher layer)
           if (rsAggr)
             model = _this.getAggregateRegion(rs, rsAggr, name);
           else {
@@ -231,8 +235,10 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             model.set('name', name);
           }
 
+          // TODO: multiselect on map with ctrl+click
           if (d3.event.ctrlKey)
             console.log('strg')
+          
           _this.map.select(rs);
           //update selector to match clicked region
           var regionSelector = _this.el.querySelector("#region-select");
@@ -242,23 +248,22 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
               break;
             }
           }
-          _this.renderRegion(model);
+          _this.renderRegion(model); // render region-data
         };
 
         var vis = this.el.querySelector("#map");
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = parseInt(vis.offsetWidth) - 35,
+        var width = parseInt(vis.offsetWidth) - 10, // rendering exceeds given limits -> 10px less
             height = width,
             units = [];
 
-        //build geojson object
+        // build geojson object from geometries attached to the communities
         var topology = {
           "type": "FeatureCollection",
           "features": []
-        };
-        
+        };        
         this.communities.each(function (model) {
           units.push(model.get('rs'));
           var feature = {
@@ -272,6 +277,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           topology.features.push(feature);
         });
 
+        // create and render map
         this.map = new Map({
           el: vis,
           topology: topology,
@@ -286,11 +292,14 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
         this.map.render();
       },
-      //get an aggregated region from the collection or create it (as cache)
+      
+      // get an aggregated region from the collection or create it (as cache)
+      // id: the id of the aggregate region you look for ( respectively a newly created one gets, if not exists)
+      // rsAggr: array of the keys of the regions (= rs) the aggregate consists of
+      // name: the name the newly created aggregate gets if id not found
       getAggregateRegion: function (id, rsAggr, name) {
-        //TODO: doesn't find them (doesn't add them anyway, but it's waste of resources)
         var region = this.collection.find(function (model) {
-          return model.get(id)
+          return model.get('id') == id;
         });
         if (!region) {
           region = new DDAggregate({
@@ -304,6 +313,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         ;
         return region;
       },
+      
       renderRegion: function (model) {
         this.el.querySelector('#agetree-tab .watch').classList.remove('active');
         this.fixYear = false;
@@ -421,6 +431,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
             _this.renderRawData(data);
           }});
       },
+      
       renderTree: function (data) {
 
         var vis = this.el.querySelector("#agetree"),
@@ -445,6 +456,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
         });
         this.ageTree.render();
       },
+      
       renderDevelopment: function (data) {
         var total = [],
                 years = [],
@@ -868,7 +880,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           // age tree can render multiple years -> render data of current one  
           this.changeYear(this.currentYear);
           // age tree needs slider to change years                    
-          this.el.querySelector(".bottom-controls").style.display = 'block';
+          this.el.querySelector("#play-controls").style.display = 'block';
         }
         //the others render summary over years -> render data of first year (thats the year the predictions base on)
         else {
@@ -877,7 +889,7 @@ define(["jquery", "app", "backbone", "text!templates/demodevelop.html", "collect
           this.renderAgeGroupTable(this.yearData.jahr);
 
           //no need for changing years
-          this.el.querySelector(".bottom-controls").style.display = 'none';
+          this.el.querySelector("#play-controls").style.display = 'none';
         }
 
       },

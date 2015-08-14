@@ -4,7 +4,7 @@ template of the NavbarView
 -->
 <div class='container-fluid' id='main-menu'>
   <!-- Brand and toggle get grouped for better mobile display -->
- <div class='navbar-header'>
+  <div class='navbar-header'>
     <button type='button' class='navbar-toggle' data-toggle='collapse' data-target='#main-collapse'>
       <span class='sr-only'>Toggle navigation</span>
       <span class='icon-bar'></span>
@@ -12,18 +12,18 @@ template of the NavbarView
       <span class='icon-bar'></span>
     </button>
     <a class='navbar-brand' target='_blank' href='http://www.ggr-planung.de/'>
-        <img src='img/ggr.gif'> 
+      <img src='img/ggr.gif'> 
     </a>
   </div>
 
   <div class='collapse navbar-collapse' id='main-collapse'>
     <ul class='nav navbar-nav'>        
-        <li><a class='menu-link' id='home' href='#'> 
-                <img src='img/home.png'>
-                Start
-            </a></li>
-        <li><a class='menu-link' id='prognosis' href='#prognosen'>Prognosen</a></li>
-        <li><a class='menu-link' id='admin' href='#admin'>Admin</a></li>
+      <li><a class='menu-link' id='home' href='#'> 
+          <img src='img/home.png'>
+          Start
+        </a></li>
+      <li><a class='menu-link' id='prognosis' href='#prognosen'>Prognosen</a></li>
+      <li><a class='menu-link' id='admin' href='#admin'>Admin</a></li>
       <li><a class='menu-link' id='login' href='#login'>Einloggen</a></li>
     </ul>
   </div><!-- /.navbar-collapse -->
@@ -33,24 +33,24 @@ template of the NavbarView
 
 <div class='container-fluid submenu active' id='prognosis-menu'>
   <!-- Brand and toggle get grouped for better mobile display -->
- <div class='navbar-header'>
+  <div class='navbar-header'>
     <button type='button' class='navbar-toggle' data-toggle='collapse' data-target='#prognosis-collapse'>
       <span class='sr-only'>Toggle navigation</span>
       <span class='icon-bar'></span>
       <span class='icon-bar'></span>
       <span class='icon-bar'></span>
     </button>
-     <form role='form' class='form-inline'>  
-        <label>Prognose</label> 
-        <select class='form-control' id='progSelect' style='width: 200px'> </select>
-     </form>
+    <form role='form' class='form-inline'>  
+      <label>Prognose</label> 
+      <select class='form-control' id='progSelect' style='width: 200px'> </select>
+    </form>
   </div>
 
   <div class='collapse navbar-collapse' id='prognosis-collapse'>
     <ul class='nav navbar-nav'>  
-        <li><a id='prognosis-content' href='#prognosen'>Übersicht</a></li>
-        <li><a id='demodevelop' href='#bevoelkerungsprognose'>Bevölkerung</a></li>
-        <li><a id='hhdevelop' href='#haushaltsprognose'>Haushalt</a></li>
+      <li class='active'><a href='#overview-tab' data-toggle='tab'> Übersicht</a></li>
+      <li><a href='#dd-tab' data-toggle='tab'>Bevölkerung</a></li>
+      <li><a href='#hh-tab' data-toggle='tab'>Haushalt</a></li>
     </ul>
   </div><!-- /.navbar-collapse -->
 </div><!-- /.container-fluid -->

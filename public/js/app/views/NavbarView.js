@@ -1,4 +1,4 @@
-define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/OptionView"],
+define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/OptionView'],
   function (app, $, Backbone, template, OptionView) {
     
     /**
@@ -13,7 +13,7 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
      */
     var NavbarView = Backbone.View.extend({
       // The DOM Element associated with this view
-      el: ".navbar.navbar-default",
+      el: '.navbar.navbar-default',
       // constructor
       initialize: function () {
         var _this = this;
@@ -21,11 +21,11 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
 
         //show login status and available prognoses on user change
         if (app.get('session'))
-          app.get('session').bind("change:user", function () {
+          app.get('session').bind('change:user', function () {
             _this.displayUserContent();
           });
         //update navbar on route change
-        app.get('router').on("route", _this.displayRoute);
+        app.get('router').on('route', _this.displayRoute);
         //display current route (needed when entering site or reload)
         this.displayRoute(app.get('router').routes[Backbone.history.getFragment()]);
       },
@@ -47,22 +47,24 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
           var user = session.get('user');
           this.$el.find('#login').text('Eingeloggt als ' + user.name);
           if (user.superuser) {
-            this.el.querySelector("#admin").style.display = 'block';
+            this.el.querySelector('#admin').style.display = 'block';
           }
           else
-            this.el.querySelector("#admin").style.display = 'none';
+            this.el.querySelector('#admin').style.display = 'none';
         }
         else {
-          this.el.querySelector("#admin").style.display = 'none';
+          this.el.querySelector('#admin').style.display = 'none';
           this.$el.find('#login').text('Einloggen');
         }
 
-        var progSelector = this.el.querySelector("#progSelect");
+        var progSelector = this.el.querySelector('#progSelect');
         while (progSelector.firstChild) {
           progSelector.removeChild(progSelector.firstChild);
         };
 
         app.set('activePrognosis', null, true); //reset prognosis (suppress event while setting to null, trigger later on)
+        var progTabs = this.el.querySelector('#prognosis-collapse').querySelector('ul');
+        progTabs.style.display = 'none';
 
         //update prognoses available for this user
         var prognoses = app.get('prognoses');
@@ -77,8 +79,12 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
             });
             progSelector.onchange = function (t) {
               var pid = t.target.value;
-              app.set("activePrognosis", pid);
-              app.get('router').navigate("prognosen", {trigger: true});
+              app.set('activePrognosis', pid);              
+              if(pid)
+                progTabs.style.display = 'block';
+              else
+                progTabs.style.display = 'none';
+              app.get('router').navigate('prognosen', {trigger: true});
             };
           }});
       },
@@ -114,24 +120,6 @@ define(["app", "jquery", "backbone", "text!templates/navbar.html", "views/Option
         else if (route === 'admin') {
           item = $('#main-menu').find('#admin').parent();
           $('#admin-menu').addClass('active');
-        }
-        else if (route === 'demodevelop') {
-          //unsatisfying as check is both here and in router
-          //maybe replace submenu links with pills
-          if ((app.get('activePrognosis') && app.get('activePrognosis') >= 0))
-            subitem = $('.submenu').find('#demodevelop').parent();
-          else
-            subitem = $('.submenu').find('#prognosis-content').parent();
-          $('#prognosis-menu').addClass('active');
-        }
-        else if (route === 'hhdevelop') {
-          //unsatisfying as check is both here and in router
-          //maybe replace submenu links with pills
-          if ((app.get('activePrognosis') && app.get('activePrognosis') >= 0))
-            subitem = $('.submenu').find('#hhdevelop').parent();
-          else
-            subitem = $('.submenu').find('#prognosis-content').parent();
-          $('#prognosis-menu').addClass('active');
         }
         item.siblings().removeClass('active');
         item.addClass('active');

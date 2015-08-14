@@ -37,28 +37,6 @@ define(['app', 'backbone', 'views/HomeView',
         this.view = new Prognosis({el: document.getElementById('mainFrame')});
       },
       
-      // demographic development
-      demodevelop: function () {
-        this.resetView();
-        // redirect to prognosis selection, if none is selected yet (means nothing to show on this page)
-        if (!app.get('activePrognosis') || app.get('activePrognosis') < 0) {
-          this.navigate('prognosen', {trigger: true});
-        }
-        else
-          this.view = new DemographicDevelopmentView({el: document.getElementById('mainFrame')});
-      },
-      
-      // households development
-      hhdevelop: function () {
-        this.resetView();
-        // redirect to prognosis selection, if none is selected yet (means nothing to show on this page)
-        if (!app.get('activePrognosis') || app.get('activePrognosis') < 0) {
-          this.navigate('prognosen', {trigger: true});
-        }
-        else
-          this.view = new HouseholdsDevelopmentView({el: document.getElementById('mainFrame')});
-      },
-      
       // login page
       login: function () {
         this.resetView();

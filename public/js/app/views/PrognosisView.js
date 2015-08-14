@@ -1,7 +1,7 @@
-define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView', 
+define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView', 
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection', 
   'views/OptionView', 'views/visuals/Map'],
-  function (app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
+  function ($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
     CommunityCollection, LayerCollection, OptionView) {
     
     /** 
@@ -34,7 +34,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
         var _this = this;
         this.template = _.template(template, {});
         this.el.innerHTML = this.template;  
-        
+                
         var prog = app.get('activePrognosis');
         if(prog){
           this.el.querySelector('#map-wrapper').style.display = 'block';
@@ -101,8 +101,11 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           this.ddView.close();
         if(this.hhView)
           this.hhView.close();
-        this.hhView = new DemographicDevelopmentView({el: this.el.querySelector('#dd-tab')});
-        this.ddView = new HouseholdsDevelopmentView({el: this.el.querySelector('#hh-tab')});
+        this.ddView = new DemographicDevelopmentView({
+          el: this.el.querySelector('#dd-tab'),
+          visTabWidth: parseInt(this.el.querySelector('#vis-reference').offsetWidth)
+        });
+        this.hhView = new HouseholdsDevelopmentView({el: this.el.querySelector('#hh-tab')});
       },
       
       renderOverview: function (pid) {
@@ -129,8 +132,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           return true;
         }
       },
-      
-      
+            
       // change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
       // gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
       changeLayer: function (layerId) {

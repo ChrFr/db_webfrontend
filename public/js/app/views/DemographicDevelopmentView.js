@@ -9,6 +9,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
     * 
     * @desc view on demographic development 
     * 
+    * @param visTabWidth
     * @return  the DemographicDevelopmentView class
     * @see     region-selectors, map, data-visualisations, data-tables
     */        
@@ -16,7 +17,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       // The DOM Element associated with this view
       el: document,
       // View constructor
-      initialize: function () {
+      initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
 
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
@@ -26,6 +27,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           // serves as cache
           this.collection = new DDCollection({progId: progId});
           this.collection.fetch({success: this.render});
+          this.visTabWidth = options.visTabWidth;
         }
       },
       
@@ -63,8 +65,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         return this;
       },
       
-      //ToDo: trigger stuff in here by event! (model changed)
-      renderRegion: function (region) { 
+      // render the given region by fetching and visualizing it's demographic data
+      renderRegion: function (region) {         
+        
         var model = this.collection.getRegion(region);
         this.el.querySelector('#agetree-tab .watch').classList.remove('active');
         this.fixYear = false;
@@ -73,8 +76,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         model.fetch({success: function () {
             _this.el.querySelector('#visualizations').style.display = 'block';
             _this.el.querySelector('#tables').style.display = 'block';
-            var data = model.get('data')[0];
-            var maxYear = model.get('maxYear'),
+            
+            // you get 0 as widths of elements in inactive tabs
+            var width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
+            this.visTabWidth = width? width: this.visTabWidth; // if you can't determine current width get last known
+            
+            var data = model.get('data')[0],
+                maxYear = model.get('maxYear'),
                 minYear = model.get('minYear'),
                 data = model.get('data');
             _this.currentModel = model;
@@ -98,8 +106,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               }
             }
             // UPDATE SLIDERS    
-            var tabContent = _this.el.querySelector('.tab-content');
-            var width = parseInt(tabContent.offsetWidth) - 90;
+            var width = _this.visTabWidth - 90;
             var sliderDiv = _this.el.querySelector('#year-slider');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
@@ -191,8 +198,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector('.tab-content');
-        var width = parseInt(tabContent.offsetWidth) - 70;
+        var width = this.visTabWidth - 70;
         //width / height ratio is 1 : 1.2
         var height = width * 0.8;
         this.ageTree = new AgeTree({
@@ -210,8 +216,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       renderDevelopment: function (data) {
         var total = [],
-                years = [],
-                title = this.getRegionName();
+            years = [],
+            title = this.getRegionName();
 
         // ABSOLUTE DATA
 
@@ -229,8 +235,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector('.tab-content');
-        var width = parseInt(tabContent.offsetWidth) - 30;
+        var width = this.visTabWidth - 30;
         var height = width * 0.5;
         this.absoluteChart = new LineChart({
           el: vis,
@@ -295,8 +300,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector('.tab-content');
-        var width = parseInt(tabContent.offsetWidth) - 70;
+        var width = this.visTabWidth - 70;
         var height = width * 0.8;
         this.barChart = new GroupedBarChart({
           el: vis,
@@ -411,8 +415,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var tabContent = this.el.querySelector('.tab-content');
-        var width = parseInt(tabContent.offsetWidth) - 70;
+        var width = this.visTabWidth - 70;
         var height = width * 0.8;
 
         var groupNames = [];

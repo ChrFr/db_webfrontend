@@ -1,17 +1,19 @@
-define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection', 'views/OptionView',
+define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
   'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visuals/AgeTree', 'views/visuals/Map',
   'views/visuals/LineChart', 'views/visuals/GroupedBarChart', 'views/visuals/StackedBarChart',
   'canvg', 'pnglink', 'filesaver', 'topojson'],
-  function ($, app, Backbone, template, DDCollection, OptionView, TableView, d3, d3slider) {
+  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
             
     /** 
     * @author Christoph Franke
     * 
     * @desc view on demographic development 
     * 
-    * @param visTabWidth
-    * @return  the DemographicDevelopmentView class
-    * @see     region-selectors, map, data-visualisations, data-tables
+    * @param visTabWidth  initial size of the visualizations; is taken, 
+    * if width of wrapping div can't be determined (if in inactive tab)
+    * 
+    * @return the DemographicDevelopmentView class
+    * @see    region-selectors, map, data-visualisations, data-tables
     */        
     var DemographicDevelopmentView = Backbone.View.extend({
       // The DOM Element associated with this view
@@ -70,7 +72,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         
         var model = this.collection.getRegion(region);
         this.el.querySelector('#agetree-tab .watch').classList.remove('active');
-        this.fixYear = false;
+        this.compareData = null;
         var _this = this;
         this.stop();
         model.fetch({success: function () {
@@ -176,6 +178,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
               _this.renderTree(_this.yearData);
             });
+            
             _this.calculateAgeGroups();
             //visualizations
             _this.renderTree(_this.yearData);
@@ -191,7 +194,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       renderTree: function (data) {
-
         var vis = this.el.querySelector('#agetree'),
                 title = this.getRegionName();
 
@@ -204,7 +206,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTree = new AgeTree({
           el: vis,
           data: data,
-          fixYear: this.fixYear,
+          compareData: this.compareData,
           title: title,
           width: width,
           height: height,
@@ -459,8 +461,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             yearData = this.groupedData[i];
             break;
           }
-        }
-        ;
+        };
         // return if no data found
         if (!yearData)
           return;
@@ -685,19 +686,21 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           this.timerId = null;
         }
       },
+      
       // watch/unwatch the current model
       watchYear: function (event) {
         var watchBtn = event.target;
-        if (!this.fixYear) {
+        if (!this.compareData) {
           watchBtn.classList.add('active');
-          this.fixYear = true;
+          this.compareData = this.yearData;
         }
         else {
           watchBtn.classList.remove('active');
-          this.fixYear = false;
+          this.compareData = null;
         }
         this.renderTree(this.yearData);
       },
+      
       fixScale: function (event) {
         var btn = event.target;
         var slider = this.el.querySelector('#scale-slider-container');

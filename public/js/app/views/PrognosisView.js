@@ -306,10 +306,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         // create and render map
         this.map = new Map({
           el: vis,
-          topology: topology,
-          //source: './shapes/gemeinden.json', 
-          //source: '/api/layers/gemeinden/map', 
-          isTopoJSON: false,
+          topLayerSource: './shapes/bundeslaender.json',
           units: units,
           width: width,
           height: height,
@@ -317,6 +314,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           onClick: onClick
         });
         this.map.render();
+        this.map.renderMap({          
+          source: './shapes/bundeslaender.json',
+          isTopoJSON: true,
+        });
+        this.map.renderMap({          
+          topology: topology,
+          //source: './shapes/gemeinden.json', 
+          //source: '/api/layers/gemeinden/map', 
+          isTopoJSON: false,
+        });
       },
             
       //remove the view

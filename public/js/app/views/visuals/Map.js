@@ -14,6 +14,7 @@ var Map = function(options){
     this.aggregates = options.aggregates;
     this.onClick = options.onClick;
     this.isTopoJSON = options.isTopoJSON;
+    this.topLayerSource = options.topLayerSource;
     
     this.render = function(callback){
         //server-side d3 needs to be loaded seperately
@@ -126,17 +127,20 @@ var Map = function(options){
             .attr("width", innerwidth)
             .attr("height", innerheight);
     
-        var loadMap = function(map, isTopojson){
-            // only draw required shapes            
+        var loadMap = function(map, isTopoJSON){
+            // only draw required shapes       
+            if(isTopoJSON && !map.objects.subunits)
+              map.objects.subunits = {}
             var subunits = {type: "GeometryCollection"},
-                geometries = _this.isTopoJSON? map.objects.subunits.geometries: map.features;
+                geometries = !isTopoJSON? map.features: map.objects.subunits.geometries;
 
-            subunits.geometries = geometries.filter( function( el ) {
-                return _this.units.indexOf( el.id ) >= 0;
-            });
+            if(geometries)
+              subunits.geometries = geometries.filter( function( el ) {
+                  return _this.units.indexOf( el.id ) >= 0;
+              });
             
             // join shapes
-            if(_this.aggregates){
+            if(_this.aggregates && geometries){
                 
                 var aggregationMap = {};
                 _this.aggregates.forEach(function(aggr){
@@ -154,14 +158,17 @@ var Map = function(options){
                 
             };
             
-            if(_this.isTopoJSON){
-                // TOP-LEVEL
+            if(isTopoJSON){
+                // TOP-LAYER
                 g.append("g")
-                    .selectAll(".toplevel")
-                        .data(topojson.feature(map, map.objects.toplevel).features)
+                    .selectAll(".toplayer")
+                        .data(topojson.feature(map, map.objects.toplayer).features)
                     .enter().append("path")
-                        .attr("class", "toplevel id")
+                        .attr("class", "toplayer id")
                         .attr("d", path);
+
+                if(!geometries)
+                  return;                
 
                 // FEATURE-SHAPES
                 g.append("g")
@@ -230,15 +237,17 @@ var Map = function(options){
                 this.select(selectedIds);
         };
 
-        //load from source if no map-geometries are given
-        if(!this.map)
-            d3.json(this.source, function(error, map) {
+        this.renderMap = function(options){
+          if(options.topology)
+            return loadMap(options.topology, options.isTopoJSON);
+          if(options.source){
+            d3.json(options.source, function(error, map) {
                 if (error) return console.error(error);
-                loadMap(map, this.isTopoJSON);            
+                loadMap(map, options.isTopoJSON);            
             });
-        //load from given geometries
-        else
-            loadMap(this.map, this.isTopoJSON);
+            return;
+          }          
+        };
         
         //var timerId;
         //ZOOM EVENT

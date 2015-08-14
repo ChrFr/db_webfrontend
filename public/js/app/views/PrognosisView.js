@@ -1,11 +1,13 @@
-define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/CommunityCollection', 
-  'collections/LayerCollection', 'views/OptionView', 'views/visuals/Map'],
-  function (app, Backbone, template, CommunityCollection, LayerCollection, OptionView) {
+define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView', 
+  'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection', 
+  'views/OptionView', 'views/visuals/Map'],
+  function (app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
+    CommunityCollection, LayerCollection, OptionView) {
     
     /** 
       * @author Christoph Franke
       * 
-      * @desc this class will hold functions for user interaction
+      * @desc view on a specific prognosis, leads to household and demographic prognoses
       * @see map of area of prognoses and description of prognoses
     */
     var PrognosisView = Backbone.View.extend({
@@ -31,50 +33,23 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
       render: function () {
         var _this = this;
         this.template = _.template(template, {});
-        this.el.innerHTML = this.template;
+        this.el.innerHTML = this.template;  
+        
+        var prog = app.get('activePrognosis');
+        if(prog){
+          this.el.querySelector('#map-wrapper').style.display = 'block';
+          this.prepareSelections(prog.id);
+        }
         
         //id of active prognosis changed in navbar -> render it
         app.bind('activePrognosis', function (progId) {
           
           var success = _this.renderOverview(app.get('activePrognosis'));
-          
           if(success){
-            var prepareSelect = function(){
-              _this.el.querySelector('#map-wrapper').style.display = 'block';
-
-              // remove old options
-              var layerSelector = _this.el.querySelector('#layer-select');
-              while (layerSelector.firstChild)
-                layerSelector.removeChild(layerSelector.firstChild);
-              
-              // create options for layer selection in preparation for map rendering
-              new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
-              new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
-              new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
-
-              _this.layers.each(function (layer) {
-                new OptionView({
-                  el: layerSelector,
-                  name: layer.get('name'),
-                  value: layer.get('id')
-                });
-              });
-
-              _this.communities.comparator = 'name';
-              _this.communities.sort();
-
-              // change layer on selection of different one
-              layerSelector.onchange = function (e) {
-                if (e.target.value !== null) {
-                  _this.changeLayer(e.target.value);
-                }
-              };
-            };
-            
-            _this.communities.fetch({
-                    data: {progId: progId},
-                    success: prepareSelect
-            });
+            _this.prepareSelections(progId);
+          }
+          else{            
+            _this.el.querySelector('#map-wrapper').style.display = 'none';
           }
         });
         
@@ -82,10 +57,57 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
         return this;
       },
       
+      // prepare the region selection and the specific prognoses views
+      // id: id of selected prognosis (available regions depend on this)
+      prepareSelections: function(id){
+        var _this = this;
+        this.communities.fetch({ //get the smallest entities (=communities) to build up regions
+                  data: {progId: id},
+                  success: function(){
+
+            _this.el.querySelector('#map-wrapper').style.display = 'block';
+
+            // remove old options
+            var layerSelector = _this.el.querySelector('#layer-select');
+            while (layerSelector.firstChild)
+              layerSelector.removeChild(layerSelector.firstChild);
+
+            // create options for layer selection in preparation for map rendering
+            new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
+            new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
+            new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
+
+            _this.layers.each(function (layer) {
+              new OptionView({
+                el: layerSelector,
+                name: layer.get('name'),
+                value: layer.get('id')
+              });
+            });
+
+            _this.communities.comparator = 'name';
+            _this.communities.sort();
+
+            // change layer on selection of different one
+            layerSelector.onchange = function (e) {
+              if (e.target.value !== null) {
+                _this.changeLayer(e.target.value);
+              }
+            };
+          }
+        });
+        // prepare the views        
+        if(this.ddView)
+          this.ddView.close();
+        if(this.hhView)
+          this.hhView.close();
+        this.hhView = new DemographicDevelopmentView({el: this.el.querySelector('#dd-tab')});
+        this.ddView = new HouseholdsDevelopmentView({el: this.el.querySelector('#hh-tab')});
+      },
+      
       renderOverview: function (pid) {
         var title = this.el.querySelector('#title');
         var text = this.el.querySelector('#description') || '';
-        this.el.querySelector('#map-wrapper').style.display = 'none';
         var warningGlyph = '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp';
         if (!app.get('session').get('user')) {
           title.innerHTML = warningGlyph + ' Sie sind nicht eingeloggt';
@@ -129,9 +151,10 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
             allCommunities.push(region.get('rs'));
           });
 
-          // create aggregation over all available regions
-          var model = [{id: 0, name: 'Gesamtgebiet', rs: allCommunities}];
-          _this.renderMap(model); // update map
+          // aggregation over all available communities
+          var region = {id: 0, name: 'Gesamtgebiet', rs: allCommunities};
+          _this.renderMap([region]); // update map
+          app.set('activeRegion', region);
           _this.map.select(0); // select area on map
           //this.renderRegion(this.getAggregateRegion(0, allCommunities, 'Gesamtgebiet')); // render data
         }
@@ -151,13 +174,12 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
               value: community.get('rs')
             });
           });
-          console.log(this.communities)
           _this.renderMap();
 
           // multiple selector
           regionSelector.onchange = function (e) {
             if (e.target.value > 0) {
-              var rsAggr = [], model, names = [], ids;
+              var rsAggr = [], model, names = [], id;
               
               // check which regions are selected
               for (var i = 0, len = regionSelector.options.length; i < len; i++) {
@@ -168,19 +190,16 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
                 }
               }
               
-              // multiple regions are selected -> aggregate regions
-              if (rsAggr.length > 1) {
-               // model = _this.getAggregateRegion(rsAggr.join('-'), rsAggr, names.join());
-                ids = rsAggr;
-              }
-              // get single region model
-              else {
-                model = _this.collection.get(rsAggr[0]);
-                model.set('name', names[0]);
-                ids = model.get('rs');
-              }
+              // multiple communities selected -> concatenate rs to get a unique id
+              // if single one is selected, rs becomes id
+              id = rsAggr.join('-');      
+              if(rsAggr.length <= 1)
+                rsAggr = null; // single rs means no aggregation at all
               
-              _this.map.select(ids);
+              var region = {id: id, name: names.join(', '), rs: rsAggr};
+              app.set('activeRegion', region);
+              
+              _this.map.select(rsAggr || id); // if there are no multiple selected rs, select id (in this case equals single rs)
               //_this.renderRegion(model);
             }
           };
@@ -219,7 +238,9 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
                   var name = e.target.selectedOptions[0].innerHTML;
                   name += '_' + layerId; //id suffix (there may be other layers with same names); must be removed to get name
                   //var model = _this.getAggregateRegion(e.target.value, rsAggr, name);
-                  _this.map.select(model.id);
+                  _this.map.select(e.target.value);
+                  var region = {id: e.target.value, name: name, rs: rsAggr};
+                  app.set('activeRegion', region);
                  // _this.renderRegion(model);
                 }
               };
@@ -229,20 +250,14 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
       },
       
       // render the map of regions
-      // aggregates: array of objects with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
+      // aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
       renderMap: function (aggregates) {
         var _this = this;
 
         // click handler, if map is clicked, render data of selected region
         var onClick = function (rs, name, rsAggr) {
-          var model;
-          // get existing model or aggregate (if higher layer)
-          if (rsAggr)
-            model = _this.getAggregateRegion(rs, rsAggr, name);
-          else {
-            model = _this.collection.get(rs);
-            model.set('name', name);
-          }
+          var region = {id: rs, name: name, rs: rsAggr};
+          app.set('activeRegion', region);
 
           // TODO: multiselect on map with ctrl+click
           if (d3.event.ctrlKey)
@@ -304,6 +319,11 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'collections/Communi
             
       //remove the view
       close: function () {
+        app.unbind('activePrognosis');
+        if(this.ddView)
+          this.ddView.close();
+        if(this.hhView)
+          this.hhView.close();
         this.unbind(); // Unbind all local event bindings
         this.remove(); // Remove view from DOM
       }

@@ -1,19 +1,6 @@
 <link rel='stylesheet' type='text/css' href='css/visuals.css'>
 <div class='container-fluid'>    
-  <div class='col-md-3'> 
-    <div class='row' id='map-header'>
-      <div class='col-md-5'> 
-        Gliederungsebene
-        <select class='form-control' id='layer-select'> </select> <br>
-      </div>
-      <div class='col-md-7'> 
-        <div id='region-label' style='display: none'> Region </div>
-        <select id='region-select' style='display: none' multiple> </select><br>
-      </div>
-    </div>
-    <div class='row' id='map'> </div>  
-  </div>
-  <div id='visualizations' class='col-md-5'>    
+  <div id='visualizations' class='col-md-7'>    
     <ul class='nav nav-tabs'>
       <li class='active'>
         <a href='#development-tab' data-toggle='tab'>     
@@ -48,7 +35,7 @@
         </a>
       </li>
     </ul>
-    <div class='tab-content'>    
+    <div class='tab-content shadow-box'>    
       <div class='tab-pane active' id='development-tab'>            
         <div id='absolute'></div>         
         <div id='relative'></div>
@@ -103,13 +90,13 @@
     </div>
   </div>
 
-  <div id='tables' class='col-md-4'> 
+  <div id='tables' class='col-md-5'> 
     <ul class='nav nav-tabs'>
       <li class='active'><a href='#agegroup-tab' data-toggle='tab'>Altersgruppen</a></li>
       <li><a href='#age-tab' data-toggle='tab'>Alterstabelle</a></li>
       <li><a href='#raw-tab' data-toggle='tab'>Rohdaten</a></li>
     </ul>
-    <div class='tab-content'>            
+    <div class='tab-content shadow-box'>            
       <div class='tab-pane active' id='agegroup-tab'>  
         <div id='agegroup-data'></div> 
         <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button> 

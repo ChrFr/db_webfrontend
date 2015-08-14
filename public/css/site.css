@@ -23,9 +23,10 @@ body {
 .text-body{
     //background-color: white;
     padding: 10px;
-    border: solid 1px lightgrey;
-    box-shadow: 1px 0px 2px 0px lightgrey;
-    background-color: white;
+}
+
+.text-body + .text-body{
+    margin-top: 20px;
 }
 
 table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
@@ -36,17 +37,24 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     margin-bottom: 5px;
 }
 
-.tab-content, #summary{
+.shadow-box, #summary{
     background-color: white;
-    width: 100%;
     border: solid 1px lightgrey;
-    z-index: 10;
-    padding: 10px;
-    padding-bottom: 20px; 
     box-shadow: 1px 0px 2px 0px lightgrey;
+}
+
+.tab-content, #summary{
+    width: 100%;
+    z-index: 10;
+    padding-bottom: 20px; 
     margin-top: -1px;
     min-height: 200px;
 }
+
+#tables .tab-content{    
+    padding: 10px;
+}
+
 .nav-tabs{
     border: solid 1px lightgrey;
     box-shadow: 1px 0px 2px 0px lightgrey;
@@ -73,6 +81,10 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
 
 .tab-pane{ 
     overflow: auto;
+}
+
+#dd-tab, #hh-tab{
+    overflow: visible;
 }
 
 .nav-tabs{    

@@ -1,10 +1,8 @@
-define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection', 
-  'models/DDAggregate', 'views/OptionView',
+define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection', 'views/OptionView',
   'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visuals/AgeTree', 'views/visuals/Map',
   'views/visuals/LineChart', 'views/visuals/GroupedBarChart', 'views/visuals/StackedBarChart',
   'canvg', 'pnglink', 'filesaver', 'topojson'],
-  function ($, app, Backbone, template, DDCollection, 
-    DDAggregate, OptionView, TableView, d3, d3slider) {
+  function ($, app, Backbone, template, DDCollection, OptionView, TableView, d3, d3slider) {
             
     /** 
     * @author Christoph Franke
@@ -19,8 +17,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       el: document,
       // View constructor
       initialize: function () {
-        _.bindAll(this, 'render');
-        var _this = this;
+        _.bindAll(this, 'render', 'renderRegion');
 
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
         var progId = app.get('activePrognosis');
@@ -28,21 +25,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           // container for all demographic developments (aggregated regions too)
           // serves as cache
           this.collection = new DDCollection({progId: progId});
-          //available comunities (base entity)
-          this.communities = new CommunityCollection();
-          //layers for community-aggregations
-          this.layers = new LayerCollection();
-          // nested fetch collections and finally render (all coll.'s needed for rendering)
-          // TODO: message to user on error
-          this.collection.fetch({success: function () {
-              _this.layers.fetch({success: function () {
-                  _this.communities.fetch({
-                    data: {progId: progId},
-                    success: _this.render
-                  });
-                }});
-            }
-          });
+          this.collection.fetch({success: this.render});
         }
       },
       
@@ -72,16 +55,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       // render view
       render: function () {
-        var _this = this;
         this.template = _.template(template, {});
         this.el.innerHTML = this.template;        
         
         this.validateAgeGroups();
+        app.bind('activeRegion', this.renderRegion);
         return this;
       },
       
-      /* ToDo: trigger stuff in here by event! (model changed)
-      renderRegion: function (model) {
+      //ToDo: trigger stuff in here by event! (model changed)
+      renderRegion: function (region) { 
+        var model = this.collection.getRegion(region);
         this.el.querySelector('#agetree-tab .watch').classList.remove('active');
         this.fixYear = false;
         var _this = this;
@@ -91,8 +75,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             _this.el.querySelector('#tables').style.display = 'block';
             var data = model.get('data')[0];
             var maxYear = model.get('maxYear'),
-                    minYear = model.get('minYear'),
-                    data = model.get('data');
+                minYear = model.get('minYear'),
+                data = model.get('data');
             _this.currentModel = model;
             //draw first year if not assigned yet
             if (!_this.currentYear) {
@@ -197,27 +181,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             _this.renderAgeTable(_this.yearData);
             _this.renderRawData(data);
           }});
-      },*/
-      //ToDo: move to collection
-      // get an aggregated region from the collection or create it (as cache)
-      // id: the id of the aggregate region you look for ( respectively a newly created one gets, if not exists)
-      // rsAggr: array of the keys of the regions (= rs) the aggregate consists of
-      // name: the name the newly created aggregate gets if id not found
-      getAggregateRegion: function (id, rsAggr, name) {
-        var region = this.collection.find(function (model) {
-          return model.get('id') == id;
-        });
-        if (!region) {
-          region = new DDAggregate({
-            id: id,
-            name: name,
-            progId: this.collection.progId,
-            rsAggr: rsAggr
-          });
-          this.collection.add(region);
-        }
-        ;
-        return region;
       },
       
       renderTree: function (data) {
@@ -795,6 +758,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       //remove the view
       close: function () {
         this.stop();
+        app.unbind('activeRegion');
         this.unbind(); // Unbind all local event bindings
         this.remove(); // Remove view from DOM
       }

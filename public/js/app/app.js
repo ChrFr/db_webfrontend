@@ -3,6 +3,7 @@
  * 
  * @desc app singleton that is supposed to hold globals such as active session;
  * attributes can be set and monitored (set, get, bind), no direct access
+ * remember to unbind bound functions, if you delete the monitoring object!
  */
 
 define(['backbone'],
@@ -26,19 +27,30 @@ define(['backbone'],
     ];
     attributes.session = null;
     attributes.activePrognosis = null;
+    attributes.activeRegion = null;
     
 
     // bind an attribute to a callback (is called on change)
-    app.bind = function (attribute, callback) {
-      callbacks[attribute] = callback;
+    app.bind = function (attribute, callback) {      
+      if(!callbacks[attribute])
+        callbacks[attribute] = [];
+      callbacks[attribute].push(callback);
+    }
+    
+    // unbind an attribute (possible ToDo: keep track of object asking, so not all listeners have to removed)
+    app.unbind = function (attribute, callback) {     
+      delete callbacks[attribute];
     }
 
     // set value of an attribute, bound callback is called 
     // (callbacks can be suppressed by passing doIgnore = true)
     app.set = function (attribute, value, doIgnore) {
       attributes[attribute] = value;
-      if (!doIgnore && callbacks[attribute])
-        callbacks[attribute](value);
+      if (!doIgnore && callbacks[attribute]){
+        callbacks[attribute].forEach(function(callback){
+          callback(value);
+        });        
+      }
     }
 
     // get the value of an attribute

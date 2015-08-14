@@ -1,7 +1,7 @@
 <!doctype html>
 <br><br>
 <div class='container-fluid'>    
-  <div class='col-md-3' id='map-wrapper'> 
+  <div class='col-md-3' id='map-wrapper' style='display: none'> 
     <div class='row' id='map-header'>
       <div class='col-md-5'> 
         Gliederungsebene
@@ -14,18 +14,39 @@
     </div>
     <div class='row' id='map'></div>  
   </div>
-  <div class="col-md-4"> 
-      <div class="text-body">
-          <h2 id="title" ></h2>
-          <p id="description">
-          </p>
+  
+  <div class="col-md-9"> 
+    <div class='tab-content'>    
+      <div class='tab-pane active' id='overview-tab'>  
+        <div class="col-md-6"> 
+          <div class="text-body shadow-box">
+            <h2 id="title" ></h2>
+            <p id="description">
+            </p>
+          </div>
+          <div class="text-body shadow-box">
+            <a href='#dd-tab' data-toggle='tab'>
+              <h3>
+                Bevölkerungsprognose 
+                <span class='glyphicon glyphicon-play'></span>
+              </h3>
+            </a>            
+          </div>
+          <div class="text-body shadow-box">
+            <a href='#haushaltsprognose'>
+              <h3>
+                Haushaltsprognose 
+                <span class='glyphicon glyphicon-play'></span>
+              </h3>
+            </a>      
+          </div>
+        </div>
+      </div>          
+      <div class='tab-pane' id='dd-tab'>  
+      </div>  
+      <div class='tab-pane' id='hh-tab'>   
       </div>
-      <div class="text-body">
-          <h2>Bevölkerungsprognose</h2>
-      </div>
-      <div class="text-body">
-          <h2>Haushaltsprognose</h2>
-      </div>
+    </div>
   </div>
 </div>
 

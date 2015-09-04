@@ -20,6 +20,18 @@ body {
     text-align: center;
 }
 
+.loader{    
+    width: 40px;
+    height: 40px;
+    background-image: url('../img/waiting_circle.gif');
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: center;
+    position:absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    margin: auto;
+}
+
 .text-body{
     //background-color: white;
     padding: 10px;
@@ -66,16 +78,6 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     padding: 10px;    
     box-shadow: 1px 0px 2px 0px lightgrey;
     border: solid 1px lightgrey;
-    background: #F7F7F3;
-}
-
-#map, #map-header{
-    background: white;
-    border: solid 1px lightgrey;
-    box-shadow: 1px 0px 2px 0px lightgrey;
-}
-
-#map-header{
     background: #F7F7F3;
 }
 

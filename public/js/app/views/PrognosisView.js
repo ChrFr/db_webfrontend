@@ -1,6 +1,6 @@
 define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView', 
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection', 
-  'views/OptionView', 'views/visuals/Map'],
+  'views/OptionView', 'views/visuals/Map', 'views/Loader'],
   function ($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
     CommunityCollection, LayerCollection, OptionView) {
     
@@ -37,7 +37,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 
         var prog = app.get('activePrognosis');
         if(prog){
-          this.el.querySelector('#map-wrapper').style.display = 'block';
+          this.el.querySelector('#description-div').style.display = 'block';
           this.prepareSelections(prog.id);
         }
         
@@ -49,7 +49,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             _this.prepareSelections(progId);
           }
           else{            
-            _this.el.querySelector('#map-wrapper').style.display = 'none';
+            _this.el.querySelector('#description-div').style.display = 'none';
+            _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
+            var vis = this.el.querySelector('#map');
+            while (vis.firstChild)
+            vis.removeChild(vis.firstChild);
           }
         });
         
@@ -61,12 +65,18 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
       // id: id of selected prognosis (available regions depend on this)
       prepareSelections: function(id){
         var _this = this;
+        var mapLoader = Loader(this.el.querySelector('#map'));
+        
         this.communities.fetch({ //get the smallest entities (=communities) to build up regions
                   data: {progId: id},
+                  error: function(){
+                      
+                  },
                   success: function(){
 
-            _this.el.querySelector('#map-wrapper').style.display = 'block';
-
+            _this.el.querySelector('#description-div').style.display = 'block';
+            _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
+            
             // remove old options
             var layerSelector = _this.el.querySelector('#layer-select');
             while (layerSelector.firstChild)
@@ -86,7 +96,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             });
 
             _this.communities.comparator = 'name';
-            _this.communities.sort();
+            _this.communities.sort(); 
+            
+            mapLoader.remove();
+            _this.renderMap({renderRegions: false});
 
             // change layer on selection of different one
             layerSelector.onchange = function (e) {
@@ -96,6 +109,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             };
           }
         });
+        
         // prepare the views        
         if(this.ddView)
           this.ddView.close();
@@ -155,7 +169,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // aggregation over all available communities
           var region = {id: 0, name: 'Gesamtgebiet', rs: allCommunities};
-          _this.renderMap([region]); // update map
+          _this.renderMap({aggregates: [region], renderRegions: true}); // update map
           app.set('activeRegion', region);
           _this.map.select(0); // select area on map
           //this.renderRegion(this.getAggregateRegion(0, allCommunities, 'Gesamtgebiet')); // render data
@@ -176,7 +190,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               value: community.get('rs')
             });
           });
-          _this.renderMap();
+          _this.renderMap({renderRegions: true});
 
           // multiple selector
           regionSelector.onchange = function (e) {
@@ -231,7 +245,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 rsMap[region.id] = region.rs; 
               });
               
-              _this.renderMap(aggregates);
+              _this.renderMap({aggregates: aggregates, renderRegions: true});
 
               // listen to selection
               regionSelector.onchange = function (e) {
@@ -253,76 +267,81 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
       
       // render the map of regions
       // aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
-      renderMap: function (aggregates) {
+      renderMap: function (options) {
         var _this = this;
-
-        // click handler, if map is clicked, render data of selected region
-        var onClick = function (rs, name, rsAggr) {
-          var region = {id: rs, name: name, rs: rsAggr};
-          app.set('activeRegion', region);
-
-          // TODO: multiselect on map with ctrl+click
-          if (d3.event.ctrlKey)
-            console.log('strg')
-          
-          _this.map.select(rs);
-          //update selector to match clicked region
-          var regionSelector = _this.el.querySelector('#region-select');
-          for (var i = 0, j = regionSelector.options.length; i < j; ++i) {
-            if (regionSelector.options[i].innerHTML === name) {
-              regionSelector.selectedIndex = i;
-              break;
-            }
-          }
-          //_this.renderRegion(model); // render region-data
-        };
-
+        
         var vis = this.el.querySelector('#map');
         while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
-
+        vis.removeChild(vis.firstChild);
+      
         var width = parseInt(vis.offsetWidth) - 10, // rendering exceeds given limits -> 10px less
             height = width,
             units = [];
 
-        // build geojson object from geometries attached to the communities
-        var topology = {
-          'type': 'FeatureCollection',
-          'features': []
-        };        
-        this.communities.each(function (model) {
-          units.push(model.get('rs'));
-          var feature = {
-            'type': 'Feature',
-            'geometry': JSON.parse(model.get('geom_json')),
-            'id': model.get('rs'),
-            'properties': {
-              'name': model.get('name')
-            }
-          };
-          topology.features.push(feature);
-        });
+        if(options.renderRegions){
+          // click handler, if map is clicked, render data of selected region
+          var onClick = function (rs, name, rsAggr) {
+            var region = {id: rs, name: name, rs: rsAggr};
+            app.set('activeRegion', region);
 
-        // create and render map
+            // TODO: multiselect on map with ctrl+click
+            if (d3.event.ctrlKey)
+              console.log('strg')
+
+            _this.map.select(rs);
+            //update selector to match clicked region
+            var regionSelector = _this.el.querySelector('#region-select');
+            for (var i = 0, j = regionSelector.options.length; i < j; ++i) {
+              if (regionSelector.options[i].innerHTML === name) {
+                regionSelector.selectedIndex = i;
+                break;
+              }
+            }
+            //_this.renderRegion(model); // render region-data
+          };
+
+          // build geojson object from geometries attached to the communities
+          var topology = {
+            'type': 'FeatureCollection',
+            'features': []
+          };        
+          this.communities.each(function (model) {
+            units.push(model.get('rs'));
+            var feature = {
+              'type': 'Feature',
+              'geometry': JSON.parse(model.get('geom_json')),
+              'id': model.get('rs'),
+              'properties': {
+                'name': model.get('name')
+              }
+            };
+            topology.features.push(feature);
+          });
+        }
+
+        // create map
         this.map = new Map({
           el: vis,
-          topLayerSource: './shapes/bundeslaender.json',
           units: units,
           width: width,
           height: height,
-          aggregates: aggregates,
+          aggregates: options.aggregates,
           onClick: onClick
         });
-        this.map.render();
+        
+        // only render selected regions, if asked for
+        if(options.renderRegions)
+          var success = function(){
+            _this.map.renderMap({          
+              topology: topology,
+              isTopoJSON: false,
+            });        
+          }
+        
         this.map.renderMap({          
           source: './shapes/bundeslaender.json',
           isTopoJSON: true,
-        });
-        this.map.renderMap({          
-          topology: topology,
-          //source: './shapes/gemeinden.json', 
-          //source: '/api/layers/gemeinden/map', 
-          isTopoJSON: false,
+          success: success
         });
       },
             

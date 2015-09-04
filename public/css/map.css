@@ -1,3 +1,17 @@
+#map, #map-header{
+    background: white;
+    border: solid 1px lightgrey;
+    box-shadow: 1px 0px 2px 0px lightgrey;
+}
+
+#map{    
+    min-height: 200px;
+}
+
+#map-header{
+    background: #F7F7F3;
+}
+
 rect.background{
     fill: white;
 }

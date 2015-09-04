@@ -1,9 +1,9 @@
 <!doctype html>
 <br><br>
 <div class='container-fluid'>    
-  <div class='col-md-3' id='map-wrapper' style='display: none'> 
+  <div class='col-md-3' id='map-wrapper'> 
     <div class='row' id='map-header'>
-      <div class='col-md-5'> 
+      <div class='col-md-5' id='layer-select-wrapper' style='display: none'> 
         Gliederungsebene
         <select class='form-control' id='layer-select'> </select> <br>
       </div>
@@ -20,12 +20,12 @@
       <div class='tab-pane active' id='overview-tab'>  
         <!-- ATTENTION: this should have same size as visualization column in demodevelop.html (taken as reference for unknown widths in inactive tabs) -->
         <div class="col-md-7" id='vis-reference'> 
-          <div class="text-body shadow-box">
+          <div class="text-body shadow-box" id='description-div' style='display: none'>
             <h2 id="title" ></h2>
             <p id="description">
             </p>
           </div>
-          <div class="text-body shadow-box">
+          <div class="text-body shadow-box" id='demo-link-div' style='display: none'>
             <a href='#dd-tab' data-toggle='tab'>
               <h3>
                 Bevölkerungsprognose 
@@ -33,7 +33,7 @@
               </h3>
             </a>            
           </div>
-          <div class="text-body shadow-box">
+          <div class="text-body shadow-box" id='hh-link-div' style='display: none'>
             <a href='#haushaltsprognose'>
               <h3>
                 Haushaltsprognose 

@@ -23,14 +23,14 @@
 }
 
 .watch{    
-    background-image: url("../img/eye_opened.png");
+    background-image: url("../img/eye_closed.png");
     background-repeat: no-repeat;
     background-size: 80%;
     background-position: center;
 }
 
 .watch.active{    
-    background-image: url("../img/eye_closed.png");
+    background-image: url("../img/eye_opened.png");
 }
 
 #fix-scale{

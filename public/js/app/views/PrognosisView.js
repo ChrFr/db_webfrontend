@@ -51,7 +51,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           else{            
             _this.el.querySelector('#description-div').style.display = 'none';
             _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
-            var vis = this.el.querySelector('#map');
+            _this.el.querySelector('#demo-link-div').style.display = 'none';
+            _this.el.querySelector('#hh-link-div').style.display = 'none';
+            var vis = _this.el.querySelector('#map');
             while (vis.firstChild)
             vis.removeChild(vis.firstChild);
           }
@@ -76,7 +78,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
             _this.el.querySelector('#description-div').style.display = 'block';
             _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
-            
+            _this.el.querySelector('#demo-link-div').style.display = 'block';
+            _this.el.querySelector('#hh-link-div').style.display = 'block';
+
             // remove old options
             var layerSelector = _this.el.querySelector('#layer-select');
             while (layerSelector.firstChild)
@@ -120,6 +124,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           visTabWidth: parseInt(this.el.querySelector('#vis-reference').offsetWidth)
         });
         this.hhView = new HouseholdsDevelopmentView({el: this.el.querySelector('#hh-tab')});
+        
       },
       
       renderOverview: function (pid) {

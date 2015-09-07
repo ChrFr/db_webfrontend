@@ -182,7 +182,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         while (regionSelector.firstChild)
           regionSelector.removeChild(regionSelector.firstChild);
 
-        // special case: WHOLE area (all communities summed up); needs no region-selection
+        // SPECIAL CASE: WHOLE area (all communities summed up); needs no region-selection
         if (layerId == -2) {
           var _this = this;
           regionSelector.style.display = 'none';
@@ -203,7 +203,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           //this.renderRegion(this.getAggregateRegion(0, allCommunities, 'Gesamtgebiet')); // render data
         }
         
-        // BASIC layer gemeinden (community, smallest enitity)
+        // BASIC LAYER gemeinden (community, smallest enitity)
         else if (layerId == -1) {
           _this.el.querySelector('#region-label').innerHTML = 'Gemeinde';
           regionSelector.style.display = 'block';
@@ -222,34 +222,36 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // multiple selector
           regionSelector.onchange = function (e) {
-            if (e.target.value > 0) {
-              var rsAggr = [], model, names = [], id;
-              
-              // check which regions are selected
-              for (var i = 0, len = regionSelector.options.length; i < len; i++) {
-                var opt = regionSelector.options[i];
-                if (opt.selected) {
-                  rsAggr.push(opt.value);
-                  names.push(opt.innerHTML);
-                }
+            if(regionSelector.selectedIndex <= 0)
+              return;
+            var rsAggr = [], model, names = [], id;
+
+            // check which regions are selected
+            for (var i = 0, len = regionSelector.options.length; i < len; i++) {
+              var opt = regionSelector.options[i];
+              if (opt.selected) {
+                rsAggr.push(opt.value);
+                names.push(opt.innerHTML);
               }
-              
-              // multiple communities selected -> concatenate rs to get a unique id
-              // if single one is selected, rs becomes id
-              id = rsAggr.join('-');      
-              if(rsAggr.length <= 1)
-                rsAggr = null; // single rs means no aggregation at all
-              
-              var region = {id: id, name: names.join(', '), rs: rsAggr};
-              app.set('activeRegion', region);
-              
-              _this.map.select(rsAggr || id); // if there are no multiple selected rs, select id (in this case equals single rs)
-              //_this.renderRegion(model);
             }
+
+            // multiple communities selected -> concatenate rs to get a unique id
+            // if single one is selected, rs becomes id
+            id = rsAggr.join('-');      
+            if(rsAggr.length <= 1)
+              rsAggr = null; // single rs means no aggregation at all
+
+            var region = {
+              id: id, 
+              name: names.join(', '), 
+              rs: rsAggr
+            };
+            app.set('activeRegion', region);
+            _this.map.select(rsAggr || id); // if there are no multiple selected rs, select id (in this case equals single rs)            
           };
         }
 
-        // SPECIFIC custom layer (e.g. landkreise)
+        // SPECIFIC CUSTOM LAYER (e.g. landkreise)
         else if (layerId > 0) {
 
           this.layers.get(layerId).fetch({
@@ -276,22 +278,35 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               _this.renderMap({aggregates: aggregates, renderRegions: true});
 
               // listen to selection
-              regionSelector.onchange = function (e) {
-                if (e.target.value !== null) {
-                  var rsAggr = rsMap[e.target.value];
-                  var name = e.target.selectedOptions[0].innerHTML;
-                  name += '_' + layerId; //id suffix (there may be other layers with same names); must be removed to get name
-                  //var model = _this.getAggregateRegion(e.target.value, rsAggr, name);
-                  _this.map.select(e.target.value);
-                  var region = {id: e.target.value, name: name, rs: rsAggr};
-                  app.set('activeRegion', region);
-                 // _this.renderRegion(model);
+              regionSelector.onchange = function () {
+                if(regionSelector.selectedIndex <= 0)
+                  return;
+                var rsAggr = [], names = [], values = [];
+
+                // check which regions are selected
+                for (var i = 0, len = regionSelector.options.length; i < len; i++) {
+                  var opt = regionSelector.options[i];
+                  if (opt.selected) {
+                    values.push(opt.value);
+                    rsAggr = rsAggr.concat(rsMap[opt.value]);
+                    names.push(opt.innerHTML);
+                  }
                 }
+
+                var region = {
+                  id: values.join('-'), 
+                  name: names.join(', '), 
+                  rs: rsAggr
+                };
+                
+                app.set('activeRegion', region);
+                _this.map.select(values);
               };
             }
           });
         }      
       },
+      
       
       // render the map of regions
       // aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
@@ -310,38 +325,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         if(options.renderRegions){
           // click handler, if map is clicked, render data of selected region
           var onClick = function (rs, name, rsAggr) {
-            var oldRegion = app.get('activeRegion'),
-                selection;
-
-            // if control key is pressed append clicked region to current selection
-            if (d3.event.ctrlKey || d3.event.shiftKey){
-              if(!rsAggr)
-                rsAggr =[rs];
-              var oldRsAggr = oldRegion.rs ? oldRegion.rs: [oldRegion.id];   
-                  
-              rsAggr = oldRsAggr.concat(rsAggr);
-              name = oldRegion.name + ', ' + name;
-              rs = oldRegion.id + '-' + rs;
-              // you need to select ids
-              selection = rsAggr;
-            }
-            // other layers have special aggregated ids
-            else
-              selection = rs;
             
-            var newRegion = {id: rs, name: name, rs: rsAggr};
-            app.set('activeRegion', newRegion);
-            
-            _this.map.select(selection);
             //update selector to match clicked region
             var regionSelector = _this.el.querySelector('#region-select');
             for (var i = 0, j = regionSelector.options.length; i < j; ++i) {
               if (regionSelector.options[i].innerHTML === name) {
-                regionSelector.selectedIndex = i;
-                break;
+                //invert selection (maybe it was already selected
+                regionSelector.options[i].selected = !regionSelector.options[i].selected;
               }
             }
-            //_this.renderRegion(model); // render region-data
+            regionSelector.onchange();
           };
 
           // build geojson object from geometries attached to the communities

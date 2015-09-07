@@ -85,6 +85,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         model.fetch({success: function () {
             //_this.el.querySelector('#visualizations').style.display = 'block';
             _this.el.querySelector('#tables').style.display = 'block';
+            var sideControls = _this.el.getElementsByClassName('side-controls');
+            console.log(sideControls)
+            for (var i = 0; i < sideControls.length; i++) 
+              sideControls[i].style.display = 'block';   
+            var bottomControls =  _this.el.getElementsByClassName('bottom-controls');
+            for (var i = 0; i < bottomControls.length; i++) 
+              bottomControls[i].style.display = 'block';   
             
             // you get 0 as widths of elements in inactive tabs
             var width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
@@ -632,15 +639,22 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTree.changeData(this.yearData);
         this.renderAgeGroupTable(this.currentYear);
         this.renderAgeTable(this.yearData);
+        
       },
+      
       /*
-       * if tab changed, show specific data and controls
+       * if tab changed, show specific data tables
        */
       tabChange: function (event) {
         this.stop();
+        
+        // no model loaded yet (because no region selected)
+        if(!this.currentModel)
+          return;
+        
         if (event.target.getAttribute('href') === '#agetree-tab') {
           // age tree can render multiple years -> render data of current one  
-          this.changeYear(this.currentYear);s
+          this.changeYear(this.currentYear);
         }
         //the others render summary over years -> render data of first year (thats the year the predictions base on)
         else {
@@ -650,6 +664,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }
 
       },
+      
       play: function (event) {
         var _this = this;
         if (!this.timerId) {

@@ -30,6 +30,26 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         });        
       },
       
+      events: {
+        // age group controls
+        'click #demo-link-div>a': 'tabChange',
+        'click #hh-link-div>a': 'tabChange',
+      },
+      
+      // activate the menu link in the navbar when a link is clicked here
+      // not best practice, because cross linking with navbar, but better for usability
+      tabChange: function(e){
+        // don't know why it is currentTarget instead of target here, e.target is strangely enough the headline inside the link
+        var href = e.currentTarget.getAttribute("href");
+        var links = document.querySelector('#prognosis-collapse').getElementsByTagName('li');
+        for(var i = 0; i < links.length; i++)
+          links[i].className = '';
+        if(href === '#dd-tab')
+          document.querySelector('#li-dd').className = 'active';
+        if(href === '#hh-tab')
+          document.querySelector('#li-hh').className = 'active';
+      },
+      
       render: function () {
         var _this = this;
         this.template = _.template(template, {});
@@ -174,9 +194,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // aggregation over all available communities
           var region = {id: 0, name: 'Gesamtgebiet', rs: allCommunities};
-          _this.renderMap({aggregates: [region], renderRegions: true}); // update map
+          _this.renderMap({
+            aggregates: [region], 
+            renderRegions: true, 
+            success: function(){_this.map.select(0);}
+          }); // update map
           app.set('activeRegion', region);
-          _this.map.select(0); // select area on map
           //this.renderRegion(this.getAggregateRegion(0, allCommunities, 'Gesamtgebiet')); // render data
         }
         
@@ -272,6 +295,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
       
       // render the map of regions
       // aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
+      // options.success: only if renderregions
       renderMap: function (options) {
         var _this = this;
         
@@ -292,7 +316,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             // TODO: multiselect on map with ctrl+click
             if (d3.event.ctrlKey)
               console.log('strg')
-
+            
             _this.map.select(rs);
             //update selector to match clicked region
             var regionSelector = _this.el.querySelector('#region-select');
@@ -340,6 +364,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             _this.map.renderMap({          
               topology: topology,
               isTopoJSON: false,
+              success: options.success
             });        
           }
         

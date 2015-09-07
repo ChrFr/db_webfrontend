@@ -249,7 +249,7 @@ var Map = function(options){
       }
       if(callback)
         callback();
-
+      
       zoomLabel.text(Math.round(100 * zoom.scale() / maxZoom) + '%');
       if(this.selectedIds)
           this.select(selectedIds);
@@ -267,6 +267,7 @@ var Map = function(options){
       }
     };
     
+    // highlight regions with given ids
     this.select = function(ids){
         if (!(ids instanceof Array)) ids = [ids];        
         this.selectedIds = ids;     

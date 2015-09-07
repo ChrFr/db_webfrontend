@@ -86,7 +86,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             //_this.el.querySelector('#visualizations').style.display = 'block';
             _this.el.querySelector('#tables').style.display = 'block';
             var sideControls = _this.el.getElementsByClassName('side-controls');
-            console.log(sideControls)
             for (var i = 0; i < sideControls.length; i++) 
               sideControls[i].style.display = 'block';   
             var bottomControls =  _this.el.getElementsByClassName('bottom-controls');

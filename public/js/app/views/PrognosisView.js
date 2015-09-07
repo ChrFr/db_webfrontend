@@ -310,14 +310,29 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         if(options.renderRegions){
           // click handler, if map is clicked, render data of selected region
           var onClick = function (rs, name, rsAggr) {
-            var region = {id: rs, name: name, rs: rsAggr};
-            app.set('activeRegion', region);
+            var oldRegion = app.get('activeRegion'),
+                selection;
 
-            // TODO: multiselect on map with ctrl+click
-            if (d3.event.ctrlKey)
-              console.log('strg')
+            // if control key is pressed append clicked region to current selection
+            if (d3.event.ctrlKey || d3.event.shiftKey){
+              if(!rsAggr)
+                rsAggr =[rs];
+              var oldRsAggr = oldRegion.rs ? oldRegion.rs: [oldRegion.id];   
+                  
+              rsAggr = oldRsAggr.concat(rsAggr);
+              name = oldRegion.name + ', ' + name;
+              rs = oldRegion.id + '-' + rs;
+              // you need to select ids
+              selection = rsAggr;
+            }
+            // other layers have special aggregated ids
+            else
+              selection = rs;
             
-            _this.map.select(rs);
+            var newRegion = {id: rs, name: name, rs: rsAggr};
+            app.set('activeRegion', newRegion);
+            
+            _this.map.select(selection);
             //update selector to match clicked region
             var regionSelector = _this.el.querySelector('#region-select');
             for (var i = 0, j = regionSelector.options.length; i < j; ++i) {

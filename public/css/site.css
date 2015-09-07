@@ -12,10 +12,6 @@ body {
    background-image: url('../img/back2.png');
 }
 
-#visualizations, #tables{
-    display: none;
-}
-
 .centered{
     text-align: center;
 }

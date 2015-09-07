@@ -1,7 +1,7 @@
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
   'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visuals/AgeTree', 'views/visuals/Map',
   'views/visuals/LineChart', 'views/visuals/GroupedBarChart', 'views/visuals/StackedBarChart',
-  'canvg', 'pnglink', 'filesaver', 'topojson'],
+  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader'],
   function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
             
     /** 
@@ -75,8 +75,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.compareData = null;
         var _this = this;
         this.stop();
+        
+        // don't need to keep track of loader divs, all children of the visualisations will be removed when rendered (incl. loader-icon)
+        Loader(this.el.querySelector('#absolute'));
+        Loader(this.el.querySelector('#agegroupchart'));
+        Loader(this.el.querySelector('#barchart'));
+        Loader(this.el.querySelector('#agetree'));
+        
         model.fetch({success: function () {
-            _this.el.querySelector('#visualizations').style.display = 'block';
+            //_this.el.querySelector('#visualizations').style.display = 'block';
             _this.el.querySelector('#tables').style.display = 'block';
             
             // you get 0 as widths of elements in inactive tabs
@@ -195,7 +202,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       renderTree: function (data) {
         var vis = this.el.querySelector('#agetree'),
-                title = this.getRegionName();
+            title = this.getRegionName();
 
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
@@ -633,18 +640,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.stop();
         if (event.target.getAttribute('href') === '#agetree-tab') {
           // age tree can render multiple years -> render data of current one  
-          this.changeYear(this.currentYear);
-          // age tree needs slider to change years                    
-          this.el.querySelector('#play-controls').style.display = 'block';
+          this.changeYear(this.currentYear);s
         }
         //the others render summary over years -> render data of first year (thats the year the predictions base on)
         else {
           this.yearData = this.currentModel.get('data')[0];
           this.renderAgeTable(this.yearData);
           this.renderAgeGroupTable(this.yearData.jahr);
-
-          //no need for changing years
-          this.el.querySelector('#play-controls').style.display = 'none';
         }
 
       },

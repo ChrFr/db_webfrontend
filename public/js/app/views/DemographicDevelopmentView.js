@@ -812,11 +812,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       window.saveAs(blob, filename);
 
       /*
-       //Chrome only
+       // this kind of download works with Chrome only
        var link = document.createElement('a');
        link.download = filename;
        link.href = dataURL;            
-       link.click();*/
+       link.click();
+       */
     }
     ;
 

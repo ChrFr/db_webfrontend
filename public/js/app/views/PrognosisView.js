@@ -64,18 +64,28 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         //id of active prognosis changed in navbar -> render it
         app.bind('activePrognosis', function (progId) {
           
+          // open overview tab by simulating click on nav
+          document.querySelector('#li-overview>a').click();
+          
           var success = _this.renderOverview(app.get('activePrognosis'));
           if(success){
             _this.prepareSelections(progId);
           }
-          else{            
+          else{          
+            // hide all elements interacting with prognoses, when no prognosis is loaded
             _this.el.querySelector('#description-div').style.display = 'none';
             _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
             _this.el.querySelector('#demo-link-div').style.display = 'none';
             _this.el.querySelector('#hh-link-div').style.display = 'none';
-            var vis = _this.el.querySelector('#map');
-            while (vis.firstChild)
-            vis.removeChild(vis.firstChild);
+            _this.el.querySelector('#region-select').style.display = 'none';
+            _this.el.querySelector('#region-label').style.display = 'none';               
+            if(_this.ddView)
+              _this.ddView.close();
+            if(_this.hhView)
+              _this.hhView.close();          
+            var map = _this.el.querySelector('#map');
+            while (map.firstChild)
+              map.removeChild(map.firstChild);
           }
         });
         
@@ -304,7 +314,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               };
             }
           });
-        }      
+        }
+        // nothing selected (id == 0 - "Bitte wählen"))
+        else{
+          _this.el.querySelector('#region-select').style.display = 'none';
+          _this.el.querySelector('#region-label').style.display = 'none';    
+        }
       },
       
       

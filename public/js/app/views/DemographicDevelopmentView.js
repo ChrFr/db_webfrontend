@@ -151,7 +151,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             });
 
             sliderDiv = _this.el.querySelector('#scale-slider');
-            var locked = (_this.el.querySelector('#fix-scale').className === 'locked');
+            var locked = (_this.el.querySelector('#fix-scale').className === 'active');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
 
@@ -674,7 +674,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         if (!this.timerId) {
           var btn = event.target;
           btn.classList.remove('stopped');
-          btn.classList.add('playing');
+          btn.classList.add('active');
           var maxYear = _this.currentModel.get('maxYear');
           var minYear = _this.currentModel.get('minYear');
           // slider reached end? -> reset
@@ -701,7 +701,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var btn = this.el.querySelector('#play');
         if (!btn)
           return;
-        btn.classList.remove('playing');
+        btn.classList.remove('active');
         btn.classList.add('stopped');
         if (this.timerId) {
           clearInterval(this.timerId);
@@ -726,14 +726,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       fixScale: function (event) {
         var btn = event.target;
         var slider = this.el.querySelector('#scale-slider-container');
-        if (btn.className === 'locked') {
-          btn.classList.remove('locked');
-          btn.classList.add('unlocked');
+        if (btn.className === 'active') {
+          btn.classList.remove('active');
           slider.classList.remove('disabled');
         }
         else {
-          btn.classList.remove('unlocked');
-          btn.classList.add('locked');
+          btn.classList.add('active');
           slider.classList.add('disabled');
         }
       },

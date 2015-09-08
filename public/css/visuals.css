@@ -56,12 +56,12 @@ rect.highlight{
 }
 
 .compare path{
-    stroke: #00FF00;
+    stroke: gold;
     stroke-width: 2;
 }
 
 text.compare{
-    stroke: #00FF00;
+    stroke: gold;
 }
 
 /*hide path, else its rendered as black box by some svg viewers like inkscape and imageMagick*/

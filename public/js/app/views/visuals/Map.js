@@ -182,11 +182,6 @@ var Map = function (options) {
               .attr('class', 'toplayer id')
               .attr('d', path)
               .attr('cursor', 'move');
-      g.append('rect')
-        .attr('class', 'background')
-        .attr('width', innerwidth)
-        .attr('height', innerheight)
-        .attr('cursor', 'move');
       var boundaries;
 
       // detailed map
@@ -278,7 +273,7 @@ var Map = function (options) {
     
         if(options.transform)
           g.attr("transform", options.transform);
-    
+        
         g.transition()
           .duration(1500)
           .style("stroke-width", 1.5 / bscale + "px")
@@ -297,7 +292,7 @@ var Map = function (options) {
   
   this.getTransform = function(){
     return g.attr("transform");
-  }  
+  } 
 
   this.renderMap = function (options) {
     if (options.topology) {

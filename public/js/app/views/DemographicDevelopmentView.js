@@ -121,7 +121,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               }
             }
             // UPDATE SLIDERS    
-            var width = _this.visTabWidth - 80;
+            var width = _this.visTabWidth - 110;
             var sliderDiv = _this.el.querySelector('#year-slider');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);

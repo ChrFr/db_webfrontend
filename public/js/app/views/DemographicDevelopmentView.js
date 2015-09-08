@@ -23,7 +23,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         _.bindAll(this, 'render', 'renderRegion');
 
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
-        var progId = app.get('activePrognosis');
+        var progId = app.get('activePrognosis').id;
         if (progId) {
           // container for all demographic developments (aggregated regions too)
           // serves as cache
@@ -121,7 +121,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               }
             }
             // UPDATE SLIDERS    
-            var width = _this.visTabWidth - 90;
+            var width = _this.visTabWidth - 80;
             var sliderDiv = _this.el.querySelector('#year-slider');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
@@ -354,8 +354,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         for (var i = 0; i < femaleAges.length; i++) {
           data.push({
             age: i,
-            female: femaleAges[i],
-            male: maleAges[i]
+            female: Math.round(femaleAges[i]),
+            male: Math.round(maleAges[i])
           });
         }
 
@@ -696,6 +696,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         else
           this.stop();
       },
+      
       stop: function () {
         var btn = this.el.querySelector('#play');
         if (!btn)
@@ -827,10 +828,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        link.href = dataURL;            
        link.click();
        */
-    }
-    ;
+    };
 
-    //http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+    // source:
+    // http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
     function dataURItoBlob(dataURI) {
       // convert base64/URLEncoded data component to raw binary data held in a string
       var byteString;
@@ -849,8 +850,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       }
 
       return new Blob([ia], {type: mimeString});
-    }
-    ;
+    };
 
     function createAlert(type, text) {
       var div = document.createElement('div');
@@ -858,8 +858,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               '<a href="#" class="close" data-dismiss="alert">&times;</a>' +
               text;
       return div;
-    }
-    ;
+    };
 
     // Returns the View class
     return DemographicDevelopmentView;

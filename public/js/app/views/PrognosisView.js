@@ -1,7 +1,7 @@
-define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView', 
+define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView', 
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection', 
   'views/OptionView', 'views/visuals/Map', 'views/Loader'],
-  function ($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
+  function (app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
     CommunityCollection, LayerCollection, OptionView) {
     
     /** 
@@ -63,14 +63,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         }
         
         //id of active prognosis changed in navbar -> render it
-        app.bind('activePrognosis', function (progId) {
-          
+        app.bind('activePrognosis', function (prognosis) {
           // open overview tab by simulating click on nav
           document.querySelector('#li-overview>a').click();
           
           var success = _this.renderOverview(app.get('activePrognosis'));
           if(success){
-            _this.prepareSelections(progId);
+            _this.prepareSelections(prognosis);
           }
           else{          
             // hide all elements interacting with prognoses, when no prognosis is loaded
@@ -96,12 +95,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
       
       // prepare the region selection and the specific prognoses views
       // id: id of selected prognosis (available regions depend on this)
-      prepareSelections: function(id){
+      prepareSelections: function(prognosis){
         var _this = this;
         var mapLoader = Loader(this.el.querySelector('#map'));
         
         this.communities.fetch({ //get the smallest entities (=communities) to build up regions
-          data: {progId: id},
+          data: {progId: prognosis.id},
           error: function(){},
           success: function(){
 
@@ -158,7 +157,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         });        
       },
       
-      renderOverview: function (pid) {
+      renderOverview: function (prognosis) {
         var map = this.el.querySelector('#map');
         var title = this.el.querySelector('#title');
         var text = this.el.querySelector('#description') || '';
@@ -168,16 +167,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           map.innerHTML += 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
           return false;
         }
-        else if (!pid || pid < 0) {
+        else if (!prognosis) {
           map.innerHTML = '<br>' + warningGlyph + '<b>keine Prognose gewählt!</b><br>';
           map.innerHTML += 'Bitte wählen Sie eine Prognose im Menü aus.';
           return false;
         }
         else {
-          var prognosis = app.get('prognoses').find(function (item) {
-            return item.get('id') == pid;
-          });
-
           title.innerText = prognosis.get('name');
           text.innerHTML = prognosis.get('description');
           return true;
@@ -188,7 +183,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
       // gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
       changeLayer: function (layerId) {
         var _this = this;
-        var progId = app.get('activePrognosis');
+        var progId = app.get('activePrognosis').id;
         var regionSelector = this.el.querySelector('#region-select');
 
         while (regionSelector.firstChild)
@@ -343,7 +338,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         var width = parseInt(vis.offsetWidth) - 10, // rendering exceeds given limits -> 10px less
             height = width,
             units = [];
-
+    
         if(options.renderRegions){
           // click handler, if map is clicked, render data of selected region
           var onClick = function (rs, name, rsAggr) {
@@ -385,7 +380,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             topology.features.push(feature);
           });
         }
+        
+        var prog = app.get('activePrognosis');
 
+        var oldTransform = this.map? this.map.getTransform(): null;
         // create map
         this.map = new Map({
           el: vis,
@@ -402,7 +400,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             _this.map.renderMap({          
               topology: topology,
               isTopoJSON: false,
-              success: options.success
+              success: options.success,
+              boundaries: prog.get('boundaries'),
+              transform: oldTransform
             });        
           }
         

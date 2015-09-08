@@ -79,13 +79,20 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
             });
             progSelector.onchange = function (t) {
               var pid = t.target.value;
-              app.set('activePrognosis', pid);              
-              if(pid)
-                progTabs.style.display = 'block';
+              var prognosis = prognoses.get(pid);
+              if(prognosis)
+                prognosis.fetch({success: function(){
+                  app.set('activePrognosis', prognosis);              
+                  if(pid)
+                    progTabs.style.display = 'block';
+                  else
+                    progTabs.style.display = 'none';
+                  app.get('router').navigate('prognosen', {trigger: true});
+                  }
+                });
               else
-                progTabs.style.display = 'none';
-              app.get('router').navigate('prognosen', {trigger: true});
-            };
+                app.set('activePrognosis', null); 
+            };            
           }});
       },
       

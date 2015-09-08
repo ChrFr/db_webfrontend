@@ -15,7 +15,6 @@
     background-repeat: no-repeat;
     background-size: 50%;
     background-position: center;
-    border: solid 2px grey;
     /*width: 30px;
     height: 30px;*/
 }
@@ -61,6 +60,7 @@
 #year-slider{
     float: left;
     margin-left: 30px;
+    margin-right: 30px;
 }
 
 .side-controls {

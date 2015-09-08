@@ -106,14 +106,14 @@ var StackedBarChart = function (options) {
     svg.append('text')
             .attr('class', 'title')
             .attr('x', margin.left / 2)
-            .attr('y', 5 - (margin.top / 2))
+            .attr('y', 10 - (margin.top / 2))
             .style('dominant-baseline', 'ideographic')
             .text(this.title);
 
     svg.append('text')
             .attr('class', 'subtitle')
             .attr('x', margin.left / 2)
-            .attr('y', 5 - (margin.top / 2))
+            .attr('y', 10 - (margin.top / 2))
             .style('dominant-baseline', 'hanging')
             .text(this.subtitle);
 

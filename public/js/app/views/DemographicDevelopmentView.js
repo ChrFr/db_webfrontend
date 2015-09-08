@@ -126,7 +126,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
             //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
-            sliderDiv.style.width = width - 30 + 'px';
+            sliderDiv.style.width = width + 'px';
             var yearStep = Math.floor((maxYear - minYear) / 4);
 
             _this.yearSlider = d3slider()
@@ -212,7 +212,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = this.visTabWidth - 70;
+        var width = this.visTabWidth - 80;
         //width / height ratio is 1 : 1.2
         var height = width * 0.8;
         this.ageTree = new AgeTree({
@@ -249,7 +249,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = this.visTabWidth - 30;
+        var width = this.visTabWidth - 40;
         var height = width * 0.5;
         this.absoluteChart = new LineChart({
           el: vis,
@@ -365,7 +365,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTable = new TableView({
           el: this.el.querySelector('#age-data'),
           columns: columns,
-          title: title + ' ' + yearData.jahr + ' - ' + this.currentModel.get('name'),
+          title: title + ' ' + yearData.jahr,// + ' - ' + this.currentModel.get('name'),
           data: data,
           dataHeight: 400,
           pagination: false,
@@ -385,7 +385,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           el: this.el.querySelector('#raw-data'),
           columns: columns,
           data: data,
-          title: data[0].jahr + ' bis ' + data[data.length - 1].jahr + ' ' + ' - ' + this.currentModel.get('name'),
+          title: data[0].jahr + ' bis ' + data[data.length - 1].jahr,// + ' - ' + this.currentModel.get('name'),
           highlight: true
         });
       },
@@ -426,7 +426,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           groupedYearData.maleTotal = groupedYearData.male.pop();
           groupedYearData.femaleTotal = groupedYearData.female.pop();
           _this.groupedData.push(groupedYearData);
-        })
+        });
       },
       
       renderAgeGroupChart: function (data) {
@@ -524,7 +524,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           columns: columns,
           data: rows,
           dataHeight: 300,
-          title: title + ' ' + yearData.jahr + ' - ' + this.currentModel.get('name'),
+          title: title + ' ' + yearData.jahr,// + ' - ' + this.currentModel.get('name'),
           clickable: true,
           selectable: true
         });
@@ -738,43 +738,47 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       downloadAgeTableCsv: function () {
-        //var filename = this.getRegionName() + '-' + this.currentYear + '-bevoelkerungsprognose.csv'
-        //this.currentModel.downloadCsv(this.currentYear, filename);
-        this.ageTable.save();
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv'
+        this.ageTable.save(filename);
       },
+      
       downloadRawCsv: function () {
-        //var filename = this.getRegionName() + '-' + this.currentYear + '-bevoelkerungsprognose.csv'
-        //this.currentModel.downloadCsv(this.currentYear, filename);
-        this.rawTable.save();
+        var filename = this.currentModel.get('name') + '-Rohdaten.csv'
+        this.rawTable.save(filename);
       },
+      
       downloadAgeGroupCsv: function () {
-        //var filename = this.getRegionName() + '-' + this.currentYear + '-bevoelkerungsprognose.csv'
-        //this.currentModel.downloadCsv(this.currentYear, filename);
-        this.ageGroupTable.save();
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv'
+        this.ageGroupTable.save(filename);
       },
+      
       downloadAgeTreePng: function (e) {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-alterspyramide.png';
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
         var svgDiv = $('#agetree>svg');
         downloadPng(svgDiv, filename);//, {width: 2, height: 2});
       },
+      
       downloadBarChartPng: function (e) {
-        var filename = this.currentModel.get('name') + '-barchart.png';
+        var filename = this.currentModel.get('name') + '-Barchart.png';
         var svgDiv = $('#barchart>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
       },
+      
       downloadAgeGroupChartPng: function (e) {
-        var filename = this.currentModel.get('name') + '-altersgruppen.png';
+        var filename = this.currentModel.get('name') + '-Altersgruppen.png';
         var svgDiv = $('#agegroupchart>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
       },
+      
       downloadDevelopmentPng: function (e) {
-        var filename = this.currentModel.get('name') + '-bevoelkerungsentwicklung_absolut.png';
+        var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
         var svgDiv = $('#absolute>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
-        var filename = this.currentModel.get('name') + '-bevoelkerungsentwicklung_relativ.png';
+        var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-relativ.png';
         var svgDiv = $('#relative>svg');
         downloadPng(svgDiv, filename, {width: 2, height: 2});
       },
+      
       //remove the view
       close: function () {
         this.stop();

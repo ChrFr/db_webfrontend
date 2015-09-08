@@ -11,11 +11,16 @@
     bottom: -55px;
 }
 
-
 #play, #fix-scale{
     background-repeat: no-repeat;
     background-size: 50%;
     background-position: center;
+    border: solid 2px grey;
+    /*width: 30px;
+    height: 30px;*/
+}
+
+#fix-scale{
     width: 30px;
     height: 30px;
 }
@@ -61,7 +66,9 @@
 .side-controls {
     position: absolute;
     right: 20px;
-    top: 10px;
+    top: 0px;
+    /* gap needed because of the tab menu */
+    padding-top: 50px;
 }
 
 .side-controls label{
@@ -122,10 +129,6 @@
 
 .download-btn img {
     width: 100%;
-}
-
-.side-controls .png{
-    margin-top: 45px;
 }
 
 .d3-slider-axis{

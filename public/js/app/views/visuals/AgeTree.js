@@ -14,7 +14,8 @@ var AgeTree = function (options) {
   this.css = options.css;
   // optional: compared data is outlines
   this.compareData = options.compareData;
-  this.title = options.title || "";
+  this.title = options.title || '';
+  this.subtitle = options.subtitle || '';
 
   this.render = function (callback) {
     //server-side d3 needs to be loaded seperately
@@ -42,27 +43,27 @@ var AgeTree = function (options) {
         svgHeight = margin.top + this.height + margin.bottom;
 
     var top = d3.select(this.el).append('svg')
-            .attr('xmlns', "http://www.w3.org/2000/svg")
-            .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
+            .attr('xmlns', 'http://www.w3.org/2000/svg')
+            .attr('xmlns:xmlns:xlink', 'http://www.w3.org/1999/xlink')
             .attr('width', svgWidth)
             .attr('height', svgHeight);
     if (this.css) {
       var defs = top.append('defs');
       var style = defs.append('style');
       //style.type = 'text/css';                
-      style.attr("type", "text/css");
+      style.attr('type', 'text/css');
       style.html(this.css);
     }
     else {
-      var parsed = "\n"
+      var parsed = '\n'
       for (var i = 0; i < document.styleSheets.length; i++) {
         if (!document.styleSheets[i].href)
           continue;
-        var str = document.styleSheets[i].href.split("/");
-        if (str[str.length - 1] == "visuals.css") {
+        var str = document.styleSheets[i].href.split('/');
+        if (str[str.length - 1] == 'visuals.css') {
           var rules = document.styleSheets[i].cssRules;
           for (var j = 0; j < rules.length; j++) {
-            parsed += (rules[j].cssText + "\n");
+            parsed += (rules[j].cssText + '\n');
           }
           break;
         }
@@ -70,8 +71,8 @@ var AgeTree = function (options) {
 
       var style = top.append('style');
       //style.type = 'text/css';                
-      style.attr("type", "text/css");
-      style.html("\n<![CDATA[" + parsed + "]]>\n");
+      style.attr('type', 'text/css');
+      style.html('\n<![CDATA[' + parsed + ']]>\n');
     }
 
     // create svg
@@ -81,11 +82,19 @@ var AgeTree = function (options) {
 
     // TITLE
 
-    svg.append("text")
+    svg.append('text')
             .attr('class', 'title')
-            .attr("x", margin.left)
-            .attr("y", 0 - (margin.top / 2))
-            .text(this.title + " - " + this.data.jahr);
+            .attr('x', margin.left / 2)
+            .attr('y', 5 - (margin.top / 2))
+            .style('dominant-baseline', 'ideographic')
+            .text(this.title + ' ' + this.data.jahr);
+    
+    svg.append('text')
+            .attr('class', 'subtitle')
+            .attr('x', margin.left / 2)
+            .attr('y', 5 - (margin.top / 2))
+            .style('dominant-baseline', 'hanging')
+            .text(this.subtitle);
 
     // SCALES
 
@@ -100,24 +109,24 @@ var AgeTree = function (options) {
 
     // TOOLTIP
     var mouseOverBar = function (d) {
-      var tooltip = d3.select('body').append("div").attr("class", "tooltip");
+      var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
       var bar = d3.select(this);
-      bar.classed("highlight", true);
+      bar.classed('highlight', true);
       var sex = '';
       if (bar.classed('female'))
         sex = 'weiblich';
       else if (bar.classed('male'))
         sex = 'männlich';
 
-      tooltip.html("Geschlecht: " + sex + "<br>Alter: " + bar.attr("age") + "<br><b>Anzahl: " + Math.round(d) + "</b>");
+      tooltip.html('Geschlecht: ' + sex + '<br>Alter: ' + bar.attr('age') + '<br><b>Anzahl: ' + Math.round(d) + '</b>');
 
-      tooltip.style("left", (d3.event.pageX + 10) + "px")
-              .style("top", (d3.event.pageY - parseInt(tooltip.style("height"))) + "px");
+      tooltip.style('left', (d3.event.pageX + 10) + 'px')
+              .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');
     };
 
     var mouseOutBar = function (d) {
-      d3.select(this).classed("highlight", false);
-      d3.select('body').selectAll("div.tooltip").remove();
+      d3.select(this).classed('highlight', false);
+      d3.select('body').selectAll('div.tooltip').remove();
     };
 
     // BARS                
@@ -131,51 +140,51 @@ var AgeTree = function (options) {
             .attr('class', 'femaleGroup')
             .attr('transform', translation(pointB, 0));
 
-    var rightBars = femaleGroup.selectAll("g")
+    var rightBars = femaleGroup.selectAll('g')
             .data(femaleAges)
-            .enter().append("g")
-            .attr("transform", function (d, i) {
+            .enter().append('g')
+            .attr('transform', function (d, i) {
               return translation(0, (_this.maxY - i) * _this.barHeight - _this.barHeight / 2);
             });
 
-    rightBars.append("rect")
+    rightBars.append('rect')
             .attr('class', 'female')
-            .attr("width", this.xScale)
-            .attr("height", this.barHeight - 1)
-            .attr("age", function (d, i) {
+            .attr('width', this.xScale)
+            .attr('height', this.barHeight - 1)
+            .attr('age', function (d, i) {
               return i;
             })
-            .on("mouseover", mouseOverBar)
-            .on("mouseout", mouseOutBar);
+            .on('mouseover', mouseOverBar)
+            .on('mouseout', mouseOutBar);
 
-    var leftBars = maleGroup.selectAll("g")
+    var leftBars = maleGroup.selectAll('g')
             .data(maleAges)
-            .enter().append("g")
-            .attr("transform", function (d, i) {
+            .enter().append('g')
+            .attr('transform', function (d, i) {
               return translation(0, (_this.maxY - i) * _this.barHeight - _this.barHeight / 2);
             });
 
-    leftBars.append("rect")
+    leftBars.append('rect')
             .attr('class', 'male')
-            .attr("width", this.xScale)
-            .attr("height", this.barHeight - 1)
-            .attr("age", function (d, i) {
+            .attr('width', this.xScale)
+            .attr('height', this.barHeight - 1)
+            .attr('age', function (d, i) {
               return i;
             })
-            .on("mouseover", mouseOverBar)
-            .on("mouseout", mouseOutBar);
+            .on('mouseover', mouseOverBar)
+            .on('mouseout', mouseOutBar);
 
     // OUTLINE FOR COMPARED DATA
     if (this.compareData) {
       var femaleCompare = this.compareData.alter_weiblich,
           maleCompare = this.compareData.alter_maennlich;
   
-      var femaleOutline = svg.append("g")
-          .attr("transform", translation(pointB, 0))
-          .attr("class", "compare"),
-          maleOutline = svg.append("g")
-          .attr("transform", translation(pointA, 0))
-          .attr("class", "compare");
+      var femaleOutline = svg.append('g')
+          .attr('transform', translation(pointB, 0))
+          .attr('class', 'compare'),
+          maleOutline = svg.append('g')
+          .attr('transform', translation(pointA, 0))
+          .attr('class', 'compare');
 
       var femaleLine = [],
           maleLine = [];
@@ -187,7 +196,7 @@ var AgeTree = function (options) {
           .y(function (d) {
             return d.y
           })
-          .interpolate("linear");
+          .interpolate('linear');
 
       for (var i = 0; i < femaleCompare.length; i++) {
         femaleLine.push({
@@ -209,12 +218,12 @@ var AgeTree = function (options) {
 
       }
 
-      femaleOutline.append("path")
-              .attr("d", lineFunction(femaleLine))
-              .attr("fill", "none");
-      maleOutline.append("path")
-              .attr("d", lineFunction(maleLine))
-              .attr("fill", "none");
+      femaleOutline.append('path')
+              .attr('d', lineFunction(femaleLine))
+              .attr('fill', 'none');
+      maleOutline.append('path')
+              .attr('d', lineFunction(maleLine))
+              .attr('fill', 'none');
     }
 
     // AXES
@@ -246,8 +255,8 @@ var AgeTree = function (options) {
             .attr('class', 'axis y left')
             .attr('transform', translation(this.width / 2, 0))
             .call(yAxis)
-            .selectAll("text")
-            .style("text-anchor", "middle");
+            .selectAll('text')
+            .style('text-anchor', 'middle');
 
     svg.append('g')
             .attr('class', 'axis x left')
@@ -261,35 +270,39 @@ var AgeTree = function (options) {
 
     // LEGEND
 
-    svg.append("text")
-            .attr("x", (this.width / 2))
-            .attr("y", -5)
-            .attr("font-weight", "bold")
-            .attr("text-anchor", "middle")
+    svg.append('text')
+            .attr('x', (this.width / 2))
+            .attr('y', -5)
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
             .text('Alter');
 
-    svg.append("text")
+    svg.append('text')
             .attr('class', 'male')
-            .attr("text-anchor", "middle")
+            .attr('text-anchor', 'middle')
             .text('Anzahl männlich')
-            .attr("x", this.width / 4)
-            .attr("y", this.height + 25);
+            .attr('x', this.width / 4)
+            .attr('y', this.height + 25);
 
-    svg.append("text")
+    svg.append('text')
             .attr('class', 'female')
-            .attr("text-anchor", "middle")
+            .attr('text-anchor', 'middle')
             .text('Anzahl weiblich')
-            .attr("x", 3 * this.width / 4)
-            .attr("y", this.height + 25);
+            .attr('x', 3 * this.width / 4)
+            .attr('y', this.height + 25);
 
-    if (this.fixYear)
-      svg.append("text")
+    if (this.compareData){
+      svg.append('text')
               .attr('class', 'compare')
-              .text('Vergleichsjahr ' + this.data.jahr)
-              .attr("x", margin.left)
-              .attr("y", 20);
-
-    svg.selectAll(".domain").style("display", "none");
+              .attr('x', this.width - 20)
+              .attr('y', 5 - (margin.top / 2))
+              .style('text-anchor', 'end') 
+              .style('dominant-baseline', 'ideographic')
+              .text('Vergleichsjahr ' + this.compareData.jahr)
+    }
+      
+    // remove the black borders caused by the domain
+    svg.selectAll('.domain').style('display', 'none');
 
     function translation(x, y) {
       return 'translate(' + x + ',' + y + ')';
@@ -302,18 +315,18 @@ var AgeTree = function (options) {
   this.changeData = function (data) {
     this.data = data;
     var _this = this;
-    var title = this.title + " - " + data.jahr;
+    var title = this.title + ' - ' + data.jahr;
     var d3el = d3.select(this.el);
     d3el.select('.title').text(title);
 
     //update bars
-    d3el.select('.femaleGroup').selectAll("g")
+    d3el.select('.femaleGroup').selectAll('g')
             .data(data.alter_weiblich)
-            .select("rect").attr("width", _this.xScale);
+            .select('rect').attr('width', _this.xScale);
 
-    d3el.select('.maleGroup').selectAll("g")
+    d3el.select('.maleGroup').selectAll('g')
             .data(data.alter_maennlich)
-            .select("rect").attr("width", _this.xScale);
+            .select('rect').attr('width', _this.xScale);
 
     function translation(x, y) {
       return 'translate(' + x + ',' + y + ')';

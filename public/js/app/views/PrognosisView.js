@@ -32,8 +32,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
       
       events: {
         // age group controls
-        'click #demo-link-div>a': 'tabChange',
-        'click #hh-link-div>a': 'tabChange',
+        'click #sub-map-nav>a': 'tabChange',
       },
       
       // activate the menu link in the navbar when a link is clicked here
@@ -44,6 +43,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         var links = document.querySelector('#prognosis-collapse').getElementsByTagName('li');
         for(var i = 0; i < links.length; i++)
           links[i].className = '';
+        if(href === '#overview-tab')
+          document.querySelector('#li-overview').className = 'active';
         if(href === '#dd-tab')
           document.querySelector('#li-dd').className = 'active';
         if(href === '#hh-tab')
@@ -75,8 +76,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             // hide all elements interacting with prognoses, when no prognosis is loaded
             _this.el.querySelector('#description-div').style.display = 'none';
             _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
-            _this.el.querySelector('#demo-link-div').style.display = 'none';
-            _this.el.querySelector('#hh-link-div').style.display = 'none';
+            _this.el.querySelector('#sub-map-nav').style.display = 'none';
             _this.el.querySelector('#region-select').style.display = 'none';
             _this.el.querySelector('#region-label').style.display = 'none';               
             if(_this.ddView)
@@ -86,6 +86,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             var map = _this.el.querySelector('#map');
             while (map.firstChild)
               map.removeChild(map.firstChild);
+            _this.el.querySelector('#selection-label').innerHTML = '';
           }
         });
         
@@ -100,16 +101,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         var mapLoader = Loader(this.el.querySelector('#map'));
         
         this.communities.fetch({ //get the smallest entities (=communities) to build up regions
-                  data: {progId: id},
-                  error: function(){
-                      
-                  },
-                  success: function(){
+          data: {progId: id},
+          error: function(){},
+          success: function(){
 
             _this.el.querySelector('#description-div').style.display = 'block';
             _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
-            _this.el.querySelector('#demo-link-div').style.display = 'block';
-            _this.el.querySelector('#hh-link-div').style.display = 'block';
+            _this.el.querySelector('#sub-map-nav').style.display = 'block';
 
             // remove old options
             var layerSelector = _this.el.querySelector('#layer-select');
@@ -144,31 +142,35 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           }
         });
         
-        // prepare the views        
+        // remove old views        
         if(this.ddView)
           this.ddView.close();
         if(this.hhView)
           this.hhView.close();
+        
+        // create new views (in newly created divs, because 'close' will remove them)
         this.ddView = new DemographicDevelopmentView({
-          el: this.el.querySelector('#dd-tab'),
+          el: this.el.querySelector('#dd-tab').appendChild(document.createElement('div')),
           visTabWidth: parseInt(this.el.querySelector('#vis-reference').offsetWidth)
         });
-        this.hhView = new HouseholdsDevelopmentView({el: this.el.querySelector('#hh-tab')});
-        
+        this.hhView = new HouseholdsDevelopmentView({
+          el: this.el.querySelector('#hh-tab').appendChild(document.createElement('div'))
+        });        
       },
       
       renderOverview: function (pid) {
+        var map = this.el.querySelector('#map');
         var title = this.el.querySelector('#title');
         var text = this.el.querySelector('#description') || '';
         var warningGlyph = '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp';
         if (!app.get('session').get('user')) {
-          title.innerHTML = warningGlyph + ' Sie sind nicht eingeloggt';
-          text.innerHTML = 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
+          map.innerHTML = '<br>' + warningGlyph + ' <b>Sie sind nicht eingeloggt</b><br>';
+          map.innerHTML += 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
           return false;
         }
         else if (!pid || pid < 0) {
-          title.innerHTML = warningGlyph + 'keine Prognose gewählt! ';
-          text.innerHTML = 'Bitte wählen Sie eine Prognose im Menü aus.';
+          map.innerHTML = '<br>' + warningGlyph + '<b>keine Prognose gewählt!</b><br>';
+          map.innerHTML += 'Bitte wählen Sie eine Prognose im Menü aus.';
           return false;
         }
         else {
@@ -210,7 +212,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             success: function(){_this.map.select(0);}
           }); // update map
           app.set('activeRegion', region);
-          //this.renderRegion(this.getAggregateRegion(0, allCommunities, 'Gesamtgebiet')); // render data
+          _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>Gesamtgebiet</b><br>';
         }
         
         // BASIC LAYER gemeinden (community, smallest enitity)
@@ -251,12 +253,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             if(rsAggr.length <= 1)
               rsAggr = null; // single rs means no aggregation at all
 
+            var name = names.join(', ');
+            
             var region = {
               id: id, 
-              name: names.join(', '), 
+              name: name, 
               rs: rsAggr
             };
             app.set('activeRegion', region);
+            _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>' + name + '</b><br>';
             _this.map.select(rsAggr || id); // if there are no multiple selected rs, select id (in this case equals single rs)            
           };
         }
@@ -302,14 +307,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                     names.push(opt.innerHTML);
                   }
                 }
+                var name = names.join(', ');
 
                 var region = {
                   id: values.join('-'), 
-                  name: names.join(', '), 
+                  name: name, 
                   rs: rsAggr
                 };
                 
                 app.set('activeRegion', region);
+                _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>' + name + '</b><br>';
                 _this.map.select(values);
               };
             }
@@ -345,10 +352,18 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             var regionSelector = _this.el.querySelector('#region-select');
             for (var i = 0, j = regionSelector.options.length; i < j; ++i) {
               if (regionSelector.options[i].innerHTML === name) {
-                //invert selection (maybe it was already selected
-                regionSelector.options[i].selected = !regionSelector.options[i].selected;
-              }
-            }
+                // ctrl or shift pressed while clicking -> allow multiselect
+                if (d3.event.ctrlKey || d3.event.shiftKey)
+                  //invert selection (maybe it was already selected
+                  regionSelector.options[i].selected = !regionSelector.options[i].selected;
+                // simple click -> single selection
+                else{
+                  regionSelector.selectedIndex = i;
+                  break;
+                }
+              }              
+            }         
+            // trigger onchange event
             regionSelector.onchange();
           };
 

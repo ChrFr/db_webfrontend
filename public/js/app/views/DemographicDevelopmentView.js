@@ -207,8 +207,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       renderTree: function (data) {
-        var vis = this.el.querySelector('#agetree'),
-            title = this.currentModel.get('name');
+        var vis = this.el.querySelector('#agetree');
 
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
@@ -220,7 +219,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           el: vis,
           data: data,
           compareData: this.compareData,
-          title: title,
+          title: 'Bevölkerungspyramide',
+          subtitle: this.currentModel.get('name'),
           width: width,
           height: height,
           maxY: this.currentModel.get('maxAge'),
@@ -231,8 +231,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       renderDevelopment: function (data) {
         var total = [],
-            years = [],
-            title = this.currentModel.get('name');
+            years = [];
 
         // ABSOLUTE DATA
 
@@ -257,7 +256,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           data: [dataAbs],
           width: width,
           height: height,
-          title: title + ' - Bevölkerungsentwicklung absolut',
+          title: 'Bevölkerungsentwicklung absolut',
+          subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
           ylabel: 'Gesamtbevölkerung in absoluten Zahlen',
           minY: 0
@@ -287,16 +287,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           data: [dataRel],
           width: width,
           height: height,
-          title: title + ' - Bevölkerungsentwicklung relativ',
+          title: 'Bevölkerungsentwicklung relativ',
+          subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
           ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')'
         });
 
         this.relativeChart.render();
       },
+      
       renderBarChart: function (data) {
-        var dataSets = [],
-                title = this.currentModel.get('name');
+        var dataSets = [];
 
         _.each(data, function (d) {
           var values = [
@@ -322,7 +323,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           data: dataSets,
           width: width,
           height: height,
-          title: title + ' - Bevölkerungsentwicklung',
+          title: 'Bevölkerungsentwicklung',
+          subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
           groupLabels: ['A: Geburten - Sterbefälle', 'B: Zuwanderung - Abwanderung', 'gesamt: A + B'],
           ylabel: 'Zuwachs',
@@ -330,14 +332,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
         this.barChart.render();
       },
+      
       renderAgeTable: function (yearData) {
         var columns = [],
-                title = this.currentModel.get('name');
+            title = '';
 
         if (yearData.jahr == this.currentModel.get('minYear'))
-          title += ' - Basisjahr';
+          title = 'Basisjahr';
         else
-          title += ' - Prognose';
+          title = 'Prognose';
 
         // adapt age data to build table (arrays to single entries)
         columns.push({name: 'age', description: 'Alter'});
@@ -362,7 +365,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTable = new TableView({
           el: this.el.querySelector('#age-data'),
           columns: columns,
-          title: title + ' ' + yearData.jahr,
+          title: title + ' ' + yearData.jahr + ' - ' + this.currentModel.get('name'),
           data: data,
           dataHeight: 400,
           pagination: false,
@@ -371,6 +374,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           highlight: true
         });
       },
+      
       renderRawData: function (data) {
         var columns = [];
         Object.keys(data[0]).forEach(function (i) {
@@ -381,10 +385,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           el: this.el.querySelector('#raw-data'),
           columns: columns,
           data: data,
-          title: this.currentModel.get('name') + ' - ' + data[0].jahr + '-' + data[data.length - 1].jahr,
+          title: data[0].jahr + ' bis ' + data[data.length - 1].jahr + ' ' + ' - ' + this.currentModel.get('name'),
           highlight: true
         });
       },
+      
       calculateAgeGroups: function () {
         var _this = this;
         this.groupedData = [];
@@ -423,9 +428,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           _this.groupedData.push(groupedYearData);
         })
       },
+      
       renderAgeGroupChart: function (data) {
-        var vis = this.el.querySelector('#agegroupchart'),
-                title = this.currentModel.get('name');
+        var vis = this.el.querySelector('#agegroupchart');
 
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
@@ -443,7 +448,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           data: data,
           width: width,
           height: height,
-          title: title + ' - Altersgruppen',
+          title: 'Altersgruppen',
+          subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
           ylabel: 'Summe',
           stackLabels: groupNames,
@@ -451,16 +457,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
         this.ageGroupChart.render();
       },
+      
       renderAgeGroupTable: function (year) {
-
         var columns = [],
-                title = this.currentModel.get('name');
-
-        if (year == this.currentModel.get('minYear'))
-          title += ' - Basisjahr';
-        else
-          title += ' - Prognose';
-
+            title = '';
         columns.push({name: 'ageGroup', description: 'Altersgruppe'});
         columns.push({name: 'female', description: 'weiblich'});
         columns.push({name: 'male', description: 'männlich'});
@@ -478,6 +478,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // return if no data found
         if (!yearData)
           return;
+        
+        if (yearData.jahr == this.currentModel.get('minYear'))
+          title = 'Basisjahr';
+        else
+          title = 'Prognose';
 
         var rows = [];
         var index = 0;
@@ -519,7 +524,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           columns: columns,
           data: rows,
           dataHeight: 300,
-          title: title + ' ' + yearData.jahr,
+          title: title + ' ' + yearData.jahr + ' - ' + this.currentModel.get('name'),
           clickable: true,
           selectable: true
         });

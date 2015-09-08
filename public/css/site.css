@@ -6,9 +6,17 @@
 html, body {
 }
 
+/*
+a {
+    color: #E6C200;
+}
+
+a:hover, a:focus{
+    color: darkgoldenrod;
+}
+*/
+
 body {
-    /*background-color: #F5F5F5;*/
-    
    background-image: url('../img/back2.png');
 }
 
@@ -152,7 +160,7 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     margin: 0 auto;
 }
 
-.form-control:focus{    
+.form-control:focus, select:focus{    
     box-shadow: 0px 0px 2px 1px gold;
     border: solid 1px gold;
 }

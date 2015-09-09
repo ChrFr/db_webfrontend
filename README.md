@@ -1,4 +1,9 @@
-add. needed: ImageMagick
+## Prerequisites to install on server
+
+* node.js
+* python 2.7
+* git
+* PostgreSQL
 
 ### License
 

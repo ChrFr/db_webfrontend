@@ -1,4 +1,4 @@
-define(["app", "jquery", "backbone", "text!templates/hhdevelop.html"],
+define(['app', 'jquery', 'backbone', 'text!templates/hhdevelop.html'],
 
     function(app, $, Backbone, template){
         var PrognosisView = Backbone.View.extend({
@@ -24,6 +24,10 @@ define(["app", "jquery", "backbone", "text!templates/hhdevelop.html"],
             close: function () {
                 this.unbind(); // Unbind all local event bindings
                 this.remove(); // Remove view from DOM
+            },
+            
+            renderRegion: function (region) {         
+            
             }
 
         });

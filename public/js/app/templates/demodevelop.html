@@ -1,154 +1,140 @@
-<link rel="stylesheet" type="text/css" href="css/visuals.css">
-<div class="container-fluid">    
-    <div class="col-md-3"> 
-         <div class="row">
-            <div class="col-md-5"> 
-                <label> Gliederungsebene </label>
-                <select class="form-control" id="layer-select"> </select> <br>
-            </div>
-            <div class="col-md-7"> 
-                <label id="region-label" style="display: none"> Region </label>
-                <select class="form-control" id="region-select" style="display: none"> </select><br>
-            </div>
+<link rel='stylesheet' type='text/css' href='css/visuals.css'>
+<div class='container-fluid'>    
+  <!-- ATTENTION: this should have same size as text column in prognosis.html (taken as reference width, because unknown widths in inactive tabs) -->
+  <div id='visualizations' class='col-md-7'>    
+    <ul class='nav nav-tabs'>
+      <li class='active'>
+        <a href='#development-tab' data-toggle='tab'>     
+          <div class = 'icon'>
+            <img src='img/linechart.png'>
+          </div>
+          Entwicklung
+        </a>
+      </li>
+      <li id='ageTreeBtn'>
+        <a href='#agetree-tab' data-toggle='tab'>                    
+          <div class = 'icon'>
+            <img src='img/agetree.png'>
+          </div>
+          Bevölkerungspyramide
+        </a>
+      </li>
+      <li>
+        <a href='#agegroupchart-tab' data-toggle='tab'>          
+          <div class = 'icon'>
+            <img src='img/barchart.png'>
+          </div>
+          Altersgruppen
+        </a>
+      </li>
+      <li>
+        <a href='#barchart-tab' data-toggle='tab'>          
+          <div class = 'icon'>
+            <img src='img/groupedbarchart.png'>
+          </div>
+          Bar Chart
+        </a>
+      </li>
+    </ul>
+    <div class='tab-content shadow-box'>    
+      <div class='tab-pane active' id='development-tab'>     
+        <div id='absolute'></div>
+        <div id='relative'></div>
+        <div class='side-controls' style='display: none'> 
+          <button class='download-btn png' title='Grafik als png-Datei speichern'> 
+            <img src='img/camera-black.png'> 
+          </button>
         </div>
-        <div id="map"> </div>  
-    </div>
-    <div id="visualizations" class="col-md-5">    
-        <ul class="nav nav-pills">
-            <li class="active">
-                <a href="#development-tab" data-toggle="tab">     
-                    <div class = "icon">
-                        <img src="img/linechart.png">
-                    </div>
-                    Entwicklung
-                </a>
-            </li>
-            <li>
-                <a href="#agegroupchart-tab" data-toggle="tab">          
-                    <div class = "icon">
-                        <img src="img/barchart.png">
-                    </div>
-                    Altersgruppen
-                </a>
-            </li>
-            <li>
-                <a href="#barchart-tab" data-toggle="tab">          
-                    <div class = "icon">
-                        <img src="img/groupedbarchart.png">
-                    </div>
-                    Bar Chart
-                </a>
-            </li>
-            <li id="ageTreeBtn">
-                <a href="#agetree-tab" data-toggle="tab">                    
-                    <div class = "icon">
-                        <img src="img/agetree.png">
-                    </div>
-                    Bevölkerungspyramide
-                </a>
-            </li>
-        </ul>
-        <div class="tab-content">                     
-            <div class="tab-pane active" id="map-tab">     
-            </div>
-            <div class="tab-pane active" id="development-tab">            
-                <div id="absolute"></div>         
-                <div id="relative"></div>
-                <div class="side-controls"> 
-                    <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="img/camera-black.png"> 
-                    </button>
-                </div>
-            </div>          
-            <div class="tab-pane" id="agegroupchart-tab">    
-                <div id="agegroupchart"></div>
-                <div class="side-controls"> 
-                    <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="img/camera-black.png"> 
-                    </button>
-                </div>
-            </div>  
-            <div class="tab-pane" id="barchart-tab">    
-                <div id="barchart"></div>
-                <div class="side-controls"> 
-                    <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="img/camera-black.png"> 
-                    </button>
-                </div>
-            </div>
-            <div class="tab-pane" id="agetree-tab">            
-                <div id="agetree"></div>
-                <div class="side-controls"> 
-                    <button class="download-btn png" title="Grafik als png-Datei speichern"> 
-                        <img src="img/camera-black.png"> 
-                    </button>
-                    <button class="watch" title="Aktuelles Jahr beobachten"> 
-                    </button>
-                    <br>
-                    <label id="current-scale"></label>
-                    <div id="scale-slider-container">
-                        <label id="max-scale"></label>
-                        <div id="scale-slider"></div>
-                        <label id="min-scale"></label>
-                        <br>                  
-                    </div>
-                    <div id="fix-wrapper">
-                    <button id="fix-scale" class="unlocked" title="Skalierung fixieren"></button>
-                    </div>
-                </div>
-            </div>
-        </div>	
-        <div class="bottom-controls">
-            <button id="play" class="stopped"> 
-            </button>
-            <div id="year-slider"></div>
+      </div>          
+      <div class='tab-pane' id='agegroupchart-tab'>    
+        <div id='agegroupchart'></div>
+        <div class='side-controls' style='display: none'> 
+          <button class='download-btn png' title='Grafik als png-Datei speichern'> 
+            <img src='img/camera-black.png'> 
+          </button>
         </div>
+      </div>  
+      <div class='tab-pane' id='barchart-tab'>    
+        <div id='barchart'></div>
+        <div class='side-controls' style='display: none'> 
+          <button class='download-btn png' title='Grafik als png-Datei speichern'> 
+            <img src='img/camera-black.png'> 
+          </button>
+        </div>
+      </div>
+      <div class='tab-pane' id='agetree-tab'>            
+        <div id='agetree'></div>
+        <div class='side-controls' style='display: none'> 
+          <button id='play' class='stopped' title='Prognose abspielen'> 
+          </button>
+          <button class='watch' title='Aktuelles Jahr beobachten'> 
+          </button>
+          <button class='download-btn png' title='Grafik als png-Datei speichern'> 
+            <img src='img/camera-black.png'> 
+          </button>
+          <br>
+          <label id='current-scale'></label>
+          <div id='scale-slider-container'>
+            <label id='max-scale'></label>
+            <div id='scale-slider'></div>
+            <label id='min-scale'></label>
+            <br>                  
+          </div>
+          <div id='fix-wrapper'>
+            <button id='fix-scale' title='Skalierung fixieren'></button>
+          </div>
+        </div>        
+        <div class='bottom-controls' id='play-controls' style='display: none'>
+          <div id='year-slider'></div>
+        </div>
+      </div>
+    </div>	
+  </div>
+
+  <div id='tables' class='col-md-5' style='display: none'> 
+    <ul class='nav nav-tabs'>
+      <li class='active'><a href='#agegroup-tab' data-toggle='tab'>Altersgruppen</a></li>
+      <li><a href='#age-tab' data-toggle='tab'>Alterstabelle</a></li>
+      <li><a href='#raw-tab' data-toggle='tab'>Rohdaten</a></li>
+    </ul>
+    <div class='tab-content shadow-box'>            
+      <div class='tab-pane active' id='agegroup-tab'>  
+        <div id='agegroup-data'></div> 
+        <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button> 
+        <button type='button' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <br><br>   
+      </div>
+      <div class='tab-pane' id='age-tab'>    
+        <div id='age-data'></div>
+        <button type='button' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <br>
+      </div>
+      <div class='tab-pane' id='raw-tab'>    
+        <div id='raw-data'></div>
+        <button type='button' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <br>
+      </div>
+    </div>    
+    <div class='grouped'>
+      <label>Altersgruppe</label>
+      <br>
+      <div class='col-md-3'>
+        <input class='form-control' id='agegroup-from' type='number' min='0' max='200'>
+      </div>
+      <div class='col-xs-1'>
+        <label>_</label>
+      </div>
+      <div class='col-md-3'>
+        <input class='form-control' id='agegroup-to' type='number' min='0' max='201'>
+      </div>
+      <div class='col-md-2'>
+        <button type='button' id='new-group' class='btn btn-secondary' title='Altersgruppe hinzufügen'>Hinzufügen</button>
+      </div>
+      <br><br>
     </div>
-    
-    <div id="tables" class="col-md-4"> 
-        <ul class="nav nav-pills">
-            <li class="active"><a href="#agegroup-tab" data-toggle="tab">Altersgruppen</a></li>
-            <li><a href="#age-tab" data-toggle="tab">Alterstabelle</a></li>
-            <li><a href="#raw-tab" data-toggle="tab">Rohdaten</a></li>
-        </ul>
-        <div class="tab-content">            
-            <div class="tab-pane active" id="agegroup-tab">  
-                <div id="agegroup-data"></div> 
-                <button id="delete-agegroups" type="button" class="btn btn-secondary" title="ausgewählte Altersgruppen entfernen">Entfernen</button> 
-                <button type="button" class="btn btn-primary download-btn csv" title="Datenblatt als csv-Datei speichern.">Speichern</button>
-                <br><br>   
-                <div class="grouped">
-                    <label>Altersgruppe</label>
-                    <br>
-                    <div class="col-md-3">
-                        <input class="form-control" id="agegroup-from" type="number" min="0" max="200">
-                    </div>
-                    <div class="col-xs-1">
-                        <label>_</label>
-                    </div>
-                    <div class="col-md-3">
-                        <input class="form-control" id="agegroup-to" type="number" min="0" max="201">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" id="new-group" class="btn btn-secondary" title="Altersgruppe hinzufügen">Hinzufügen</button>
-                    </div>
-                    <br><br>
-                    </div>
-                </div>
-            <div class="tab-pane" id="age-tab">    
-                <div id="age-data"></div>
-                <button type="button" class="btn btn-primary download-btn csv" title="Datenblatt als csv-Datei speichern.">Speichern</button>
-                <br>
-            </div>
-            <div class="tab-pane" id="raw-tab">    
-                <div id="raw-data"></div>
-                <button type="button" class="btn btn-primary download-btn csv" title="Datenblatt als csv-Datei speichern.">Speichern</button>
-                <br>
-            </div>
-        </div>	
-    </div>
+  </div>
 </div>
 
-<div id="pngWrapper" style="display: none">
-  <canvas id="pngRenderer"></canvas>
+<div id='pngWrapper' style='display: none'>
+  <canvas id='pngRenderer'></canvas>
 </div>

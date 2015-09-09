@@ -1,37 +1,51 @@
 .bottom-controls{
-    display: none;
-    background-color: white;
+    background-color: #F7F7F3;
     height: 50px;
     padding: 10px; 
     box-shadow: 1px 0px 2px 0px lightgrey;
     border: solid 1px lightgrey;
 }
 
+#play-controls{
+    position: absolute;
+    bottom: -55px;
+}
+
 #play, #fix-scale{
     background-repeat: no-repeat;
     background-size: 50%;
     background-position: center;
+    /*width: 30px;
+    height: 30px;*/
+}
+
+#fix-scale{
     width: 30px;
     height: 30px;
 }
 
+.side-controls button.active{
+    box-shadow: 0px 0px 2px 2px gold;    
+    border: 0px;
+}
 #play.stopped{    
     background-image: url("../img/play.png");
 }
 
-#play.playing{    
+#play.active{    
     background-image: url("../img/pause.png");
 }
 
 .watch{    
-    background-image: url("../img/eye_opened.png");
+    background-image: url("../img/eye_closed.png");
     background-repeat: no-repeat;
     background-size: 80%;
     background-position: center;
 }
 
 .watch.active{    
-    background-image: url("../img/eye_closed.png");
+    box-shadow: 0px 0px 2px 2px #00FF00 !important;
+    background-image: url("../img/eye_opened.png");
 }
 
 #fix-scale{
@@ -40,23 +54,26 @@
     background-position: center;
 }
 
-#fix-scale.locked{    
+#fix-scale.active{    
     background-image: url("../img/locked.png");
 }
 
-#fix-scale.unlocked{    
+#fix-scale{    
     background-image: url("../img/unlocked.png");
 }
 
 #year-slider{
     float: left;
     margin-left: 30px;
+    margin-right: 30px;
 }
 
 .side-controls {
     position: absolute;
     right: 20px;
-    top: 10px;
+    top: 0px;
+    /* gap needed because of the tab menu */
+    padding-top: 60px;
 }
 
 .side-controls label{
@@ -78,7 +95,7 @@
 }
 
 .bottom-controls button{    
-    border: solid 3px grey;  
+    border: solid 2px grey;  
     float: left;
 }
 
@@ -117,10 +134,6 @@
 
 .download-btn img {
     width: 100%;
-}
-
-.side-controls .png{
-    margin-top: 45px;
 }
 
 .d3-slider-axis{

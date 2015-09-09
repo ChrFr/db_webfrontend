@@ -83,9 +83,14 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
                 return this.table.bootstrapTable('getSelections');
             },
             
-            save: function(){
+            save: function(filename){
+                if(!filename)
+                  filename = this.title;
+                // tableExport adds the extension automatically
+                else if(filename.endsWith('.csv'))
+                  filename = filename.slice(0, -4);
                 this.table.tableExport({type:'csv',
-                                        fileName: this.title,
+                                        fileName: filename,
                                         csvSeparator: ';'});
             },
             

@@ -1,26 +1,30 @@
-require(["app", "router", "models/SessionModel", "views/NavbarView",  
-    "collections/PrognosisCollection"],
+/** 
+ * @author Christoph Franke
+ * 
+ * @desc app singleton, thats supposed to hold globals such as active session
+ * attributes can be set and monitored (set, get, bind)
+ */
 
-function(app, Router, SessionModel, Navbar, PrognosisCollection) {
-    //before anything else happens, check if already logged in by fetching
-    //(cookies are used)
-    app.session = new SessionModel();
-    app.session.fetch({
-        success: render,
-        error: render
-    });   
+require(['app', 'router', 'models/SessionModel', 'views/NavbarView',
+  'collections/PrognosisCollection'],
+  function (app, Router, SessionModel, Navbar, PrognosisCollection) {
     
-    //load available prognoses on user change
-    app.prognoses = new PrognosisCollection();  
-                
-    app.ageGroups = [
-        {from: 0, to: 20, name: "0 - 20"},
-        {from: 20, to: 65, name: "20 - 65"},
-        {from: 65, to: null, name: "65+"}
-    ];
-    
-    function render(){
-        app.router = new Router();
-        app.navbar = new Navbar();        
+    // before anything else happens, check if user is already logged by checking cookies (server-side)
+    var session = new SessionModel();
+    app.set('session', session);
+    session.fetch({
+      success: render,
+      error: render // render in any case (if logged in or not)
+    });
+
+    // already fetched prognosis are stored globally
+    app.set('prognoses', new PrognosisCollection());
+
+    // render site
+    function render() {
+      // important: router needs to be loaded first (navbar links to it)
+      app.set('router', new Router()); // render subsites provided by router
+      app.set('navbar', new Navbar()); // render navbar
     }
-});
+  }
+);

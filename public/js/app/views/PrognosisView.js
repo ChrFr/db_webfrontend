@@ -73,22 +73,6 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
               _this.prepareSelections(prognosis);
             }
             else{
-              /*
-                //listen to resize event of the window and rerender, if resized
-                $(window).resize(function(e) {  
-                    if (e.target === this)
-                        delay(function(){
-                            if (_this.resourcesView){
-                                _this.resourcesView.unbind();
-                                _this.resourcesView.remove();
-                            };                            
-                            if (_this.editorView){
-                                _this.editorView.unbind();
-                                _this.editorView.remove();
-                            };
-                            _this.render();
-                        }, 500);
-                });*/
               // hide all elements interacting with prognoses, when no prognosis is loaded
               _this.el.querySelector('#description-div').style.display = 'none';
               _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
@@ -122,7 +106,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             },
             success: function(){
               loader.remove();
-              _this.createMap(success = function(){
+              _this.createMap(callback = function(){
                 _this.el.querySelector('#description-div').style.display = 'block';
                 _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
                 _this.el.querySelector('#sub-map-nav').style.display = 'block';
@@ -220,7 +204,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             var region = {id: 0, name: 'Gesamtgebiet', rs: allCommunities};
             _this.renderMap({
               aggregates: [region],
-              success: function(){
+              callback: function(){
                 _this.map.select(0);
               }
             }); // update map
@@ -342,7 +326,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           }
         },
         
-        createMap: function(success){    
+        createMap: function(callback){    
           var vis = this.el.querySelector('#map');
           while(vis.firstChild)
             vis.removeChild(vis.firstChild);
@@ -358,7 +342,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             background: {
               source: './shapes/bundeslaender.json',
               isTopoJSON: true,
-              success: success
+              callback: callback
             }
           });
         },
@@ -369,7 +353,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
         renderMap: function(options){
           
           var _this = this,
-              units = [],
+              subunits = [],
               options = options || {};
 
           // click handler, if map is clicked, render data of selected region
@@ -400,7 +384,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             'features': []
           };
           this.communities.each(function(model){
-            units.push(model.get('rs'));
+            subunits.push(model.get('rs'));
             var feature = {
               'type': 'Feature',
               'geometry': JSON.parse(model.get('geom_json')),
@@ -419,10 +403,10 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
 
           _this.map.renderMap({
             topology: topology,
-            units: units,
+            subunits: subunits,
             aggregates: options.aggregates,
             isTopoJSON: false,
-            success: options.success,
+            callback: options.callback,
             boundaries: prog.get('boundaries'),
             onClick: onClick
           });

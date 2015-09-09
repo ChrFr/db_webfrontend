@@ -1,6 +1,14 @@
-/*
- Author: Christoph Franke
- Publisher: GGR
+/**
+ * Author: Christoph Franke
+ * Publisher: GGR
+ *
+ * an interactive map of regions, call this.renderMap(options) to render maps on top of the background map
+ * 
+ * @param options.el parent html-element the map will be placed in
+ * @param options.width the width of the viewport
+ * @param options.height the height of the viewport
+ * @param options.background options for a background map, see comments above function this.renderMap() to see how it is formed
+ *  
  */
 
 var Map = function(options){
@@ -96,27 +104,6 @@ var Map = function(options){
 
   var g = svg.append('g')
       .call(zoom);
-/*
-  svg.append('line')
-      .attr('x1', 20)
-      .attr('y1', 20)
-      .attr('x2', 40)
-      .attr('y2', 40)
-      .style('stroke', 'black')
-      .style('stroke-width', '2');
-
-  svg.append('circle')
-      .attr('cx', 20)
-      .attr('cy', 20)
-      .attr('r', 15)
-      .style('fill', 'white')
-      .style('stroke', 'black');
-
-  var zoomLabel = svg.append('text')
-      .attr('x', 20)
-      .attr('y', 20)
-      .style('text-anchor', 'middle')
-      .attr('dy', '.3em');*/
   
   var zoomWrapper = d3.select(this.el).insert('div', ':first-child');
 
@@ -155,11 +142,27 @@ var Map = function(options){
   
   var sliderHandle = slideDiv.select('.d3-slider-handle');
     
+ /* render given map-data (geoJSON or topoJSON, file or data) into map
+  * the smallest units are always referred to as subunits!
+  * the background units are always referred to as toplayer!
+  * 
+  * @param options.topology ready map-data, excludes options.source
+  * @param options.source path to file with map-data, excludes options.topology
+  * @param options.boundaries boundaries (needed for bounding box) can not be computed with geoJSON-data, pass boundaries instead, if you want a zoom to the bbox (ignored when topoJSON-data is passed) 
+  * @param options.subunits the subunits, their names and their ids
+  * @param options.aggregates the areas that will be aggregated from subunits (e.g. landkreise are composed of gemeinden)
+  * @param options.isTopoJSON indicator for the data-type, if the data is topoJSON set it to true else false (or don't set at all)
+  * @param options.callback callback is called after map is rendered (loading from file is asynchronous!)
+  * @param options.background options for a background map, see comments above function this.renderMap() to see how it is formed
+  *  
+  */
   this.renderMap = function(options){
-    if(!options.units) options.units = [];
+    if(!options.subunits) options.subunits = [];
+    // process data
     if(options.topology){
       loadMap(options.topology, options);
     }
+    // load file and process data then
     else if(options.source){
       d3.json(options.source, function(error, map){
         if(error)
@@ -175,6 +178,9 @@ var Map = function(options){
       this.renderMap(options.background);
   }
   
+  
+  // does the job for this.renderMap(); seperated, for optional asynchronous file-loading by d3
+  // map is for options see this.renderMap()
   function loadMap(map, options){
     // only draw required shapes       
     if(options.isTopoJSON && !map.objects.subunits)
@@ -184,7 +190,7 @@ var Map = function(options){
 
     if(geometries)
       subunits.geometries = geometries.filter(function(el){
-        return options.units.indexOf(el.id) >= 0;
+        return options.subunits.indexOf(el.id) >= 0;
       });
 
     // join shapes
@@ -300,7 +306,7 @@ var Map = function(options){
                 return 'subunit key' + d.id;
               })
               .attr('key', function(d){
-                return d.id
+                return d.id;
               })
               .attr('d', path)
               .attr('cursor', 'pointer')
@@ -350,8 +356,8 @@ var Map = function(options){
       svg.selectAll('.background').attr('cursor', 'move');
     }
     
-    if(options.success)
-      options.success();
+    if(options.callback)
+      options.callback();
 
     if(this.selectedIds)
       this.select(selectedIds);
@@ -359,7 +365,7 @@ var Map = function(options){
 
   this.getTransform = function(){
     return g.attr("transform");
-  }
+  };
 
   this.removeMaps = function(){
     g.selectAll('.submap').remove();
@@ -373,7 +379,7 @@ var Map = function(options){
     d3.selectAll('.subunit').classed('selected', false);
     ids.forEach(function(id){
       d3.selectAll('.key' + id).classed('selected', true);
-    })
+    });
   };
 
 };

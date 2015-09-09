@@ -24,6 +24,10 @@
     height: 30px;
 }
 
+.side-controls button.active{
+    box-shadow: 0px 0px 2px 2px gold;    
+    border: 0px;
+}
 #play.stopped{    
     background-image: url("../img/play.png");
 }
@@ -40,12 +44,8 @@
 }
 
 .watch.active{    
+    box-shadow: 0px 0px 2px 2px #00FF00 !important;
     background-image: url("../img/eye_opened.png");
-}
-
-.side-controls button.active{
-    box-shadow: 0px 0px 2px 2px gold;    
-    border: 0px;
 }
 
 #fix-scale{

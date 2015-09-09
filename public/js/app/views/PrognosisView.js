@@ -338,14 +338,12 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           this.map = new Map({
             el: vis,
             width: width,
-            height: height
-          });
-          
-          // render background image 
-          this.map.renderMap({
-            source: './shapes/bundeslaender.json', // GERMANY
-            isTopoJSON: true,
-            success: success
+            height: height,
+            background: {
+              source: './shapes/bundeslaender.json',
+              isTopoJSON: true,
+              success: success
+            }
           });
         },
         

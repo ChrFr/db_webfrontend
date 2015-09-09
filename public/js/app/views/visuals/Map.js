@@ -7,6 +7,11 @@ var Map = function(options){
   this.el = options.el || document;
   this.width = options.width;
   this.height = options.height;
+  this.background = options.background || {};
+  
+  // remember if zoomed in on submap once
+  // continued zooms mess up mouse-zoom
+  var initialZoom = false;
   
   //server-side d3 needs to be loaded seperately
   if(!d3)
@@ -33,12 +38,9 @@ var Map = function(options){
 
   var path = d3.geo.path()
       .projection(projection);
-
-
-/* another zoom style
  
   var minZoom = innerheight,
-      maxZoom = 400 * minZoom;
+      maxZoom = 100 * minZoom;
   
   var zoom = d3.behavior.zoom()
       .translate(projection.translate())
@@ -46,30 +48,18 @@ var Map = function(options){
       .scaleExtent([minZoom, maxZoom])
       .on('zoom', zoomed);   
    
-  //var timerId;
+  var timerId;
   //ZOOM EVENT
   function zoomed(){
+      if(!initialZoom)
+        return;
       var scale = d3.event.scale;
       projection.translate(d3.event.translate).scale(scale);
       g.selectAll('path').attr('d', path);
-      zoomLabel.text(Math.round(100 * scale / maxZoom) + '%');
-      //ZOOM SLIDER DEACTIVATED (DOESN'T CENTER)
       //if you zoom in and out too fast, d3 can't set the values properly and throws error
       //timer prevents this
-      //clearTimeout(timerId);
-      //timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
-  }*/
-  
-  
-  var zoom = d3.behavior.zoom()
-      .translate([0, 0])
-      .scale(1)
-      .scaleExtent([1, 8])
-      .on("zoom", zoomed);
-
-  function zoomed() {
-    g.style("stroke-width", 1.5 / d3.event.scale + "px");
-    g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+      clearTimeout(timerId);
+      timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
   }
 
   var mouseover = function(d, i){
@@ -106,7 +96,7 @@ var Map = function(options){
 
   var g = svg.append('g')
       .call(zoom);
-
+/*
   svg.append('line')
       .attr('x1', 20)
       .attr('y1', 20)
@@ -126,32 +116,63 @@ var Map = function(options){
       .attr('x', 20)
       .attr('y', 20)
       .style('text-anchor', 'middle')
-      .attr('dy', '.3em');
-
-  /* ZOOM DOESN'T CENTER!
-   var slideDiv = d3.select(this.el).append('div')
-   .attr('id', 'zoom-slider')
-   .style('position', 'absolute')
-   .style('width', innerwidth + 'px');
-   
-   var slideZoom = function(event, value){
-   zoom.scale(maxZoom * value / 100).event(g);
-   };
-   
-   var zoomSlider = d3slider().axis(d3.svg.axis())
-   .min(100 * minZoom/maxZoom).max(100)
-   .on('slide', slideZoom);
-   
-   slideDiv.call(zoomSlider);
-   */
+      .attr('dy', '.3em');*/
   
-  g.append('rect')
-      .attr('class', 'background')
-      .attr('width', innerwidth)
-      .attr('height', innerheight)
-      .attr('cursor', 'move');
 
-  var loadMap = function(map, options){
+  d3.select(this.el).append('span')
+      .attr('class', 'glyphicon glyphicon-zoom-in')
+      .attr('aria-hidden', 'true')
+      .style('float', 'left')
+      .style('margin-left', 10 + 'px')
+      .style('margin-bottom', 5 + 'px')
+      .attr('width', 20);
+  
+  // ZOOM DOESN'T CENTER!
+  var slideDiv = d3.select(this.el).append('div')
+      .attr('id', 'zoom-slider')
+      .style('float', 'left')
+      .style('width', innerwidth - 45 + 'px')
+      .style('margin-left', 5 + 'px')
+      .style('margin-right', 10 + 'px')
+      .attr('class', 'disabled');
+
+  
+  var slideZoom = function(event, value){
+   zoom.scale(maxZoom * value / 100).event(g);
+  };
+
+  var zoomSlider = d3slider().axis(d3.svg.axis())
+    .min(100 * minZoom/maxZoom).max(100)
+    .axis(d3.svg.axis().ticks(0))
+    .on('slide', slideZoom)
+    .value(Math.round(100 * zoom.scale() / maxZoom));
+
+  slideDiv.call(zoomSlider);
+  
+  var sliderHandle = slideDiv.select('.d3-slider-handle')
+      .style('display', 'none');
+    
+  this.renderMap = function(options){
+    if(!options.units) options.units = [];
+    if(options.topology){
+      loadMap(options.topology, options);
+    }
+    else if(options.source){
+      d3.json(options.source, function(error, map){
+        if(error)
+          return console.error(error);
+        loadMap(map, options);
+      });
+    }
+  };
+  
+  if (options.background){     
+      // you shouldn't zoom on background map, because it can messup the later zoom
+      options.background.disableZoom = true;
+      this.renderMap(options.background);
+  }
+  
+  function loadMap(map, options){
     // only draw required shapes       
     if(options.isTopoJSON && !map.objects.subunits)
       map.objects.subunits = {};
@@ -185,10 +206,10 @@ var Map = function(options){
     if(options.isTopoJSON){
       // TOP-LAYER (background map)
       g.append('g')
-          .selectAll('.toplayer')
+          .selectAll('.background')
           .data(topojson.feature(map, map.objects.toplayer).features)
           .enter().append('path')
-          .attr('class', 'toplayer id')
+          .attr('class', 'background id')
           .attr('d', path)
           .attr('cursor', 'move');
 
@@ -285,7 +306,10 @@ var Map = function(options){
                   options.onClick(d.id, d.properties.name, d.properties.rsArr);
               });
 
-      if(options.boundaries){
+      if(options.boundaries){        
+        // center map for zoom slider (zooms to center)
+        projection.center(d3.geo.centroid(options.boundaries));
+        g.selectAll('path').attr('d', path);
         
         var bounds = path.bounds(options.boundaries),
             bdx = bounds[1][0] - bounds[0][0],
@@ -293,50 +317,42 @@ var Map = function(options){
             bx = (bounds[0][0] + bounds[1][0]) / 2,
             by = (bounds[0][1] + bounds[1][1]) / 2,
             scale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-            translate = [innerwidth / 2 - scale * bx, innerheight / 2 - scale * by];        
-        console.log(translate)
-        console.log(scale)
+            translate = [innerwidth / 2 - scale * bx, innerheight / 2 - scale * by];    
 
-    g.transition()
-      .duration(1500)
-      .call(zoom.translate(translate).scale(scale).event);
         // Zoom to outer boundaries of submap
         // WARNING: messes up the mouse-zoom!
-        //if(options.zoomTo)
-         //g.transition()
-          //    .duration(1500)
-          //    .style("stroke-width", 1.5 / bscale + "px")
-          //    .attr("transform", "translate(" + translate + ")scale(" + bscale + ")");  
-        
+        if(!initialZoom){
+          g.transition()
+              .duration(1500)
+              .style("stroke-width", 1.5 / scale + "px")
+              .attr("transform", "translate(" + translate + ")scale(" + scale + ")");   
+          
+          initialZoom = true;
+        }
       }
     }
 
+    if(options.disableZoom){
+      slideDiv.classed('disabled', true);
+      sliderHandle.style('display', 'none');
+      svg.selectAll('.background').attr('cursor','not-allowed');
+    }
+    else{
+      slideDiv.classed('disabled', false);
+      sliderHandle.style('display', 'block');
+      svg.selectAll('.background').attr('cursor', 'move');
+    }
+    
     if(options.success)
       options.success();
 
-    //zoomLabel.text(Math.round(400 * zoom.scale() / maxZoom) + '%');
     if(this.selectedIds)
       this.select(selectedIds);
   };
 
-
   this.getTransform = function(){
     return g.attr("transform");
   }
-
-  this.renderMap = function(options){
-    if(!options.units) options.units = [];
-    if(options.topology){
-      loadMap(options.topology, options);
-    }
-    else if(options.source){
-      d3.json(options.source, function(error, map){
-        if(error)
-          return console.error(error);
-        loadMap(map, options);
-      });
-    }
-  };
 
   this.removeMaps = function(){
     g.selectAll('.submap').remove();

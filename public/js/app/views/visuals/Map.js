@@ -118,24 +118,28 @@ var Map = function(options){
       .style('text-anchor', 'middle')
       .attr('dy', '.3em');*/
   
+  var zoomWrapper = d3.select(this.el).insert('div', ':first-child');
 
-  d3.select(this.el).append('span')
-      .attr('class', 'glyphicon glyphicon-zoom-in')
+  zoomWrapper.append('span')
+      .attr('class', 'glyphicon glyphicon-zoom-out')
       .attr('aria-hidden', 'true')
       .style('float', 'left')
       .style('margin-left', 10 + 'px')
-      .style('margin-bottom', 5 + 'px')
       .attr('width', 20);
   
-  // ZOOM DOESN'T CENTER!
-  var slideDiv = d3.select(this.el).append('div')
+  var slideDiv = zoomWrapper.append('div')
       .attr('id', 'zoom-slider')
       .style('float', 'left')
-      .style('width', innerwidth - 45 + 'px')
+      .style('width', innerwidth - 65 + 'px')
       .style('margin-left', 5 + 'px')
-      .style('margin-right', 10 + 'px')
-      .attr('class', 'disabled');
-
+      .style('margin-right', 5 + 'px')
+      .style('margin-top', 5 + 'px');
+  
+  zoomWrapper.append('span')
+      .attr('class', 'glyphicon glyphicon-zoom-in')
+      .attr('aria-hidden', 'true')
+      .style('float', 'left')
+      .attr('width', 20);
   
   var slideZoom = function(event, value){
    zoom.scale(maxZoom * value / 100).event(g);
@@ -149,8 +153,7 @@ var Map = function(options){
 
   slideDiv.call(zoomSlider);
   
-  var sliderHandle = slideDiv.select('.d3-slider-handle')
-      .style('display', 'none');
+  var sliderHandle = slideDiv.select('.d3-slider-handle');
     
   this.renderMap = function(options){
     if(!options.units) options.units = [];
@@ -175,7 +178,7 @@ var Map = function(options){
   function loadMap(map, options){
     // only draw required shapes       
     if(options.isTopoJSON && !map.objects.subunits)
-      map.objects.subunits = {};
+      map.objects.subunits = {};    
     var subunits = {type: 'GeometryCollection'},
     geometries = !options.isTopoJSON ? map.features : map.objects.subunits.geometries;
 
@@ -200,11 +203,12 @@ var Map = function(options){
         el.properties.name = mapped ? mapped.name : null;
         el.properties.rsArr = mapped ? mapped.rsArr : null;
       });
-    }
-    ;
+    };
 
+    /* render TopoJSON */
     if(options.isTopoJSON){
-      // TOP-LAYER (background map)
+      
+      // background map
       g.append('g')
           .selectAll('.background')
           .data(topojson.feature(map, map.objects.toplayer).features)
@@ -285,6 +289,7 @@ var Map = function(options){
 
     }
 
+    /* render GeoJSON */
     else{
       g.append('g')
           .attr('class', 'submap')
@@ -306,39 +311,41 @@ var Map = function(options){
                   options.onClick(d.id, d.properties.name, d.properties.rsArr);
               });
 
-      if(options.boundaries){        
-        // center map for zoom slider (zooms to center)
-        projection.center(d3.geo.centroid(options.boundaries));
-        g.selectAll('path').attr('d', path);
-        
-        var bounds = path.bounds(options.boundaries),
-            bdx = bounds[1][0] - bounds[0][0],
-            bdy = bounds[1][1] - bounds[0][1],
-            bx = (bounds[0][0] + bounds[1][0]) / 2,
-            by = (bounds[0][1] + bounds[1][1]) / 2,
-            scale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-            translate = [innerwidth / 2 - scale * bx, innerheight / 2 - scale * by];    
+      // Zoom to outer boundaries of submap
+      // WARNING: messes up the mouse-zoom! -> do it only once
+      if(options.boundaries && !initialZoom){         
 
-        // Zoom to outer boundaries of submap
-        // WARNING: messes up the mouse-zoom!
-        if(!initialZoom){
+          // center map for zoom slider (zooms to center)
+          projection.center(d3.geo.centroid(options.boundaries));
+          g.selectAll('path').attr('d', path);
+
+          var bounds = path.bounds(options.boundaries),
+              bdx = bounds[1][0] - bounds[0][0],
+              bdy = bounds[1][1] - bounds[0][1],
+              bx = (bounds[0][0] + bounds[1][0]) / 2,
+              by = (bounds[0][1] + bounds[1][1]) / 2,
+              scale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
+              translate = [innerwidth / 2 - scale * bx, innerheight / 2 - scale * by];   
+          
           g.transition()
               .duration(1500)
               .style("stroke-width", 1.5 / scale + "px")
               .attr("transform", "translate(" + translate + ")scale(" + scale + ")");   
           
           initialZoom = true;
-        }
+        
       }
     }
 
+    // disable the zoom-controls
     if(options.disableZoom){
-      slideDiv.classed('disabled', true);
+      zoomWrapper.classed('disabled', true);
       sliderHandle.style('display', 'none');
       svg.selectAll('.background').attr('cursor','not-allowed');
     }
+    // enable the zoom-controls
     else{
-      slideDiv.classed('disabled', false);
+      zoomWrapper.classed('disabled', false);
       sliderHandle.style('display', 'block');
       svg.selectAll('.background').attr('cursor', 'move');
     }

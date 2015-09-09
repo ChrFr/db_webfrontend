@@ -8,7 +8,10 @@
 
 #play-controls{
     position: absolute;
-    bottom: -55px;
+    bottom: -50px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 #play, #fix-scale{

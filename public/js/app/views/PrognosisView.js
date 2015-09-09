@@ -73,6 +73,22 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
               _this.prepareSelections(prognosis);
             }
             else{
+              /*
+                //listen to resize event of the window and rerender, if resized
+                $(window).resize(function(e) {  
+                    if (e.target === this)
+                        delay(function(){
+                            if (_this.resourcesView){
+                                _this.resourcesView.unbind();
+                                _this.resourcesView.remove();
+                            };                            
+                            if (_this.editorView){
+                                _this.editorView.unbind();
+                                _this.editorView.remove();
+                            };
+                            _this.render();
+                        }, 500);
+                });*/
               // hide all elements interacting with prognoses, when no prognosis is loaded
               _this.el.querySelector('#description-div').style.display = 'none';
               _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
@@ -331,7 +347,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           while(vis.firstChild)
             vis.removeChild(vis.firstChild);
           
-          var width = parseInt(vis.offsetWidth) - 10, // rendering exceeds given limits -> 10px less
+          var width = parseInt(vis.offsetWidth) - 20, // rendering exceeds given limits -> 10px less
               height = width;
           
           // create map

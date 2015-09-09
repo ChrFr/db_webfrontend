@@ -86,14 +86,14 @@ var AgeTree = function (options) {
             .attr('class', 'title')
             .attr('x', margin.left / 2)
             .attr('y', 10 - (margin.top / 2))
-            .style('dominant-baseline', 'ideographic')
             .text(this.title + ' ' + this.data.jahr);
     
     svg.append('text')
             .attr('class', 'subtitle')
             .attr('x', margin.left / 2)
             .attr('y', 10 - (margin.top / 2))
-            .style('dominant-baseline', 'hanging')
+            .attr('font-size', '1em')
+            .attr('dy', '1em')
             .text(this.subtitle);
 
     // SCALES

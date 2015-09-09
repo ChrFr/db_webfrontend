@@ -2,6 +2,8 @@
     Author: Christoph Franke
     Publisher: GGR
 */
+
+/* base style for all resolutions */
 .navbar{
     z-index: 200;
 }
@@ -84,15 +86,26 @@
 #prognosis-menu a, #prognosis-menu .navbar-header{
     color: white;
     box-sizing: border-box;
-}
-
-#prognosis-menu .active a, #prognosis-menu a:hover{
     background-color: #454545;
-    box-sizing: border-box;
-    //background: linear-gradient( to top, gold 10%, #454545 25%);
-    border-bottom: solid 5px gold;
 }
 
+.navbar-header label, .navbar-header .form-control{
+    float:left; 
+    margin-right: 5px;
+}
+
+/* no idea, why bootstrap is always putting a gap between the collapsed menu and the navbar,
+   looks quite ugly, so this line removes it*/
+.navbar-collapse > ul{
+    margin-top: 0;
+}
+    
+#prognosis-menu .active a{
+    color: #454545;
+    background-color: gold;
+}
+
+/* diverting style for resolutions bigger than 768px (bottom up) -> navbar not collapsed anymore*/
 @media (min-width: 768px) {
     
     #main-menu ul{
@@ -132,5 +145,18 @@
     .submenu.active{        
         top: 50px;
         display: block;       
+    }
+    
+    #prognosis-menu .active a{
+        color: #454545;
+        background-color: gold;
+    }
+    
+    #prognosis-menu .active a, #prognosis-menu a:hover{
+        color: white;
+        background-color: #454545;
+        box-sizing: border-box;
+        //background: linear-gradient( to top, gold 10%, #454545 25%);
+        border-bottom: solid 5px gold;
     }
 }

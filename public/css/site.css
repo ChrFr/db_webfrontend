@@ -24,6 +24,20 @@ body {
     text-align: center;
 }
 
+#visualizations, #vis-reference, #tables, #map-wrapper{
+    /* bootstrap padding messes up relative width of children, use margin instead */
+    padding-left: 0;
+    padding-right: 0;
+    /* keep distance to neighbouring divs (bottom space needed on small devices) */
+    margin-right: 10px;    
+    margin-bottom: 15px;
+}
+
+#visualizations{
+    /* vis. need more space because of the 50px high play-controls at the bottom*/    
+    margin-bottom: 65px;
+}
+
 .loader{    
     width: 40px;
     height: 40px;
@@ -47,10 +61,6 @@ body {
 
 table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
     background: lightgrey;
-}
-
-.tab-pane > div{
-    margin-bottom: 5px;
 }
 
 .shadow-box, #summary{

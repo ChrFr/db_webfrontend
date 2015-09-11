@@ -6,18 +6,23 @@
 html, body {
 }
 
-/*
-a {
-    color: #E6C200;
+/* workaround for problem with inactive bootstrap tabs (you can't get the right properties of containers with diplay: none) 
+warning: it overrides the overflow-y! */
+.tab-content-wa>.tab-pane{
+    display: block; /* override display: none of bootrstrap */
 }
-
-a:hover, a:focus{
-    color: darkgoldenrod;
+.tab-content-wa>.tab-pane, 
+.tab-content-wa>.tab-pane>div{  /* in our case the child of tab-pane is used for the views, needs to be hidden as well */
+    height: 0;        /* those two lines hide the div*/
+    overflow-y: hidden;
 }
-*/
+.tab-content-wa>.active, 
+.tab-content-wa>.active>div{
+    height: auto; /* this shows the div again */
+}
 
 body {
-   background-image: url('../img/back2.png');
+    background-image: url('../img/back2.png');
 }
 
 .centered{

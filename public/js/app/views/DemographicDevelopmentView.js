@@ -9,8 +9,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
     * 
     * @desc view on demographic development 
     * 
-    * @param visTabWidth  initial size of the visualizations; is taken, 
-    * if width of wrapping div can't be determined (if in inactive tab)
+    * @param width  initial size of the visualizations; is taken, 
+    *               if width of wrapping div can't be determined (if in inactive tab)
     * 
     * @return the DemographicDevelopmentView class
     * @see    region-selectors, map, data-visualisations, data-tables
@@ -29,7 +29,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           // serves as cache
           this.collection = new DDCollection({progId: progId});
           this.collection.fetch({success: this.render});
-          this.visTabWidth = options.visTabWidth;
+          this.width = options.width;
         }
       },
       
@@ -60,7 +60,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       // render view
       render: function () {
         this.template = _.template(template, {});
-        this.el.innerHTML = this.template;        
+        this.el.innerHTML = this.template;     
         
         this.validateAgeGroups();
         app.bind('activeRegion', this.renderRegion);
@@ -93,13 +93,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               bottomControls[i].style.display = 'block';   
             
             // you get 0 as widths of elements in inactive tabs
-            var width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
-            this.visTabWidth = width? width: this.visTabWidth; // if you can't determine current width get last known
+            _this.width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
+            
+            //_this.width = width? width: _this.width // if you can't determine current width get last known
             
             var data = model.get('data')[0],
                 maxYear = model.get('maxYear'),
                 minYear = model.get('minYear'),
                 data = model.get('data');
+                
             _this.currentModel = model;
             //draw first year if not assigned yet
             if (!_this.currentYear) {
@@ -121,7 +123,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               }
             }
             // UPDATE SLIDERS    
-            var width = _this.visTabWidth - 150; // - padding etc.
+            var width = _this.width - 150; // - padding etc.
             var sliderDiv = _this.el.querySelector('#year-slider');
             while (sliderDiv.firstChild)
               sliderDiv.removeChild(sliderDiv.firstChild);
@@ -212,7 +214,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = this.visTabWidth - 80;
+        var width = this.width - 80;
         //width / height ratio is 1 : 1.2
         var height = width * 0.8;
         this.ageTree = new AgeTree({
@@ -249,7 +251,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = this.visTabWidth - 40;
+        var width = this.width - 40;
         var height = width * 0.5;
         this.absoluteChart = new LineChart({
           el: vis,
@@ -316,7 +318,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = this.visTabWidth - 70;
+        var width = this.width - 70;
         var height = width * 0.8;
         this.barChart = new GroupedBarChart({
           el: vis,
@@ -435,7 +437,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         while (vis.firstChild)
           vis.removeChild(vis.firstChild);
 
-        var width = this.visTabWidth - 70;
+        var width = this.width - 70;
         var height = width * 0.8;
 
         var groupNames = [];

@@ -36,10 +36,10 @@
   </div>
   
   <div class="col-lg-9 col-sm-7"> 
-    <div class='tab-content'>    
+    <!-- workaround for issues with bootstrap-class tab-content (see site.css)-->
+    <div class='tab-content-wa'>    
       <div class='tab-pane active' id='overview-tab'>  
-        <!-- ATTENTION: this should have same size as visualization column in demodevelop.html (taken as reference for unknown widths in inactive tabs) -->
-        <div class="col-lg-7 col-md-12" id='vis-reference'> 
+        <div class="col-lg-7 col-md-12"> 
           <div class="text-body shadow-box" id='description-div' style='display: none'>
             <h2 id="title" ></h2>
             <p id="description">

@@ -2,20 +2,54 @@
  * Author: Christoph Franke
  * Publisher: GGR
  *
- * an interactive map of regions, call this.renderMap(options) to render maps on top of the background map
+ * an interactive zoomable, clickable map of regions, 
+ * call renderMap(options) to render maps on top of the background map,
+ * removeMap() removes all maps but the background
  * 
  * @param options.el parent html-element the map will be placed in
  * @param options.width the width of the viewport
  * @param options.height the height of the viewport
- * @param options.background options for a background map, see comments above function this.renderMap() to see how it is formed
+ * @param options.background options for a background map, see comments above function renderMap() to see how it is formed
  *  
  */
 
-var Map = function(options){
+var Map = function(options){  
+  
   this.el = options.el || document;
   this.width = options.width;
   this.height = options.height;
   this.background = options.background || {};
+  
+ /** 
+  * render given map-data (geoJSON or topoJSON, file or data) into map
+  * the smallest units are always referred to as subunits!
+  * the background units are always referred to as toplayer!
+  * 
+  * @param options.topology ready map-data, excludes options.source
+  * @param options.source path to file with map-data, excludes options.topology
+  * @param options.boundaries boundaries (needed for bounding box) can not be computed with geoJSON-data, pass boundaries instead, if you want a zoom to the bbox (ignored when topoJSON-data is passed) 
+  * @param options.subunits the subunits, their names and their ids
+  * @param options.aggregates the areas that will be aggregated from subunits (e.g. landkreise are composed of gemeinden)
+  * @param options.isTopoJSON indicator for the data-type, if the data is topoJSON set it to true else false (or don't set at all)
+  * @param options.callback callback is called after map is rendered (loading from file is asynchronous!)
+  *  
+  */
+  this.renderMap = function(options){
+    if(!options.subunits) options.subunits = [];
+    // process data
+    if(options.topology){
+      loadMap(options.topology, options);
+    }
+    // load file and process data then
+    else if(options.source){
+      d3.json(options.source, function(error, map){
+        if(error)
+          return console.error(error);
+        loadMap(map, options);
+      });
+    }
+  };
+  
   
   // remember if zoomed in on submap once
   // continued zooms mess up mouse-zoom
@@ -142,36 +176,6 @@ var Map = function(options){
   
   var sliderHandle = slideDiv.select('.d3-slider-handle');
     
- /* render given map-data (geoJSON or topoJSON, file or data) into map
-  * the smallest units are always referred to as subunits!
-  * the background units are always referred to as toplayer!
-  * 
-  * @param options.topology ready map-data, excludes options.source
-  * @param options.source path to file with map-data, excludes options.topology
-  * @param options.boundaries boundaries (needed for bounding box) can not be computed with geoJSON-data, pass boundaries instead, if you want a zoom to the bbox (ignored when topoJSON-data is passed) 
-  * @param options.subunits the subunits, their names and their ids
-  * @param options.aggregates the areas that will be aggregated from subunits (e.g. landkreise are composed of gemeinden)
-  * @param options.isTopoJSON indicator for the data-type, if the data is topoJSON set it to true else false (or don't set at all)
-  * @param options.callback callback is called after map is rendered (loading from file is asynchronous!)
-  * @param options.background options for a background map, see comments above function this.renderMap() to see how it is formed
-  *  
-  */
-  this.renderMap = function(options){
-    if(!options.subunits) options.subunits = [];
-    // process data
-    if(options.topology){
-      loadMap(options.topology, options);
-    }
-    // load file and process data then
-    else if(options.source){
-      d3.json(options.source, function(error, map){
-        if(error)
-          return console.error(error);
-        loadMap(map, options);
-      });
-    }
-  };
-  
   if (options.background){     
       // you shouldn't zoom on background map, because it can messup the later zoom
       options.background.disableZoom = true;

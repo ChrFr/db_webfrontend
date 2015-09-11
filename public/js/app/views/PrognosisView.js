@@ -7,8 +7,8 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
       /** 
        * @author Christoph Franke
        * 
-       * @desc view on a specific prognosis, leads to household and demographic prognoses
-       * @see map of area of prognoses and description of prognoses
+       * @desc view on a specific prognosis, wraps a map, the household and demographic prognoses and guides the user to the specific prognoses
+       * @see map of area of prognoses, description of prognoses, household and demographic prognoses
        */
       var PrognosisView = Backbone.View.extend({
         // The DOM Element associated with this view
@@ -32,7 +32,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
         },
         
         events: {
-          // age group controls
+          // navigate to the specific prognoses
           'click #sub-map-nav>a': 'tabChange',
         },
         
@@ -52,11 +52,15 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             document.querySelector('#li-hh').className = 'active';
         },
         
+        // render the view
         render: function(){
           var _this = this;
           this.template = _.template(template, {});
           this.el.innerHTML = this.template;
 
+          // overview should be opened, when new prognosis is selected
+          document.querySelector('#li-overview>a').click();
+          
           var prog = app.get('activePrognosis');
           if(prog){
             this.el.querySelector('#description-div').style.display = 'block';
@@ -65,9 +69,6 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
 
           //id of active prognosis changed in navbar -> render it
           app.bind('activePrognosis', function(prognosis){
-            // open overview tab by simulating click on nav
-            document.querySelector('#li-overview>a').click();
-
             var success = _this.renderOverview(app.get('activePrognosis'));
             if(success){
               _this.prepareSelections(prognosis);
@@ -147,11 +148,8 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             this.ddView.close();
           if(this.hhView)
             this.hhView.close();
-
-          // create new views (in newly created divs, because 'close' will remove them)
           this.ddView = new DemographicDevelopmentView({
-            el: this.el.querySelector('#dd-tab').appendChild(document.createElement('div')),
-            visTabWidth: parseInt(this.el.querySelector('#vis-reference').offsetWidth)
+            el: this.el.querySelector('#dd-tab').appendChild(document.createElement('div'))
           });
           this.hhView = new HouseholdsDevelopmentView({
             el: this.el.querySelector('#hh-tab').appendChild(document.createElement('div'))

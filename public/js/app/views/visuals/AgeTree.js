@@ -29,7 +29,7 @@ var AgeTree = function (options) {
 
     var margin = {
       top: 30,
-      right: 20,
+      right: 30,
       bottom: 30,
       left: 20,
       middle: 10
@@ -37,10 +37,13 @@ var AgeTree = function (options) {
 
     this.regionWidth = this.width / 2 - margin.middle;
     var pointA = this.regionWidth,
-        pointB = this.width - this.regionWidth;
+        pointB = this.width - this.regionWidth;    
 
-    var svgWidth = margin.left + this.width + margin.right,
-        svgHeight = margin.top + this.height + margin.bottom;
+    var svgWidth = this.width,
+        svgHeight = this.height;
+    
+    this.width -= (margin.left + margin.right);
+    this.height -= (margin.top + margin.bottom);
 
     var top = d3.select(this.el).append('svg')
             .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -253,7 +256,7 @@ var AgeTree = function (options) {
 
     svg.append('g')
             .attr('class', 'axis y left')
-            .attr('transform', translation(this.width / 2, 0))
+            .attr('transform', translation(this.width / 2  + margin.left + 2, 0))
             .call(yAxis)
             .selectAll('text')
             .style('text-anchor', 'middle');
@@ -271,7 +274,7 @@ var AgeTree = function (options) {
     // LEGEND
 
     svg.append('text')
-            .attr('x', (this.width / 2))
+            .attr('x', (this.width / 2) + margin.left + 2)
             .attr('y', this.height + 20)
             .attr('font-weight', 'bold')
             .attr('text-anchor', 'middle')

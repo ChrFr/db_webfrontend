@@ -84,116 +84,116 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         Loader(this.el.querySelector('#agetree'));
         
         model.fetch({success: function () {
-            //_this.el.querySelector('#visualizations').style.display = 'block';
-            _this.el.querySelector('#tables').style.display = 'block';
-            var sideControls = _this.el.getElementsByClassName('side-controls');
-            for (var i = 0; i < sideControls.length; i++) 
-              sideControls[i].style.display = 'block';   
-            var bottomControls =  _this.el.getElementsByClassName('bottom-controls');
-            for (var i = 0; i < bottomControls.length; i++) 
-              bottomControls[i].style.display = 'block';   
-            
-            // you get 0 as widths of elements in inactive tabs
-            _this.width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
-            
-            //_this.width = width? width: _this.width // if you can't determine current width get last known
-            
-            var maxYear = model.get('maxYear'),
-                minYear = model.get('minYear'),
-                data = model.get('data');
-                
-            _this.currentModel = model;
-            //draw first year if not assigned yet
-            if (!_this.currentYear) {
-              _this.yearData = data[0];
-              _this.currentYear = minYear;
-            }
-            //keep year of previous region, if new region has data for it
-            else {
-              var found = false;
-              _.each(model.get('data'), (function (yd) {
-                if (yd.jahr == _this.currentYear) {
-                  found = true;
-                  _this.yearData = yd;
-                }
-              }));
-              if (!found) {
-                _this.currentYear = minYear;
-                _this.yearData = data[0];
+          //_this.el.querySelector('#visualizations').style.display = 'block';
+          _this.el.querySelector('#tables').style.display = 'block';
+          var sideControls = _this.el.getElementsByClassName('side-controls');
+          for (var i = 0; i < sideControls.length; i++) 
+            sideControls[i].style.display = 'block';   
+          var bottomControls =  _this.el.getElementsByClassName('bottom-controls');
+          for (var i = 0; i < bottomControls.length; i++) 
+            bottomControls[i].style.display = 'block';   
+
+          // you get 0 as widths of elements in inactive tabs
+          _this.width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
+
+          //_this.width = width? width: _this.width // if you can't determine current width get last known
+
+          var maxYear = model.get('maxYear'),
+              minYear = model.get('minYear'),
+              data = model.get('data');
+
+          _this.currentModel = model;
+          //draw first year if not assigned yet
+          if (!_this.currentYear) {
+            _this.yearData = data[0];
+            _this.currentYear = minYear;
+          }
+          //keep year of previous region, if new region has data for it
+          else {
+            var found = false;
+            _.each(model.get('data'), (function (yd) {
+              if (yd.jahr == _this.currentYear) {
+                found = true;
+                _this.yearData = yd;
               }
+            }));
+            if (!found) {
+              _this.currentYear = minYear;
+              _this.yearData = data[0];
             }
-            // UPDATE SLIDERS    
-            var width = _this.width - 150; // - padding etc.
-            var sliderDiv = _this.el.querySelector('#year-slider');
-            clearElement(sliderDiv);
-            //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
-            sliderDiv.style.width = width + 'px';
-            var yearStep = Math.floor((maxYear - minYear) / 4);
+          }
+          // UPDATE SLIDERS    
+          var width = _this.width - 150; // - padding etc.
+          var sliderDiv = _this.el.querySelector('#year-slider');
+          clearElement(sliderDiv);
+          //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
+          sliderDiv.style.width = width + 'px';
+          var yearStep = Math.floor((maxYear - minYear) / 4);
 
-            _this.yearSlider = d3slider()
-                .axis(
-                  d3.svg.axis().orient('down')
-                    //4 ticks
-                    .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
-                    .tickFormat(d3.format('d'))
-                    .ticks(maxYear - minYear)
-                    .tickSize(10)
-                )
-                .min(minYear)
-                .max(maxYear)
-                .step(1)
-                .value(_this.currentYear);
+          _this.yearSlider = d3slider()
+              .axis(
+                d3.svg.axis().orient('down')
+                  //4 ticks
+                  .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
+                  .tickFormat(d3.format('d'))
+                  .ticks(maxYear - minYear)
+                  .tickSize(10)
+              )
+              .min(minYear)
+              .max(maxYear)
+              .step(1)
+              .value(_this.currentYear);
 
-            d3.select('#year-slider').call(_this.yearSlider);
+          d3.select('#year-slider').call(_this.yearSlider);
 
-            _this.yearSlider.on('slide', function (evt, value) {
-              evt.stopPropagation();
-              _this.changeYear(value);
-            });
+          _this.yearSlider.on('slide', function (evt, value) {
+            evt.stopPropagation();
+            _this.changeYear(value);
+          });
 
-            sliderDiv = _this.el.querySelector('#scale-slider');
-            var locked = (_this.el.querySelector('#fix-scale').className === 'active');
-            clearElement(sliderDiv);
+          sliderDiv = _this.el.querySelector('#scale-slider');
+          var locked = (_this.el.querySelector('#fix-scale').className === 'active');
+          clearElement(sliderDiv);
 
-            //you can only scale below highest number, if you fixed scale before (for comparison)
-            var min = Math.ceil(model.get('maxNumber'));
-            var minScale = (!_this.xScale || min < _this.xScale) ? min : _this.xScale;
-            if (minScale < 1)
-              minScale = 1;
+          //you can only scale below highest number, if you fixed scale before (for comparison)
+          var min = Math.ceil(model.get('maxNumber'));
+          var minScale = (!_this.xScale || min < _this.xScale) ? min : _this.xScale;
+          if (minScale < 1)
+            minScale = 1;
 
-            if (!_this.xScale || !locked) {
-              _this.xScale = model.get('maxNumber');
-              _this.xScale *= 1.3;
-              _this.xScale = Math.ceil(_this.xScale);
-              _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-            }
+          if (!_this.xScale || !locked) {
+            _this.xScale = model.get('maxNumber');
+            _this.xScale *= 1.3;
+            _this.xScale = Math.ceil(_this.xScale);
+            _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
+          }
 
-            var maxScale = 10000;
+          var maxScale = 10000;
 
-            var xScale = d3.scale.log()
-                .domain([minScale, maxScale]);
+          var xScale = d3.scale.log()
+              .domain([minScale, maxScale]);
 
-            _this.el.querySelector('#min-scale').innerHTML = minScale;
-            _this.el.querySelector('#max-scale').innerHTML = maxScale;
+          _this.el.querySelector('#min-scale').innerHTML = minScale;
+          _this.el.querySelector('#max-scale').innerHTML = maxScale;
 
-            var scaleSlider = d3slider()
-                .scale(xScale)
-                .value(_this.xScale)
-                .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
-                .orientation('vertical');
+          var scaleSlider = d3slider()
+              .scale(xScale)
+              .value(_this.xScale)
+              .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
+              .orientation('vertical');
 
-            d3.select('#scale-slider').call(scaleSlider);
+          d3.select('#scale-slider').call(scaleSlider);
 
-            scaleSlider.on('slide', function (evt, value) {
-              evt.stopPropagation();
-              _this.xScale = Math.ceil(value);
-              _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-              _this.renderTree(_this.yearData);
-            });
-            
-            _this.calculateAgeGroups();            
-            _this.renderData();
-          }});
+          scaleSlider.on('slide', function (evt, value) {
+            evt.stopPropagation();
+            _this.xScale = Math.ceil(value);
+            _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
+            _this.renderTree(_this.yearData);
+          });
+
+          _this.calculateAgeGroups();            
+          _this.renderData();
+        }});
       },
       
       renderData: function(){
@@ -214,6 +214,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.renderAgeTable(this.yearData);
         this.renderRawData(data);
         
+        // TODO: change size of yearSlider
       },
       
       renderTree: function(data) {
@@ -221,7 +222,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         
         clearElement(vis);
 
-        var width = this.width - 80;
+        var width = this.width - 5;
         //width / height ratio is 1 : 1.2
         var height = width * 0.8;
         this.ageTree = new AgeTree({

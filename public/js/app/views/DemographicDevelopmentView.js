@@ -5,21 +5,24 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
   function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
             
     /** 
-    * @author Christoph Franke
-    * 
-    * @desc view on demographic development 
-    * 
-    * @param options.width  initial size of the visualizations; is taken, 
-    *                       if width of wrapping div can't be determined 
-    *                       (if in inactive tab)
-    * 
-    * @return the DemographicDevelopmentView class
-    * @see    region-selectors, map, data-visualisations, data-tables
-    */        
+     * @author Christoph Franke
+     * 
+     * @desc view on demographic development 
+     * 
+     * @param options.width  initial size of the visualizations; is taken, 
+     *                       if width of wrapping div can't be determined 
+     *                       (if in inactive tab)
+     * 
+     * @return the DemographicDevelopmentView class
+     * @see    region-selectors, map, data-visualisations, data-tables
+     */        
     var DemographicDevelopmentView = Backbone.View.extend({
       // The DOM Element associated with this view
       el: document,
-      // View constructor
+      
+      /*
+       * view-constructor
+       */
       initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
 
@@ -34,7 +37,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }       
       },
       
-      // dom events (managed by jquery)
+      
+      /*
+       * dom events (managed by jquery)
+       */
       events: {
         // age group controls
         'click #new-group': 'addAgeGroup',
@@ -58,7 +64,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         'click #fix-scale': 'fixScale'
       },
       
-      // render view
+      /*
+       * render view
+       */ 
       render: function () {
         this.template = _.template(template, {});
         this.el.innerHTML = this.template;     
@@ -68,7 +76,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         return this;
       },
       
-      // render the given region by fetching and visualizing it's demographic data
+      /*
+       * render the given region by fetching and visualizing it's demographic data
+       */
       renderRegion: function (region) {         
         
         var model = this.collection.getRegion(region);
@@ -196,6 +206,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }});
       },
       
+      /*
+       * call functions to render visualizations and tables with active data
+       */
       renderData: function(){
         // no active model -> nothing to render
         if(!this.currentModel)
@@ -217,6 +230,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // TODO: change size of yearSlider
       },
       
+      /* 
+       * render the agetree 
+       */     
       renderTree: function(data) {
         var vis = this.el.querySelector('#agetree');
         
@@ -239,6 +255,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTree.render();
       },
       
+      /*
+       * render 2 line charts with demo. development
+       */
       renderDevelopment: function (data) {
         var total = [],
             years = [];
@@ -304,6 +323,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.relativeChart.render();
       },
       
+      /*
+       * render bar chart with factors influencing the development
+       */
       renderBarChart: function (data) {
         var dataSets = [];
 
@@ -340,6 +362,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.barChart.render();
       },
       
+      /*
+       * render a table with mail and female ages for given year
+       */
       renderAgeTable: function (yearData) {
         var columns = [],
             title = '';
@@ -382,6 +407,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      /*
+       * render a table with the raw data received from the server
+       */
       renderRawData: function (data) {
         var columns = [];
         Object.keys(data[0]).forEach(function (i) {
@@ -397,6 +425,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      /*
+       * divide the range of ages into the defined agegroups 
+       */
       calculateAgeGroups: function () {
         var _this = this;
         this.groupedData = [];
@@ -436,6 +467,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      /*
+       * render a stacked bar-chart with agegroups
+       */
       renderAgeGroupChart: function (data) {
         var vis = this.el.querySelector('#agegroupchart');
         clearElement(vis);
@@ -463,6 +497,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageGroupChart.render();
       },
       
+      /*
+       * render a table with ages divided into agegroups
+       */
       renderAgeGroupTable: function (year) {
         var columns = [],
             title = '';
@@ -534,6 +571,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           selectable: true
         });
       },
+      
       /*
        * sorted insertion of user defined agegroups (in app)
        */
@@ -569,6 +607,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.renderAgeGroupTable(this.currentYear);
         this.renderAgeGroupChart(this.groupedData);
       },
+      
       /*
        * flags intersections of groups, condition: sorted order of agegroups
        */
@@ -599,6 +638,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           tab.appendChild(createAlert('warning', text));
         }
       },
+      
       /*
        * adjust age input range, if first input field changed
        */
@@ -613,6 +653,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           toInput.value = from + 1;
         }
       },
+      
       /*
        * remove agegroups
        */
@@ -640,15 +681,18 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.renderAgeGroupTable(this.currentYear);
         this.renderAgeGroupChart(this.groupedData);
       },
-      changeYear: function (year) {
+      
+      /*
+       * rerender visualisations according to the given year
+       */
+      changeYear: function(year) {
         this.currentYear = year;
         var data = this.currentModel.get('data');
         var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
         this.yearData = data[idx];
         this.ageTree.changeData(this.yearData);
         this.renderAgeGroupTable(this.currentYear);
-        this.renderAgeTable(this.yearData);
-        
+        this.renderAgeTable(this.yearData);        
       },
       
       /*
@@ -674,8 +718,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
       },
       
+      /*
+       * cycle through the years (change year every 1000 ms)
+       */
       play: function (event) {
         var _this = this;
+        var t = 1000;
         if (!this.timerId) {
           var btn = event.target;
           btn.classList.remove('stopped');
@@ -696,12 +744,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               _this.yearSlider.value(currentYear + 1);
               _this.changeYear(currentYear + 1);
             }
-          }, 1000);
+          }, t);
         }
         else
           this.stop();
       },
       
+      /*
+       * stop the cycle through the years
+       */
       stop: function () {
         var btn = this.el.querySelector('#play');
         if (!btn)
@@ -714,7 +765,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }
       },
       
-      // watch/unwatch the current model
+      /*
+       * watch/unwatch the current model
+       */
       watchYear: function (event) {
         var watchBtn = event.target;
         if (!this.compareData) {
@@ -728,6 +781,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.renderTree(this.yearData);
       },
       
+      /*
+       * fix the current scale (agetree)
+       */
       fixScale: function (event) {
         var btn = event.target;
         var slider = this.el.querySelector('#scale-slider-container');
@@ -741,18 +797,20 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }
       },
       
+      // FUNCTIONS FOR CONVERTING CURRENT MODELDATA TO CSV/PNG
+      
       downloadAgeTableCsv: function () {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv'
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv';
         this.ageTable.save(filename);
       },
       
       downloadRawCsv: function () {
-        var filename = this.currentModel.get('name') + '-Rohdaten.csv'
+        var filename = this.currentModel.get('name') + '-Rohdaten.csv';
         this.rawTable.save(filename);
       },
       
       downloadAgeGroupCsv: function () {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv'
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv';
         this.ageGroupTable.save(filename);
       },
       
@@ -793,6 +851,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
     });
 
+    /*
+     * convert given svg to file
+     * scale is a resizing factor (e.g. scale = 2 doubles the resolution)
+     */
     function downloadPng(svgDiv, filename, scale) {
       var oldWidth = svgDiv.width(),
           oldHeight = svgDiv.height(),
@@ -833,7 +895,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        */
     };
 
-    // source: http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+    /*
+     * convert a dataURI to a blob-string
+     * source: http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+     */
     function dataURItoBlob(dataURI) {
       // convert base64/URLEncoded data component to raw binary data held in a string
       var byteString;
@@ -854,6 +919,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       return new Blob([ia], {type: mimeString});
     };
 
+    /*
+     * create and return a div containing a bootstrap-alert with the given type and text
+     * available types: success, info, danger, warning
+     */
     function createAlert(type, text) {
       var div = document.createElement('div');
       div.innerHTML = '<div class="alert alert-' + type + '">' +
@@ -862,13 +931,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       return div;
     };
     
-    // clear given dom-element by removing its children
+    /*
+     * clear given dom-element by removing its children
+     */
     function clearElement(el){
       while (el.firstChild)
         el.removeChild(el.firstChild);
     }
 
-    // Returns the View class
+    // return the view class (for chaining)
     return DemographicDevelopmentView;
   }
 );

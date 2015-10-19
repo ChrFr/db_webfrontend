@@ -12,7 +12,6 @@
  * @param options.background options for a background map, see comments above function renderMap() to see how it is formed
  *  
  */
-
 var Map = function(options){  
   
   this.el = options.el || document;
@@ -183,8 +182,10 @@ var Map = function(options){
   }
   
   
-  // does the job for this.renderMap(); seperated, for optional asynchronous file-loading by d3
-  // map is for options see this.renderMap()
+  /*
+   * does the job for this.renderMap(); seperated, for optional asynchronous file-loading by d3
+   * map is for options see this.renderMap()
+   */
   function loadMap(map, options){
     // only draw required shapes       
     if(options.isTopoJSON && !map.objects.subunits)
@@ -386,7 +387,9 @@ var Map = function(options){
     });
   };
   
-  // change size of the view
+  /*
+   * change size of the view
+   */
   this.changeViewport = function(width, height){
     // resize svg
     var iw = width - margin.left - margin.right,

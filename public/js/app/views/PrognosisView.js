@@ -53,8 +53,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           'click #sub-map-nav>a': 'tabChange',
         },
         
-        // activate the menu link in the navbar when a link is clicked here
-        // not best practice, because cross linking with navbar, but better for usability
+        /*
+         * activate the menu link in the navbar when a link is clicked here
+         * not best practice, because cross linking with navbar, but better for usability
+         */
         tabChange: function(e){
           // don't know why it is currentTarget instead of target here, e.target is strangely enough the headline inside the link
           var href = e.currentTarget.getAttribute("href");
@@ -69,7 +71,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             document.querySelector('#li-hh').className = 'active';
         },
         
-        // render the view
+        /*
+         * render the view
+         */
         render: function(){
           var _this = this;
           this.template = _.template(template, {});
@@ -112,7 +116,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           return this;
         },
         
-        // rerender graphical elements to adapt to current window size
+        /*
+         * rerender graphical elements to adapt to current window size
+         */
         rerender: function(){       
           // rerender visualisations of the demographic development view
           if(this.ddView)
@@ -127,8 +133,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           }
         },
         
-        // prepare the region selection and the specific prognoses views
-        // id: id of selected prognosis (available regions depend on this)
+        /*
+         * prepare the region selection and the specific prognoses views
+         * id: id of selected prognosis (available regions depend on this)
+         */
         prepareSelections: function(prognosis){
           var _this = this;
           var loader = Loader(this.el.querySelector('#map'));
@@ -188,6 +196,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           });
         },
         
+        /*
+         * render the start messages like description and title
+         */
         renderOverview: function(prognosis){
           var map = this.el.querySelector('#map');
           var title = this.el.querySelector('#title');
@@ -210,8 +221,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           }
         },
         
-        // change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
-        // gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
+        /*
+         * change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
+         * gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
+         */
         changeLayer: function(layerId){
           var _this = this;
           var progId = app.get('activePrognosis').id;
@@ -356,6 +369,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           }
         },
         
+        /*
+         * create the map with a background-layer containing germany
+         */
         createMap: function(callback){    
           var vis = this.el.querySelector('#map');
           while(vis.firstChild)
@@ -377,14 +393,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           });
         },
         
-        // render the map of regions
-        // aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
-        // options.success: only if renderregions
+        /*
+         * render the map of regions
+         * optiona.aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
+         * options.callback: called after map is rendered
+         */
         renderMap: function(options){
           
           var _this = this,
               subunits = [],
               options = options || {};
+          console.log(options);
 
           // click handler, if map is clicked, render data of selected region
           var onClick = function(rs, name, rsAggr){
@@ -443,7 +462,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           
         },
         
-        //remove the view
+        /*
+         * remove the view
+         */
         close: function(){
           app.unbind('activePrognosis');
           if(this.ddView)

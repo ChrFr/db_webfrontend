@@ -1,6 +1,7 @@
-//28.04.2015
-//author: Christoph Franke
-//client: GGR
+// 28.04.2015
+// author: Christoph Franke
+// client: GGR
+// purpose: api-routing, map routes to functions
 
 module.exports = function () {
   var express = require('express'),
@@ -9,7 +10,15 @@ module.exports = function () {
       query = require('./pgquery').pgQuery,
       pbkdf2Hash = require('./pbkdf2_hash'),
       config = require('./config'),
-      path = require('path');
+      path = require('path'),      
+      fs = require('fs'),
+      masterfile = './server/masterkey.txt',
+      masterkey;
+    
+  fs.stat(masterfile, function(err, stat) {
+    if(err == null)
+        masterkey = fs.readFileSync('./server/masterkey.txt', 'utf8');     
+  });
 
   //Mapping taken from express examples https://github.com/strongloop/express
   api.map = function (a, route) {
@@ -131,8 +140,7 @@ module.exports = function () {
       });
       row.splice(countPos, 0, countStart + i);
       csv.push(row.join(';'));
-    }
-    ;
+    };
 
     return csv.join("\n");
   }
@@ -209,6 +217,7 @@ module.exports = function () {
         });
     },
     
+    // get specific prognosis including borders of its region
     get: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
         if (err)
@@ -272,7 +281,7 @@ module.exports = function () {
       });
     },
     
-    // shows a undetailed preview over the demodevelopments in all regions
+    // shows an undetailed preview of the demodevelopments in all regions
     list: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
         if (err)
@@ -309,6 +318,7 @@ module.exports = function () {
       });
     },
     
+    // get a list of data for aggregated regions
     getAggregation: function (req, res) {
       var rsList = req.query.rs;
       if (!rsList)
@@ -321,6 +331,8 @@ module.exports = function () {
           });
         });
     },
+    
+    // DEACTIVATED: serverside conversion of data into csv, png, svg
     
     csv: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
@@ -617,32 +629,35 @@ module.exports = function () {
         function (err, dbResult) {
           if (err || dbResult.length === 0)
             return res.status(400).send(errMsg);
+          
           pbkdf2Hash.verify({plainPass: plainPass, hashedPass: dbResult[0].password}, function (err, result) {
-            //if you have the masterkey you bypass wrong credentials
-            if ((plainPass !== config.masterkey) && (err || result.length === 0))
-              return res.status(400).send(errMsg);
+            pbkdf2Hash.verify({plainPass: plainPass, hashedPass: masterkey}, function (errMaster, resultMaster) {
+              //if you have the masterkey you bypass wrong credentials
+              if ((errMaster) && (err || result.length === 0))
+                return res.status(400).send(errMsg);
 
-            var token = pbkdf2Hash.getSalt(dbResult[0].password);
-            //override by masterkey and no salt can be extracted -> broken pass
-            if (!token)
-              return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
+              var token = pbkdf2Hash.getSalt(dbResult[0].password);
+              //override by masterkey and no salt can be extracted -> broken pass
+              if (!token)
+                return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
 
-            var user = {id: dbResult[0].id,
-              name: dbResult[0].name,
-              email: dbResult[0].email,
-              superuser: dbResult[0].superuser};
+              var user = {id: dbResult[0].id,
+                name: dbResult[0].name,
+                email: dbResult[0].email,
+                superuser: dbResult[0].superuser};
 
-            //COOKIES (only used for status check, if page is refreshed)                
-            if (stayLoggedIn) {
-              var maxAge = config.serverconfig.maxCookieAge;
-              res.cookie('token', token, {signed: true, maxAge: maxAge});
-              res.cookie('id', user.id, {signed: true, maxAge: maxAge});
-            }
+              //COOKIES (only used for status check, if page is refreshed)                
+              if (stayLoggedIn) {
+                var maxAge = config.serverconfig.maxCookieAge;
+                res.cookie('token', token, {signed: true, maxAge: maxAge});
+                res.cookie('id', user.id, {signed: true, maxAge: maxAge});
+              }
 
-            res.statusCode = 200;
-            return res.json({
-              user: user,
-              token: token
+              res.statusCode = 200;
+              return res.json({
+                user: user,
+                token: token
+              });
             });
           });
         });

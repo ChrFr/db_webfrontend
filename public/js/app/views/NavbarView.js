@@ -29,9 +29,11 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
         //display current route (needed when entering site or reload)
         this.displayRoute(app.get('router').routes[Backbone.history.getFragment()]);
       },
+      
       events: {
         'click .menu-link': 'openSubMenu'
       },
+      
       // Renders the view's template to the UI
       render: function () {
         this.template = _.template(template, {});
@@ -40,6 +42,8 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
         return this;
 
       },
+      
+      // render elements depending on login-status such as the available prognoses
       displayUserContent: function () {
         //change the text of the menu item, to show, that the user is logged in
         var session = app.get('session');
@@ -96,6 +100,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
           }});
       },
       
+      // open a submenu
       openSubMenu: function (event) {
         $('.submenu').removeClass('active');
         var id = event.target.id;
@@ -107,6 +112,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
           $('#admin-menu').addClass('active');
       },
       
+      // display the current active url-route by activating/deactivating menus/submenus
       displayRoute: function (route, params) {
         $('.submenu').removeClass('active');
         var item = $('');

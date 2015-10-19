@@ -9,8 +9,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
     * 
     * @desc view on demographic development 
     * 
-    * @param width  initial size of the visualizations; is taken, 
-    *               if width of wrapping div can't be determined (if in inactive tab)
+    * @param options.width  initial size of the visualizations; is taken, 
+    *                       if width of wrapping div can't be determined 
+    *                       (if in inactive tab)
     * 
     * @return the DemographicDevelopmentView class
     * @see    region-selectors, map, data-visualisations, data-tables

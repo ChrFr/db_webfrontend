@@ -1,5 +1,6 @@
 //author: Christoph Franke
 //client: GGR
+//purpose: configuration and start of node.js, call of api
 
 // DEPENDENCIES
 

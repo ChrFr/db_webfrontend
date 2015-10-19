@@ -1,39 +1,44 @@
 define(['app', 'jquery', 'backbone', 'text!templates/hhdevelop.html'],
 
     function(app, $, Backbone, template){
-        var PrognosisView = Backbone.View.extend({
-            // The DOM Element associated with this view
-            el: document,
-            // View constructor
-            initialize: function() {         
-                // Calls the view's render method
-                this.render();  
-            },
+      /** 
+      * @author Christoph Franke
+      * 
+      * @desc view on development of households
+      *  
+      * @return the HouseholdsDevelopmentView class
+      * @see    nothing yet besides placeholder text
+      */        
+      var HouseholdsDevelopmentView = Backbone.View.extend({
+        // The DOM Element associated with this view
+        el: document,
+        // View constructor
+        initialize: function() {         
+          // Calls the view's render method
+          this.render();  
+        },
 
-            events: {
-                
-            },
+        events: {
 
-            render: function() {
-                this.template = _.template(template, {});
-                this.el.innerHTML = this.template;  
-                return this;
-            },       
-            
-            //remove the view
-            close: function () {
-                this.unbind(); // Unbind all local event bindings
-                this.remove(); // Remove view from DOM
-            },
-            
-            renderRegion: function (region) {         
-            
-            }
+        },
 
-        });
+        // render view
+        render: function() {
+          this.template = _.template(template, {});
+          this.el.innerHTML = this.template;  
+          return this;
+        },       
 
-        // Returns the View class
-        return PrognosisView;
+        //remove the view
+        close: function () {
+          this.unbind(); // Unbind all local event bindings
+          this.remove(); // Remove view from DOM
+        },
+
+      });
+
+      // Returns the View class
+      return HouseholdsDevelopmentView;
 
     }
 

@@ -1,3 +1,8 @@
+// 28.04.2015
+// author: Christoph Franke
+// client: GGR
+
+// purpose: serverside rendering of visualitzations with d3 (only agetree by now)
 
 var d3 = require('d3'),
     jsdom = require('jsdom'),
@@ -6,7 +11,6 @@ var d3 = require('d3'),
     fs = require('fs'),
     visualsCss = fs.readFileSync("./public/css/visuals.css", 'utf8');
 
-//var exports;
 exports.renderAgeTree = (function(options, callback){
     var data = options.data,
         width = options.width,

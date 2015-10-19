@@ -2,7 +2,7 @@
 //client: GGR
 
 // DEPENDENCIES
-// ============
+
 var express = require("express"),
     config = require('./config').serverconfig,
     http = require("http"),
@@ -13,7 +13,6 @@ var express = require("express"),
     errorHandler = require('error-handler');
 
 // SERVER CONFIGURATION
-// ====================
     
 app.use(cookieParser(config.cookieSecret));
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -23,7 +22,6 @@ app.use(express["static"](__dirname + "/../public"));
 app.use('/api', require('./api')); 
     
 // SERVER
-// ======
 
 // Start Node.js Server
 http.createServer(app).listen(port);

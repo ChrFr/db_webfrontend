@@ -74,9 +74,8 @@
 .side-controls {
     position: absolute;
     right: 20px;
-    top: 0px;
     /* gap needed because of the tab menu */
-    padding-top: 60px;
+    top: 20%;
 }
 
 .side-controls label{

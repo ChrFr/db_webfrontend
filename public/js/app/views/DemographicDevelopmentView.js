@@ -31,7 +31,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           this.collection = new DDCollection({progId: progId});
           this.collection.fetch({success: this.render});
           this.width = options.width;
-        }
+        }       
       },
       
       // dom events (managed by jquery)
@@ -98,8 +98,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             
             //_this.width = width? width: _this.width // if you can't determine current width get last known
             
-            var data = model.get('data')[0],
-                maxYear = model.get('maxYear'),
+            var maxYear = model.get('maxYear'),
                 minYear = model.get('minYear'),
                 data = model.get('data');
                 
@@ -126,25 +125,24 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             // UPDATE SLIDERS    
             var width = _this.width - 150; // - padding etc.
             var sliderDiv = _this.el.querySelector('#year-slider');
-            while (sliderDiv.firstChild)
-              sliderDiv.removeChild(sliderDiv.firstChild);
+            clearElement(sliderDiv);
             //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
             sliderDiv.style.width = width + 'px';
             var yearStep = Math.floor((maxYear - minYear) / 4);
 
             _this.yearSlider = d3slider()
-                    .axis(
-                      d3.svg.axis().orient('down')
-                        //4 ticks
-                        .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
-                        .tickFormat(d3.format('d'))
-                        .ticks(maxYear - minYear)
-                        .tickSize(10)
-                    )
-                    .min(minYear)
-                    .max(maxYear)
-                    .step(1)
-                    .value(_this.currentYear);
+                .axis(
+                  d3.svg.axis().orient('down')
+                    //4 ticks
+                    .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
+                    .tickFormat(d3.format('d'))
+                    .ticks(maxYear - minYear)
+                    .tickSize(10)
+                )
+                .min(minYear)
+                .max(maxYear)
+                .step(1)
+                .value(_this.currentYear);
 
             d3.select('#year-slider').call(_this.yearSlider);
 
@@ -155,8 +153,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
             sliderDiv = _this.el.querySelector('#scale-slider');
             var locked = (_this.el.querySelector('#fix-scale').className === 'active');
-            while (sliderDiv.firstChild)
-              sliderDiv.removeChild(sliderDiv.firstChild);
+            clearElement(sliderDiv);
 
             //you can only scale below highest number, if you fixed scale before (for comparison)
             var min = Math.ceil(model.get('maxNumber'));
@@ -174,17 +171,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             var maxScale = 10000;
 
             var xScale = d3.scale.log()
-                    .domain([minScale, maxScale]);
+                .domain([minScale, maxScale]);
 
             _this.el.querySelector('#min-scale').innerHTML = minScale;
             _this.el.querySelector('#max-scale').innerHTML = maxScale;
 
-
-
-            var scaleSlider = d3slider().scale(xScale)
-                    .value(_this.xScale)
-                    .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
-                    .orientation('vertical');
+            var scaleSlider = d3slider()
+                .scale(xScale)
+                .value(_this.xScale)
+                .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
+                .orientation('vertical');
 
             d3.select('#scale-slider').call(scaleSlider);
 
@@ -195,25 +191,35 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               _this.renderTree(_this.yearData);
             });
             
-            _this.calculateAgeGroups();
-            //visualizations
-            _this.renderTree(_this.yearData);
-            _this.renderDevelopment(data);
-            _this.renderBarChart(data);
-            _this.renderAgeGroupChart(_this.groupedData);
-
-            //data tables
-            _this.renderAgeGroupTable(_this.currentYear);
-            _this.renderAgeTable(_this.yearData);
-            _this.renderRawData(data);
+            _this.calculateAgeGroups();            
+            _this.renderData();
           }});
       },
       
-      renderTree: function (data) {
+      renderData: function(){
+        // no active model -> nothing to render
+        if(!this.currentModel)
+          return;        
+        
+        this.width = parseInt(this.el.querySelector('.tab-content').offsetWidth);
+        var data = this.currentModel.get('data');
+        
+        //visualizations        
+        this.renderTree(this.yearData);
+        this.renderDevelopment(data);
+        this.renderBarChart(data);
+        this.renderAgeGroupChart(this.groupedData);
+        //data tables
+        this.renderAgeGroupTable(this.currentYear);
+        this.renderAgeTable(this.yearData);
+        this.renderRawData(data);
+        
+      },
+      
+      renderTree: function(data) {
         var vis = this.el.querySelector('#agetree');
-
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
+        
+        clearElement(vis);
 
         var width = this.width - 80;
         //width / height ratio is 1 : 1.2
@@ -243,14 +249,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           years.push(d.jahr);
         });
 
-        var dataAbs = {label: '',
+        var dataAbs = {
+          label: '',
           x: years,
           y: total
         };
 
         var vis = this.el.querySelector('#absolute');
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
+        clearElement(vis);
 
         var width = this.width - 40;
         var height = width * 0.5;
@@ -281,9 +287,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         ;
 
         vis = this.el.querySelector('#relative');
-
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
+        clearElement(vis);
 
         this.relativeChart = new LineChart({
           el: vis,
@@ -316,9 +320,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
 
         var vis = this.el.querySelector('#barchart');
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
-
+        clearElement(vis);
+        
         var width = this.width - 70;
         var height = width * 0.8;
         this.barChart = new GroupedBarChart({
@@ -434,9 +437,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       renderAgeGroupChart: function (data) {
         var vis = this.el.querySelector('#agegroupchart');
-
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
+        clearElement(vis);
 
         var width = this.width - 70;
         var height = width * 0.8;
@@ -793,8 +794,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
     function downloadPng(svgDiv, filename, scale) {
       var oldWidth = svgDiv.width(),
-              oldHeight = svgDiv.height(),
-              oldScale = svgDiv.attr('transform') || '';
+          oldHeight = svgDiv.height(),
+          oldScale = svgDiv.attr('transform') || '';
 
       //change scale
       if (scale) {
@@ -831,8 +832,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        */
     };
 
-    // source:
-    // http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+    // source: http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
     function dataURItoBlob(dataURI) {
       // convert base64/URLEncoded data component to raw binary data held in a string
       var byteString;
@@ -860,6 +860,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               text;
       return div;
     };
+    
+    // clear given dom-element by removing its children
+    function clearElement(el){
+      while (el.firstChild)
+        el.removeChild(el.firstChild);
+    }
 
     // Returns the View class
     return DemographicDevelopmentView;

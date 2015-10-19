@@ -93,15 +93,15 @@ var Map = function(options){
   var timerId;
   //ZOOM EVENT
   function zoomed(){
-      if(!initialZoom)
-        return;
-      var scale = d3.event.scale;
-      projection.translate(d3.event.translate).scale(scale);
-      g.selectAll('path').attr('d', path);
-      //if you zoom in and out too fast, d3 can't set the values properly and throws error
-      //timer prevents this
-      clearTimeout(timerId);
-      timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
+    if(!initialZoom)
+      return;
+    var scale = d3.event.scale;
+    projection.translate(d3.event.translate).scale(scale);
+    g.selectAll('path').attr('d', path);
+    //if you zoom in and out too fast, d3 can't set the values properly and throws error
+    //timer prevents this
+    clearTimeout(timerId);
+    timerId = setTimeout(function() { zoomSlider.value(100 * scale / maxZoom); }, 100);            
   }
 
   var mouseover = function(d, i){
@@ -384,6 +384,17 @@ var Map = function(options){
     ids.forEach(function(id){
       d3.selectAll('.key' + id).classed('selected', true);
     });
+  };
+  
+  // change size of the view
+  this.changeViewport = function(width, height){
+    // resize svg
+    var iw = width - margin.left - margin.right,
+        ih = height - margin.top - margin.bottom;
+    svg.attr('width', iw).attr('height', ih);
+      
+    // resize slider
+    slideDiv.style('width', iw - 45 + 'px');
   };
 
 };

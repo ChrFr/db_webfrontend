@@ -1,7 +1,7 @@
-define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
+define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection',
   'views/OptionView', 'views/visuals/Map', 'views/Loader'],
-    function(app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
+    function($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
         CommunityCollection, LayerCollection, OptionView){
 
       /** 
@@ -28,6 +28,23 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             error: function(){
               _this.render(); // render anyway, if fetching layers fails, you can at least choose Gesamtgebiet/Gemeinde on layer selection
             }
+          });          
+        
+          var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+              clearTimeout (timer);
+              timer = setTimeout(callback, ms);
+            };
+          })();
+
+          var _this = this;
+          //listen to resize event of the window and rerender, if resized
+          $(window).resize(function(e) {             
+            if (e.target === window)
+              delay(function(){
+                _this.rerender();
+              }, 1000);
           });
         },
         
@@ -93,6 +110,21 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
 
           _this.renderOverview(app.get('activePrognosis'));
           return this;
+        },
+        
+        // rerender graphical elements to adapt to current window size
+        rerender: function(){       
+          // rerender visualisations of the demographic development view
+          if(this.ddView)
+            this.ddView.renderData();
+          
+          // resize the map
+          if(this.map){
+            var vis = this.el.querySelector('#map');            
+            var width = parseInt(vis.offsetWidth) - 20, // rendering exceeds given limits -> 10px less
+                height = width;
+            this.map.changeViewport(width, height);
+          }
         },
         
         // prepare the region selection and the specific prognoses views

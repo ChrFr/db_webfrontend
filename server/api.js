@@ -37,11 +37,23 @@ module.exports = function () {
     }
   };
 
-  //group a list of json objects by given key, by now only sum or median of all other values
-  function groupBy(array, key, options) {
+  /*
+   * @desc aggregate a list of json objects by given key, by now only sum or 
+   *       median of group-values (except key, remains untouched)
+   * 
+   * @param array             list of json objects, every single json has to 
+   *                          contain at least the given key 
+   * @param key               the key, the json objects will be aggregated by
+   * @param options.mode      by now only 'sum' or 'average' allowed (default: 'sum') 
+   * @param options.isIntKey  true, if the given key is an integer value
+   *  
+   * @returns aggregated      aggregated json object, keys remain
+   */ 
+  function aggregateByKey(array, key, options) {
     var mode = options.mode || 'sum';
     var groups = {};
-    //map array by key in groups and merge other keys of group into arrays
+    
+    //  map array by key in groups and merge other keys of group into arrays
     array.forEach(function (item) {
       if (!groups[item[key]]) {
         groups[item[key]] = {};
@@ -57,15 +69,17 @@ module.exports = function () {
     });
 
     var result = [];
-    //reduce group key-values and restore input form (array of json objects)
+    // reduce group key-values and restore input form (array of json objects)
     for (var gk in groups) {
       var group = groups[gk];
+      // parse key to int, if requested
       if (options.keyIsInt)
         gk = parseInt(gk);
       var g = {};
       g[key] = gk;
 
       for (var k in group) {
+        // value is an array -> keep array, sum up values at associated indices
         if (group[k][0] instanceof Array) {
           g[k] = [];
           // js vanilla lacks matrix transposition or vector addition
@@ -73,22 +87,24 @@ module.exports = function () {
             var sum = 0;
             for (var j = 0; j < group[k].length; j++)
               sum += group[k][j][i];
-            if (mode === 'median')
+            // average the sum, if requested by given mode
+            if (mode === 'average')
               sum /= group[k].length;
             g[k].push(sum);
           }
         }
+        // value is no array -> simple sum over groups
         else {
           g[k] = group[k].reduce(function (sum, element) {
             return sum + element;
           }, 0);
-          if (mode === 'median')
+          // average the sum, if requested by given mode
+          if (mode === 'average')
             g[k] /= group[k].length;
         }
       }
       result.push(g);
-    }
-    ;
+    };
     return result;
   }
 
@@ -223,7 +239,10 @@ module.exports = function () {
         if (err)
           return res.status(status).send(err);
         // postgis-query to get a multiline border (json) of multiple geometries
-        var bboxSql = "SELECT p.id AS id, ST_AsGeoJSON(st_boundary(st_union(g.geom))) AS geom " + //st_asewkt(st_envelope(st_union(g.geom))) AS geom " <- alternatively this gets the bounding box from multiple geometries (associated with project)
+        var bboxSql = "SELECT p.id AS id, ST_AsGeoJSON(st_boundary(st_union(g.geom))) AS geom " +                       
+                      // alternative: st_asewkt(st_envelope(st_union(g.geom))) AS geom " 
+                      // instead of ST_AsGeoJSON, gets the bounding box from multiple 
+                      // geometries (associated with project)
                       "FROM prognosen AS p, " +
                       "gemeinden g " +
                       "WHERE p.id = $1 " +
@@ -252,6 +271,7 @@ module.exports = function () {
             queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1",
             params = [req.params.pid];
         var i = 2;
+        // array of rs?
         if (rsArray && rsArray instanceof Array) {
           var p = [];
           for (i; i < rsArray.length + 2; i++)
@@ -260,15 +280,17 @@ module.exports = function () {
           queryString += " AND rs IN (" + p.join(",") + ")";
           params = params.concat(rsArray);
         }
+        // r single rs?
         else {
           queryString += " AND rs=$" + i;
           params.push(req.params.rs);
         }
-        //specific year queried or all years?   
+        // specific year queried or all years?   
         if (year) {
           queryString += " AND jahr=$3 ";
           params.push(year);
         }
+        // else all years ordered by year
         else {
           queryString += ' ORDER BY jahr';
         };
@@ -327,7 +349,7 @@ module.exports = function () {
         demodevelop.getData(req, res, rsList, function (result) {
           return res.json({
             rs: rsList,
-            data: groupBy(result, 'jahr', {keyIsInt: true})
+            data: aggregateByKey(result, 'jahr', {keyIsInt: true})
           });
         });
     },
@@ -432,68 +454,85 @@ module.exports = function () {
     
     list: function (req, res) {
       query("SELECT id, name FROM layer", [], function (err, result) {
+        if (err)
+          return res.sendStatus(500);
         return res.status(200).send(result);
       });
     },
     
     get: function (req, res) {
       query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
+        if (err)
+          return res.sendStatus(500);
+        if (result.length === 0)
+          return res.sendStatus(404);
+        // the meta data from layer table
         var name = result[0].name,
-                table = result[0].tabelle,
-                key = result[0].key,
-                params = [],
-                subquery;
+            table = result[0].tabelle,
+            key = result[0].key, // name of the column referencing the corresponding layer
+            params = [],
+            subquery;
 
-        //grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
+        // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
         var queryStr = "SELECT {key} as id, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
 
-        //for which communities does data exist belonging to this prognosis?
+        // for which communities does data exist belonging to this prognosis?
         var progId = req.query.progId;
         if (progId) {
           subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden WHERE prognose_id=$1)";
           params.push(progId);
         }
-        //take the table as is, if no prognosis id is given
+        // take the table as is, if no prognosis id is given
         else
           subquery = 'gemeinden';
 
-        //pgquery doesn't seem to allow injection of table/columnnames
-        //they are taken from a db-table anyway, so it should be safe to replace manual
+        // pgquery doesn't seem to allow injection of table/columnnames
+        // they are taken from a db-table anyway, so it should be safe to replace manual
         queryStr = queryStr.replace('{subquery}', subquery)
                 .replace(new RegExp('{table}', 'g'), table)
                 .replace(new RegExp('{key}', 'g'), key);
         query(queryStr, params, function (err, result) {
-          return res.status(200).send(
-                  {'id': req.params.id,
-                    'name': name,
-                    'regionen': result});
+          return res.status(200).send({
+            'id': req.params.id,
+            'name': name,
+            'regionen': result
+          });
         });
       });
     },
     
     gemeinden: {
       list: function (req, res) {
-        //get gemeinden for specific prognosis
+        // get gemeinden for specific prognosis
         var progId = req.query.progId;
         if (progId)
-          // take all gemeinden belonging to requested prognosis where populationdata is available
-          query("SELECT prognose_id, rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [progId], function (err, result) {
+          // take all gemeinden belonging to requested prognosis 
+          query("SELECT rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [progId], function (err, result) {
+            if (err)
+              return res.sendStatus(500);
+            if (result.length === 0)
+              return res.sendStatus(404);
             return res.status(200).send(result);
           });
         else {
-          query("SELECT * FROM gemeinden", [], function (err, result) {
+          query("SELECT rs, name, geom_json FROM gemeinden", [], function (err, result) {
+            if (err)
+              return res.sendStatus(500);
+            if (result.length === 0)
+              return res.sendStatus(404);
             return res.status(200).send(result);
           });
         }
       },
       get: function (req, res) {
-        query('SELECT * FROM gemeinden WHERE rs=$1', [req.params.rs],
-                function (err, result) {
-                  return res.status(200).send(result[0]);
-                });
-      },
-      map: function (req, res) {
-        res.sendFile(path.join(__dirname, 'shapes', 'gemeinden.json'));
+        query('SELECT rs, name, geom_json FROM gemeinden WHERE rs=$1', [req.params.rs],
+          function (err, result) {
+            if (err)
+              return res.sendStatus(500);
+            if (result.length === 0)
+              return res.sendStatus(404);
+            return res.status(200).send(result[0]);
+          });
       }
     }
   };
@@ -675,13 +714,10 @@ module.exports = function () {
 
   api.map({
     
-    '/layers': {
+    '/layer': {
       get: layers.list,
       '/gemeinden': {
         get: layers.gemeinden.list,
-        '/map': {
-          get: layers.gemeinden.map
-        },
         '/:rs': {
           get: layers.gemeinden.get
         }

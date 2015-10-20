@@ -403,7 +403,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           var _this = this,
               subunits = [],
               options = options || {};
-          console.log(options);
 
           // click handler, if map is clicked, render data of selected region
           var onClick = function(rs, name, rsAggr){

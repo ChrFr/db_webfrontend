@@ -61,8 +61,7 @@ define(["backbone", "models/DDModel", 'models/DDAggregate'],
             rsAggr: rsAggr
           });
           this.add(model);
-        }
-        ;
+        };
         return model;
       }
 

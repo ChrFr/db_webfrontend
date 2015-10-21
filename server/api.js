@@ -10,7 +10,6 @@ module.exports = function () {
       query = require('./pgquery').pgQuery,
       pbkdf2Hash = require('./pbkdf2_hash'),
       config = require('./config'),
-      path = require('path'),      
       fs = require('fs'),
       masterfile = './server/masterkey.txt',
       masterkey;
@@ -37,48 +36,72 @@ module.exports = function () {
     }
   };
 
-  /*
-   * @desc aggregate a list of json objects by given key, by now only sum or 
-   *       median of group-values (except key, remains untouched)
-   * 
-   * @param array             list of json objects, every single json has to 
-   *                          contain at least the given key 
-   * @param key               the key, the json objects will be aggregated by
-   * @param options.mode      by now only 'sum' or 'average' allowed (default: 'sum') 
-   * @param options.isIntKey  true, if the given key is an integer value
-   *  
-   * @returns aggregated      aggregated json object, keys remain
-   */ 
-  function aggregateByKey(array, key, options) {
-    var mode = options.mode || 'sum';
-    var groups = {};
-    
-    //  map array by key in groups and merge other keys of group into arrays
-    array.forEach(function (item) {
-      if (!groups[item[key]]) {
-        groups[item[key]] = {};
-      }
-      for (var k in item) {
-        if (k !== key) {
-          if (!groups[item[key]][k])
-            groups[item[key]][k] = [item[k]];
-          else
-            groups[item[key]][k].push(item[k]);
-        }
-      }
-    });
+/*
+ * @desc aggregate a list of json-objects by given key, by now only sum or 
+ *       averages of group-values
+ * 
+ * @param array             array of json-objects, all json objects have to be uniform,
+ *                          that means, they contain the same keys,
+ *                          values can be single values or arrays of values
+ * @param key               the key, that determines the structure of the aggregate,
+ *                          remains untouched
+ * @param options.mode      mode for aggregation of values
+ *                          if mode as single string is given, all keys get this mode
+ *                          if object is given, specify which key gets which mode
+ *                          (if not defined, key gets default mode), 
+ *                          by now only modes 'sum' or 'average' allowed (default: 'sum') 
+ * @param options.isIntKey  true, if the given key is an integer value
+ *  
+ * @returns aggregated      aggregated json object, keys remain
+ */ 
+function aggregateByKey(array, key, options) {
+  var defaultMode = 'sum',
+      mode = options.mode || defaultMode,
+      groups = {},
+      keyModes= {};
+  
+  // build an object with all keys and their modes as values
+  // on the basis of the first json, (all json-objects are expected to be uniform)
+  for (k in array[0]){    
+    if (typeof mode === 'object'){
+      if(k in mode)
+        keyModes[k] = mode[k];
+      else 
+        keyModes[k] = defaultMode;
+    }
+    // mode is a string
+    else 
+      keyModes[k] = mode;
+  }
 
-    var result = [];
-    // reduce group key-values and restore input form (array of json objects)
-    for (var gk in groups) {
-      var group = groups[gk];
-      // parse key to int, if requested
-      if (options.keyIsInt)
-        gk = parseInt(gk);
-      var g = {};
-      g[key] = gk;
+  //  map array by key in groups and merge other keys of group into arrays
+  array.forEach(function (item) {
+    if (!groups[item[key]]) {
+      groups[item[key]] = {};
+    }
+    for (var k in item) {
+      if (k !== key) {
+        if (!groups[item[key]][k])
+          groups[item[key]][k] = [item[k]];
+        else
+          groups[item[key]][k].push(item[k]);
+      }
+    }
+  });
 
-      for (var k in group) {
+  var result = [];
+  // reduce group key-values and restore input form (array of json objects)
+  for (var gk in groups) {
+    var group = groups[gk];
+    // parse key to int, if requested
+    if (options.keyIsInt)
+      gk = parseInt(gk);
+    var g = {};
+    g[key] = gk;
+
+    for (var k in group) {
+      var keyMode = keyModes[k];
+      if (keyMode === 'sum' || keyMode === 'average'){
         // value is an array -> keep array, sum up values at associated indices
         if (group[k][0] instanceof Array) {
           g[k] = [];
@@ -88,7 +111,7 @@ module.exports = function () {
             for (var j = 0; j < group[k].length; j++)
               sum += group[k][j][i];
             // average the sum, if requested by given mode
-            if (mode === 'average')
+            if (keyMode === 'average')
               sum /= group[k].length;
             g[k].push(sum);
           }
@@ -99,16 +122,19 @@ module.exports = function () {
             return sum + element;
           }, 0);
           // average the sum, if requested by given mode
-          if (mode === 'average')
+          if (keyMode === 'average')
             g[k] /= group[k].length;
         }
       }
-      result.push(g);
-    };
-    return result;
-  }
+    }
+    result.push(g);
+  };
+  return result;
+}
 
-  // transform json object by splitting array fields e.g. 
+  /*
+   * transform json object by splitting array fields
+   */ 
   function expandJsonToCsv(options) {
     var data = options.data || {},
       renameFields = options.renameFields || {},
@@ -240,7 +266,7 @@ module.exports = function () {
           return res.status(status).send(err);
         // postgis-query to get a multiline border (json) of multiple geometries
         var bboxSql = "SELECT p.id AS id, ST_AsGeoJSON(st_boundary(st_union(g.geom))) AS geom " +                       
-                      // alternative: st_asewkt(st_envelope(st_union(g.geom))) AS geom " 
+                      // alternative: "st_asewkt(st_envelope(st_union(g.geom))) AS geom" 
                       // instead of ST_AsGeoJSON, gets the bounding box from multiple 
                       // geometries (associated with project)
                       "FROM prognosen AS p, " +
@@ -248,7 +274,9 @@ module.exports = function () {
                       "WHERE p.id = $1 " +
                       "AND g.prognose_id = p.id " +
                       "GROUP BY p.id; ";
-        query(bboxSql, [req.params.pid], function (err, bbox) {          
+        query(bboxSql, [req.params.pid], function (err, bbox) {     
+          if(err)
+            return res.sendStatus(500);
           result.boundaries = err || bbox.length == 0 ? null: bbox = JSON.parse(bbox[0].geom);
           res.setHeader('Content-Type', 'application/json');
           return res.status(200).send(result);
@@ -354,7 +382,7 @@ module.exports = function () {
         });
     },
     
-    // DEACTIVATED: serverside conversion of data into csv, png, svg
+    /* DEACTIVATED: serverside conversion of data into csv, png, svg */
     
     csv: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
@@ -416,7 +444,7 @@ module.exports = function () {
         });
     },
     
-    //converts to PNG
+    //converts agetree to PNG
     agetree: function (req, res) {
       var Render = require('./render');
       if (!req.query.year)
@@ -460,6 +488,7 @@ module.exports = function () {
       });
     },
     
+    // get 
     get: function (req, res) {
       query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
         if (err)
@@ -474,7 +503,9 @@ module.exports = function () {
             subquery;
 
         // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
-        var queryStr = "SELECT {key} as id, T.name, ARRAY_AGG(G.rs) AS rs FROM {table} T INNER JOIN {subquery} G USING ({key}) GROUP BY T.name, {key}";
+        var queryStr = "SELECT {key} as id, T.name, ARRAY_AGG(G.rs) AS rs" + 
+                "FROM {table} T INNER JOIN {subquery} G USING ({key})" + 
+                "GROUP BY T.name, {key}";
 
         // for which communities does data exist belonging to this prognosis?
         var progId = req.query.progId;
@@ -486,8 +517,8 @@ module.exports = function () {
         else
           subquery = 'gemeinden';
 
-        // pgquery doesn't seem to allow injection of table/columnnames
-        // they are taken from a db-table anyway, so it should be safe to replace manual
+        // pgquery doesn't seem to allow passing table/columnnames
+        // they are taken from a db-table anyway, so it's be safe to replace directly
         queryStr = queryStr.replace('{subquery}', subquery)
                 .replace(new RegExp('{table}', 'g'), table)
                 .replace(new RegExp('{key}', 'g'), key);
@@ -524,6 +555,7 @@ module.exports = function () {
           });
         }
       },
+      
       get: function (req, res) {
         query('SELECT rs, name, geom_json FROM gemeinden WHERE rs=$1', [req.params.rs],
           function (err, result) {
@@ -580,8 +612,6 @@ module.exports = function () {
           return res.status(status).send(err);
         if (!user.superuser)
           return res.status(403);
-        //TODO: only admin allowed to create
-        //TODO: check, if already exists, else create
         var name = req.body.name;
         var email = req.body.email;
 
@@ -703,8 +733,13 @@ module.exports = function () {
     },
     
     logout: function (req, res) {
+      /* 
       res.clearCookie('id');
       res.clearCookie('token');
+      */
+      // clearCookie is bugged, workaround:
+      res.cookie('id', '', {expires: new Date(1), path: '/' });
+      res.cookie('token', '', {expires: new Date(1), path: '/' });
       res.sendStatus(200);
     }
   };

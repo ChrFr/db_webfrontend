@@ -488,49 +488,50 @@ function aggregateByKey(array, key, options) {
       });
     },
     
-    // get 
-    get: function (req, res) {
-      query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
-        if (err)
-          return res.sendStatus(500);
-        if (result.length === 0)
-          return res.sendStatus(404);
-        // the meta data from layer table
-        var name = result[0].name,
-            table = result[0].tabelle,
-            key = result[0].key, // name of the column referencing the corresponding layer
-            params = [],
-            subquery;
+// get a layer with all it's regions and the gemeinden they are composed of
+get: function (req, res) {
+  query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
+    if (err)
+      return res.sendStatus(500);
+    if (result.length === 0)
+      return res.sendStatus(404);
+    // the meta data from layer table
+    var name = result[0].name,
+        table = result[0].tabelle,
+        key = result[0].key, // name of the column referencing the corresponding layer
+        params = [],
+        subquery;
 
-        // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
-        var queryStr = "SELECT {key} as id, T.name, ARRAY_AGG(G.rs) AS rs" + 
-                "FROM {table} T INNER JOIN {subquery} G USING ({key})" + 
-                "GROUP BY T.name, {key}";
+    // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
+    var queryStr = "SELECT {key} AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
+            "FROM {table} AS T INNER JOIN {subquery} AS G USING ({key}) " + 
+            "GROUP BY T.name, {key}";
+    
+    // for which communities does data exist belonging to this prognosis?
+    var progId = req.query.progId;
+    if (progId) {
+      subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden " +
+              "WHERE prognose_id=$1)";
+      params.push(progId);
+    }
+    // take the table as is, if no prognosis id is given
+    else
+      subquery = 'gemeinden';
 
-        // for which communities does data exist belonging to this prognosis?
-        var progId = req.query.progId;
-        if (progId) {
-          subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden WHERE prognose_id=$1)";
-          params.push(progId);
-        }
-        // take the table as is, if no prognosis id is given
-        else
-          subquery = 'gemeinden';
-
-        // pgquery doesn't seem to allow passing table/columnnames
-        // they are taken from a db-table anyway, so it's be safe to replace directly
-        queryStr = queryStr.replace('{subquery}', subquery)
-                .replace(new RegExp('{table}', 'g'), table)
-                .replace(new RegExp('{key}', 'g'), key);
-        query(queryStr, params, function (err, result) {
-          return res.status(200).send({
-            'id': req.params.id,
-            'name': name,
-            'regionen': result
-          });
-        });
+    // pgquery doesn't seem to allow passing table/columnnames
+    // they are taken from a db-table anyway, so it's be safe to replace directly
+    queryStr = queryStr.replace('{subquery}', subquery)
+            .replace(new RegExp('{table}', 'g'), table)
+            .replace(new RegExp('{key}', 'g'), key);
+    query(queryStr, params, function (err, result) {
+      return res.status(200).send({
+        'id': req.params.id,
+        'name': name,
+        'regionen': result
       });
-    },
+    });
+  });
+},
     
     gemeinden: {
       list: function (req, res) {

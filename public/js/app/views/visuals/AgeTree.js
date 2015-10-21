@@ -76,13 +76,19 @@ var AgeTree = function (options) {
       //style.type = 'text/css';                
       style.attr('type', 'text/css');
       style.html('\n<![CDATA[' + parsed + ']]>\n');
-    }
-
+    }   
+    
+    // background
+    top.append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("fill", "white");
+    
     // create svg
     var svg = top.append('svg')
             .append('g')
             .attr('transform', translation(margin.left, margin.top));
-
+    
     // TITLE
 
     svg.append('text')
@@ -194,10 +200,10 @@ var AgeTree = function (options) {
 
       var lineFunction = d3.svg.line()
           .x(function (d) {
-            return d.x
+            return d.x;
           })
           .y(function (d) {
-            return d.y
+            return d.y;
           })
           .interpolate('linear');
 
@@ -301,7 +307,7 @@ var AgeTree = function (options) {
               .attr('y', 5 - (margin.top / 2))
               .style('text-anchor', 'end') 
               .style('dominant-baseline', 'ideographic')
-              .text('Vergleichsjahr ' + this.compareData.jahr)
+              .text('Vergleichsjahr ' + this.compareData.jahr);
     }
       
     // remove the black borders caused by the domain

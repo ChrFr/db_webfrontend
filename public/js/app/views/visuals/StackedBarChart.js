@@ -49,7 +49,7 @@ var StackedBarChart = function (options) {
 
     if (!this.maxY)
       this.maxY = d3.max(this.data, function (d) {
-        return d.total
+        return d.total;
       }) * 1.1;
 
     var margin = {
@@ -95,6 +95,12 @@ var StackedBarChart = function (options) {
       style.attr('type', 'text/css');
       style.html('\n<![CDATA[' + parsed + ']]>\n');
     }
+    
+    // background
+    top.append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("fill", "white");
 
     // create svg
     var svg = top.append('svg')

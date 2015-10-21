@@ -80,6 +80,11 @@ var GroupedBarChart = function (options) {
       style.attr('type', 'text/css');
       style.html('\n<![CDATA[' + parsed + ']]>\n');
     }
+    // background
+    top.append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("fill", "white");
 
     // create svg
     var svg = top.append('svg')

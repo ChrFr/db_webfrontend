@@ -3,6 +3,25 @@
  Publisher: GGR
  */
 
+/*
+ * an age tree (aka age pyramid) comparing female and male population
+ * 
+ * @param options.el                   the parent container of the rendered vis.
+ * @param options.data.alter_maennlich array, ascending number of male population at ages starting from 0
+ * @param options.data.alter_weiblich  array, ascending number of female population at ages starting from 0
+ * @param options.data.jahr            visualized year
+ * @param options.compareData          optional, will be rendered as green outline, same structure as options.data
+ * @param options.width                the width of the rendered svg
+ * @param options.height               the height of the rendered svg
+ * @param options.title                optional, main title
+ * @param options.subtitle             optional, subtitle
+ * @param options.maxX                 optional, end value of the x-Axis
+ * @param options.maxY                 optional, end value of the y-axis
+ * @param options.css                  optional, css instructions, only needed if rendered on server
+ * @param options.cssSource            optional, name of the embedded stylesheet (default: visualizations.css)
+ * 
+ * @see age tree
+ */
 var AgeTree = function (options) {
   this.el = options.el || document;
   this.data = options.data;
@@ -12,6 +31,7 @@ var AgeTree = function (options) {
   this.maxY = options.maxY || 100;
   // optional: css is written in svg meta
   this.css = options.css;
+  this.cssSource = options.cssSource || "visualizations.css";
   // optional: compared data is outlines
   this.compareData = options.compareData;
   this.title = options.title || '';
@@ -63,7 +83,7 @@ var AgeTree = function (options) {
         if (!document.styleSheets[i].href)
           continue;
         var str = document.styleSheets[i].href.split('/');
-        if (str[str.length - 1] == 'visuals.css') {
+        if (str[str.length - 1] == this.cssSource) {
           var rules = document.styleSheets[i].cssRules;
           for (var j = 0; j < rules.length; j++) {
             parsed += (rules[j].cssText + '\n');

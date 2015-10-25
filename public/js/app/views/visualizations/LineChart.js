@@ -3,12 +3,33 @@
  Publisher: GGR
  */
 
+/*
+ * a line chart drawing a line to show functional relation between two characteristics
+ * 
+ * @param options.el         the parent container of the rendered vis.
+ * @param options.data.x     values in x direction  
+ * @param options.data.y     values in y direction 
+ * @param options.data.label optional, label the line gets      
+ * @param options.width      the width of the rendered svg
+ * @param options.height     the height of the rendered svg
+ * @param options.xlabel     label of the x-axis
+ * @param options.ylabel     label of the y-axis
+ * @param options.title      optional, main title
+ * @param options.subtitle   optional, subtitle
+ * @param options.minY       optional, lowest value of the y-axis
+ * @param options.maxY       optional, highest value of the y-axis
+ * @param options.css        optional, css instructions
+ * @param options.cssSource  optional, name of the embedded stylesheet (default: visualizations.css)
+ * 
+ * @see line chart
+ */
 var LineChart = function (options) {
   this.el = options.el || document;
   this.data = options.data;
   this.width = options.width;
   this.height = options.height;
   this.css = options.css;
+  this.cssSource = options.cssSource || "visualizations.css";
   this.xlabel = options.xlabel || "x";
   this.ylabel = options.ylabel || "y";
   this.title = options.title || "";
@@ -24,8 +45,7 @@ var LineChart = function (options) {
       return d3.max(d.y);
     });
     this.maxY += (this.maxY - this.minY) * 0.1;
-  }
-  ;
+  };
 
   this.render = function (callback) {
     //server-side d3 needs to be loaded seperately
@@ -49,7 +69,7 @@ var LineChart = function (options) {
             .attr('xmlns:xmlns:xlink', "http://www.w3.org/1999/xlink")
             .attr('width', this.width)
             .attr('height', this.height);
-
+            
     if (this.css) {
       var defs = top.append('defs');
       var style = defs.append('style');
@@ -58,12 +78,12 @@ var LineChart = function (options) {
       style.html(this.css);
     }
     else {
-      var parsed = "\n"
+      var parsed = "\n";
       for (var i = 0; i < document.styleSheets.length; i++) {
         if (!document.styleSheets[i].href)
           continue;
         var str = document.styleSheets[i].href.split("/");
-        if (str[str.length - 1] == "visuals.css") {
+        if (str[str.length - 1] == this.cssSource) {
           var rules = document.styleSheets[i].cssRules;
           for (var j = 0; j < rules.length; j++) {
             parsed += (rules[j].cssText + "\n");

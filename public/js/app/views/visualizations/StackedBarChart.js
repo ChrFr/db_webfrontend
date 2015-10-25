@@ -3,6 +3,27 @@
  Publisher: GGR
  */
 
+/*
+ * a stacked bar chart comparing groups of data
+ * 
+ * @param options.el             the parent container of the rendered vis.
+ * @param options.data           list of objects, each object represents a group,
+ *                               single objects contain the key "values" (an array of values) and a key containing the band-label 
+ * @param options.width          the width of the rendered svg
+ * @param options.height         the height of the rendered svg
+ * @param options.xlabel         label of the x-axis
+ * @param options.ylabel         label of positive the y-axis
+ * @param options.title          optional, main title
+ * @param options.subtitle       optional, subtitle
+ * @param options.stackLabels    array of the labels of the stacks (rendered in legend)
+ * @param options.bandName       the name of the key containing the band in options.data
+ * @param options.minY           optional, lowest value of the y-axis
+ * @param options.maxY           optional, highest value of the y-axis
+ * @param options.css            optional, css instructions, only needed if rendered on server
+ * @param options.cssSource      optional, name of the embedded stylesheet (default: visualizations.css)
+ * 
+ * @see stacked bar chart
+ */
 var StackedBarChart = function (options) {
   this.el = options.el || document;
   // data will be modified
@@ -10,6 +31,7 @@ var StackedBarChart = function (options) {
   this.width = options.width;
   this.height = options.height;
   this.css = options.css;
+  this.cssSource = options.cssSource || "visualizations.css";
   this.xlabel = options.xlabel || 'x';
   this.ylabel = options.ylabel || 'y';
   this.title = options.title || '';
@@ -81,7 +103,7 @@ var StackedBarChart = function (options) {
         if (!document.styleSheets[i].href)
           continue;
         var str = document.styleSheets[i].href.split('/');
-        if (str[str.length - 1] == 'visuals.css') {
+        if (str[str.length - 1] == this.cssSource) {
           var rules = document.styleSheets[i].cssRules;
           for (var j = 0; j < rules.length; j++) {
             parsed += (rules[j].cssText + '\n');

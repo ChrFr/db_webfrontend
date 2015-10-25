@@ -3,7 +3,7 @@
  * Publisher: GGR
  *
  * an interactive zoomable, clickable map of regions, 
- * call renderMap(options) to render maps on top of the background map,
+ * call render(options) to render maps on top of the background map,
  * removeMap() removes all maps but the background
  * 
  * @param options.el parent html-element the map will be placed in
@@ -33,7 +33,7 @@ var Map = function(options){
   * @param options.callback callback is called after map is rendered (loading from file is asynchronous!)
   *  
   */
-  this.renderMap = function(options){
+  this.render = function(options){
     if(!options.subunits) options.subunits = [];
     // process data
     if(options.topology){
@@ -178,13 +178,13 @@ var Map = function(options){
   if (options.background){     
       // you shouldn't zoom on background map, because it can messup the later zoom
       options.background.disableZoom = true;
-      this.renderMap(options.background);
+      this.render(options.background);
   }
   
   
   /*
-   * does the job for this.renderMap(); seperated, for optional asynchronous file-loading by d3
-   * map is for options see this.renderMap()
+   * does the job for this.render(); seperated, for optional asynchronous file-loading by d3
+   * map is for options see this.render()
    */
   function loadMap(map, options){
     // only draw required shapes       

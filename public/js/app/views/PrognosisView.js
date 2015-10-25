@@ -1,6 +1,6 @@
 define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection',
-  'views/OptionView', 'views/visuals/Map', 'views/Loader'],
+  'views/OptionView', 'views/visualizations/Map', 'views/Loader'],
     function($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
         CommunityCollection, LayerCollection, OptionView){
 
@@ -449,7 +449,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           
           _this.map.removeMaps();
 
-          _this.map.renderMap({
+          _this.map.render({
             topology: topology,
             subunits: subunits,
             aggregates: options.aggregates,

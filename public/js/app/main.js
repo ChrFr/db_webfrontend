@@ -1,8 +1,7 @@
 /** 
  * @author Christoph Franke
  * 
- * @desc app singleton, thats supposed to hold globals such as active session
- * attributes can be set and monitored (set, get, bind)
+ * @desc initialize the app
  */
 
 require(['app', 'router', 'models/SessionModel', 'views/NavbarView',

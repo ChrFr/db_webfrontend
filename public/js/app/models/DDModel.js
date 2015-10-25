@@ -1,4 +1,4 @@
-define(["app", "backbone", "filesaver"],
+define(["app", "backbone"],
 
     function(app, Backbone) {
 

@@ -186,9 +186,14 @@ function aggregateByKey(array, key, options) {
 
     return csv.join("\n");
   }
-
+  
   /*
-   * validates the user (id and token)
+   * validates the user by id and token
+   * 
+   * @param auth.id     the user-id
+   * @param auth.token  the token for authentification
+   * @param callback    function called after successful authentification
+   *                    (expects message, statuscode and object with user-information)
    */
   var authenticate = function (auth, callback) {
     if (!auth)
@@ -211,19 +216,27 @@ function aggregateByKey(array, key, options) {
   };
   
   /*
-   * check if user is permitted to request prognosis
+   * check if user is permitted to request prognosis, superuser has access to
+   * all prognoses
+   * 
+   * @param auth.id     the user-id
+   * @param auth.token  the token for authentification
+   * @param prognoseId  id of the prognosis
+   * @param callback    function called, if permission granted
    */
   var checkPermission = function (auth, prognoseId, callback) {
     authenticate(auth, function (error, status, user) {
       if (error)
         return callback(error, status);
-      query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], function (err, result) {
+      query('SELECT * FROM prognosen WHERE id=$1', [prognoseId], 
+      function (err, result) {
         if (err)
           return callback(err, 500);
         if (result.length === 0)
           return callback('not found', 404);
         if (!user.superuser && result[0].users.indexOf(parseInt(user.id)) < 0)
-          return callback('Sie haben keine Berechtigung, um auf diese Prognose zuzugreifen.', 403);
+          return callback('Sie haben keine Berechtigung, ' + 
+                'um auf diese Prognose zuzugreifen.', 403);
         //don't send the permissions
         delete result[0].users;
         return callback(null, 200, result[0]);

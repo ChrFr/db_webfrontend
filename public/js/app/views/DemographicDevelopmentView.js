@@ -1,7 +1,7 @@
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
-  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visuals/AgeTree', 'views/visuals/Map',
-  'views/visuals/LineChart', 'views/visuals/GroupedBarChart', 'views/visuals/StackedBarChart',
-  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader'],
+  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
+  'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
+  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/svgConversion'],
   function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
             
     /** 
@@ -12,9 +12,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
      * @param options.width  initial size of the visualizations; is taken, 
      *                       if width of wrapping div can't be determined 
      *                       (if in inactive tab)
+     * @param options.el     html-element, the view will be rendered in                      
      * 
-     * @return the DemographicDevelopmentView class
-     * @see    region-selectors, map, data-visualisations, data-tables
+     * @return the DemographicDevelopmentView class (for chaining)
+     * @see    data-visualisations, data-tables
      */        
     var DemographicDevelopmentView = Backbone.View.extend({
       // The DOM Element associated with this view
@@ -70,6 +71,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       render: function () {
         this.template = _.template(template, {});
         this.el.innerHTML = this.template;     
+        // aux. canvas for conversion into png
+        this.canvas = document.getElementById('pngRenderer');
         
         this.validateAgeGroups();
         app.bind('activeRegion', this.renderRegion);
@@ -198,7 +201,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             evt.stopPropagation();
             _this.xScale = Math.ceil(value);
             _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-            _this.renderTree(_this.yearData);
+            _this.renderAgeTree(_this.yearData);
           });
 
           _this.calculateAgeGroups();            
@@ -218,7 +221,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var data = this.currentModel.get('data');
         
         //visualizations        
-        this.renderTree(this.yearData);
+        this.renderAgeTree(this.yearData);
         this.renderDevelopment(data);
         this.renderBarChart(data);
         this.renderAgeGroupChart(this.groupedData);
@@ -233,7 +236,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       /* 
        * render the agetree 
        */     
-      renderTree: function(data) {
+      renderAgeTree: function(data) {
         var vis = this.el.querySelector('#agetree');
         
         clearElement(vis);
@@ -778,7 +781,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           watchBtn.classList.remove('active');
           this.compareData = null;
         }
-        this.renderTree(this.yearData);
+        this.renderAgeTree(this.yearData);
       },
       
       /*
@@ -816,29 +819,29 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       downloadAgeTreePng: function (e) {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
-        var svgDiv = $('#agetree>svg');
-        downloadPng(svgDiv, filename);//, {width: 2, height: 2});
+        var svg = $('#agetree>svg');
+        downloadPng(svg, filename, this.canvas);//, {width: 2, height: 2});
       },
       
       downloadBarChartPng: function (e) {
         var filename = this.currentModel.get('name') + '-Barchart.png';
-        var svgDiv = $('#barchart>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#barchart>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadAgeGroupChartPng: function (e) {
         var filename = this.currentModel.get('name') + '-Altersgruppen.png';
-        var svgDiv = $('#agegroupchart>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#agegroupchart>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadDevelopmentPng: function (e) {
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
-        var svgDiv = $('#absolute>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#absolute>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-relativ.png';
-        var svgDiv = $('#relative>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#relative>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       //remove the view
@@ -850,74 +853,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       }
 
     });
-
-    /*
-     * convert given svg to file
-     * scale is a resizing factor (e.g. scale = 2 doubles the resolution)
-     */
-    function downloadPng(svgDiv, filename, scale) {
-      var oldWidth = svgDiv.width(),
-          oldHeight = svgDiv.height(),
-          oldScale = svgDiv.attr('transform') || '';
-
-      //change scale
-      if (scale) {
-        svgDiv.width(scale.width * oldWidth);
-        svgDiv.height(scale.height * oldHeight);
-        svgDiv.attr('transform', 'scale(' + scale.width + ' ' + scale.height + ')');
-      }
-
-      //get svg plain text (eventually scaled)
-      var svg = new XMLSerializer().serializeToString(svgDiv[0]),
-              canvas = document.getElementById('pngRenderer');
-
-      //reset scale
-      if (scale) {
-        svgDiv.height(oldHeight);
-        svgDiv.width(oldWidth),
-                svgDiv.attr('transform', oldScale);
-      }
-
-      //draw svg on hidden canvas
-      canvg(canvas, svg);
-
-      //save canvas to file
-      var dataURL = canvas.toDataURL('image/png');
-      var blob = dataURItoBlob(dataURL);
-      window.saveAs(blob, filename);
-
-      /*
-       // this kind of download works with Chrome only
-       var link = document.createElement('a');
-       link.download = filename;
-       link.href = dataURL;            
-       link.click();
-       */
-    };
-
-    /*
-     * convert a dataURI to a blob-string
-     * source: http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
-     */
-    function dataURItoBlob(dataURI) {
-      // convert base64/URLEncoded data component to raw binary data held in a string
-      var byteString;
-      if (dataURI.split(',')[0].indexOf('base64') >= 0)
-        byteString = atob(dataURI.split(',')[1]);
-      else
-        byteString = unescape(dataURI.split(',')[1]);
-
-      // separate out the mime component
-      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-
-      // write the bytes of the string to a typed array
-      var ia = new Uint8Array(byteString.length);
-      for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-
-      return new Blob([ia], {type: mimeString});
-    };
 
     /*
      * create and return a div containing a bootstrap-alert with the given type and text

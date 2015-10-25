@@ -6,10 +6,10 @@
 
 var d3 = require('d3'),
     jsdom = require('jsdom'),
-    AgeTree = require("../public/js/app/views/visuals/AgeTree"),
+    AgeTree = require("../public/js/app/views/visualizations/AgeTree"),
     htmlStub = '<html><head></head><body><div id="dataviz-container"></div><script src="js/d3.v3.min.js"></script></body></html>',
     fs = require('fs'),
-    visualsCss = fs.readFileSync("./public/css/visuals.css", 'utf8');
+    visualsCss = fs.readFileSync("./public/css/visualizations.css", 'utf8');
 
 exports.renderAgeTree = (function(options, callback){
     var data = options.data,

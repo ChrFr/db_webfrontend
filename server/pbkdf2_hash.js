@@ -44,10 +44,7 @@ var pbkdf2Hash = {
     getSalt: function(hashedPass){
         return hashedPass.split('$')[2];
     },
-    
-    // 
-    // callback expects error and hashedPass
-    
+        
     /*
      * @desc verify given plainPass by hashing and comparing to given hashedPass
      * 

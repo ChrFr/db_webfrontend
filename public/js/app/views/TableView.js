@@ -1,5 +1,23 @@
-define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "filesaver", "tableexport"],
+define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "tableexport"],
     function(Backbone, $, template){
+      /*
+       * renders a table with given data
+       * 
+       * @param options.el                   the parent container of the rendered vis.
+       * @param options.data.alter_maennlich array, ascending number of male population at ages starting from 0
+       * @param options.data.alter_weiblich  array, ascending number of female population at ages starting from 0
+       * @param options.data.jahr            visualized year
+       * @param options.compareData          optional, will be rendered as green outline, same structure as options.data
+       * @param options.width                the width of the rendered svg
+       * @param options.height               the height of the rendered svg
+       * @param options.title                optional, main title
+       * @param options.subtitle             optional, subtitle
+       * @param options.maxX                 optional, end value of the x-Axis
+       * @param options.maxY                 optional, end value of the y-axis
+       * @param options.css                  optional, css instructions, only needed if rendered on server
+       * 
+       * @see table
+       */
       var TableView = Backbone.View.extend({
         // The DOM Element associated with this view
         el: document,
@@ -19,8 +37,10 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
           this.render();
           //this.model.fetch({success: this.render});
         },
+        
         events: {
         },
+        
         render: function(){
           this.template = _.template(template, {title: this.title,
             columns: this.columns});
@@ -67,25 +87,30 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "fi
           this.table.find('td').css('overflow', 'auto');
 
         },
+        
         getState: function(){
           var state = {};
           state.page = $(this.el).find('.page-number.active > a').text();
           state.size = $(this.el).find('.page-size').text();
           return state;
         },
+        
         getSelections: function(){
           return this.table.bootstrapTable('getSelections');
         },
+        
         save: function(filename){
           if(!filename)
             filename = this.title;
           // tableExport adds the extension automatically
           else if(filename.endsWith('.csv'))
             filename = filename.slice(0, -4);
-          this.table.tableExport({type: 'csv',
+          this.table.tableExport({
+            type: 'csv',
             fileName: filename,
             csvSeparator: ';'});
         },
+        
         //remove the view
         close: function(){
           while(this.table.firstChild)

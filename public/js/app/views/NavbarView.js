@@ -49,7 +49,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
         var session = app.get('session');
         if (session.get('user')) {
           var user = session.get('user');
-          this.$el.find('#login').text('Eingeloggt als ' + user.name);
+          this.$el.find('#login-status').text('Eingeloggt als ' + user.name);
           if (user.superuser) {
             this.el.querySelector('#admin').style.display = 'block';
           }
@@ -58,7 +58,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
         }
         else {
           this.el.querySelector('#admin').style.display = 'none';
-          this.$el.find('#login').text('Einloggen');
+          this.$el.find('#login-status').text('nicht eingeloggt');
         }
 
         var progSelector = this.el.querySelector('#progSelect');

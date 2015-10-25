@@ -7,6 +7,7 @@
 .navbar{
     z-index: 200;
 }
+
 #main-menu{    
     z-index: 10;
     height: 50px;
@@ -105,6 +106,15 @@
     background-color: gold;
 }
 
+/* don't show status on low resolutions */
+#login-status{
+    display: none;
+    position: absolute; 
+    right: 10px;
+    color: blue !important;
+    margin-top: 20px;
+}
+
 /* diverting style for resolutions bigger than 768px (bottom up) -> navbar not collapsed anymore*/
 @media (min-width: 768px) {
     
@@ -121,18 +131,13 @@
         box-shadow: 1px -1px 1px 0px grey;
     }
     
-    #main-collapse .active a, #main-collapse a:hover{    
+    #main-collapse .active a, #main-collapse a:not(#login-status):hover{    
         height: 45px;
         margin-top: 5px;
     }  
     
     #progSelect{
         margin-right: 20px;
-    }
-    
-    #login-link{
-        position: absolute; 
-        right: 100px;
     }
     
     .submenu{        
@@ -164,4 +169,9 @@
         //background: linear-gradient( to top, gold 10%, #454545 25%);
         border-bottom: solid 5px gold;
     }
+    
+    #login-status{
+        display: block;
+    }
+    
 }

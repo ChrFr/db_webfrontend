@@ -1,6 +1,6 @@
 #map{    
     min-height: 200px;
-    overflow: auto;
+    overflow: hidden;
 }
 
 #map-header, #sub-map-nav{

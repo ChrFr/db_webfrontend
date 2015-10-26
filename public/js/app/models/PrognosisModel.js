@@ -10,7 +10,7 @@ define(["backbone"],
             },
 
             initialize: function() {
-            },
+            }
         });
         return PrognosisModel;
     }

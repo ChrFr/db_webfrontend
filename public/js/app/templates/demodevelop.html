@@ -1,6 +1,5 @@
-<link rel='stylesheet' type='text/css' href='css/visuals.css'>
+<link rel='stylesheet' type='text/css' href='css/visualizations.css'>
 <div class='container-fluid'>    
-  <!-- ATTENTION: this should have same size as text column in prognosis.html (taken as reference width, because unknown widths in inactive tabs) -->
   <div id='visualizations' class='col-lg-7 col-md-12'>    
     <ul class='nav nav-tabs'>
       <li class='active'>
@@ -32,7 +31,7 @@
           <div class = 'icon'>
             <img src='img/groupedbarchart.png'>
           </div>
-          Bar Chart
+          Einflussfaktoren
         </a>
       </li>
     </ul>
@@ -100,18 +99,21 @@
     <div class='tab-content shadow-box'>            
       <div class='tab-pane active' id='agegroup-tab'>  
         <div id='agegroup-data'></div> 
+        <br>
         <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button> 
-        <button type='button' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
-        <br><br>   
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <br>
       </div>
       <div class='tab-pane' id='age-tab'>    
         <div id='age-data'></div>
-        <button type='button' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <br>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
         <br>
       </div>
       <div class='tab-pane' id='raw-tab'>    
         <div id='raw-data'></div>
-        <button type='button' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <br>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
         <br>
       </div>
     </div>    

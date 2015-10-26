@@ -3,12 +3,10 @@
 /* predefined css */
 @import url('bootstrap.css');
 @import url('bootstrap-table.min.css');
-@import url('commonstyles.css');
-@import url('jquery-ui.css');
 
 /* custom styles */
 @import url('navbar.css');
 @import url('site.css');
-@import url('visuals.css');
+@import url('visualizations.css');
 @import url('controls.css');
 @import url('map.css');

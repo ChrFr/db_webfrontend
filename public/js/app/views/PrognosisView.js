@@ -1,14 +1,14 @@
-define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
+define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection',
-  'views/OptionView', 'views/visuals/Map', 'views/Loader'],
-    function(app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
+  'views/OptionView', 'views/visualizations/Map', 'views/Loader'],
+    function($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
         CommunityCollection, LayerCollection, OptionView){
 
       /** 
        * @author Christoph Franke
        * 
-       * @desc view on a specific prognosis, leads to household and demographic prognoses
-       * @see map of area of prognoses and description of prognoses
+       * @desc view on a specific prognosis, wraps a map, the household and demographic prognoses and guides the user to the specific prognoses
+       * @see map of area of prognoses, description of prognoses, household and demographic prognoses
        */
       var PrognosisView = Backbone.View.extend({
         // The DOM Element associated with this view
@@ -28,16 +28,35 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             error: function(){
               _this.render(); // render anyway, if fetching layers fails, you can at least choose Gesamtgebiet/Gemeinde on layer selection
             }
+          });          
+        
+          var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+              clearTimeout (timer);
+              timer = setTimeout(callback, ms);
+            };
+          })();
+
+          var _this = this;
+          //listen to resize event of the window and rerender, if resized
+          $(window).resize(function(e) {             
+            if (e.target === window)
+              delay(function(){
+                _this.rerender();
+              }, 1000);
           });
         },
         
         events: {
-          // age group controls
+          // navigate to the specific prognoses
           'click #sub-map-nav>a': 'tabChange',
         },
         
-        // activate the menu link in the navbar when a link is clicked here
-        // not best practice, because cross linking with navbar, but better for usability
+        /*
+         * activate the menu link in the navbar when a link is clicked here
+         * not best practice, because cross linking with navbar, but better for usability
+         */
         tabChange: function(e){
           // don't know why it is currentTarget instead of target here, e.target is strangely enough the headline inside the link
           var href = e.currentTarget.getAttribute("href");
@@ -52,11 +71,17 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             document.querySelector('#li-hh').className = 'active';
         },
         
+        /*
+         * render the view
+         */
         render: function(){
           var _this = this;
           this.template = _.template(template, {});
           this.el.innerHTML = this.template;
 
+          // overview should be opened, when new prognosis is selected
+          document.querySelector('#li-overview>a').click();
+          
           var prog = app.get('activePrognosis');
           if(prog){
             this.el.querySelector('#description-div').style.display = 'block';
@@ -65,30 +90,11 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
 
           //id of active prognosis changed in navbar -> render it
           app.bind('activePrognosis', function(prognosis){
-            // open overview tab by simulating click on nav
-            document.querySelector('#li-overview>a').click();
-
             var success = _this.renderOverview(app.get('activePrognosis'));
             if(success){
               _this.prepareSelections(prognosis);
             }
             else{
-              /*
-                //listen to resize event of the window and rerender, if resized
-                $(window).resize(function(e) {  
-                    if (e.target === this)
-                        delay(function(){
-                            if (_this.resourcesView){
-                                _this.resourcesView.unbind();
-                                _this.resourcesView.remove();
-                            };                            
-                            if (_this.editorView){
-                                _this.editorView.unbind();
-                                _this.editorView.remove();
-                            };
-                            _this.render();
-                        }, 500);
-                });*/
               // hide all elements interacting with prognoses, when no prognosis is loaded
               _this.el.querySelector('#description-div').style.display = 'none';
               _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
@@ -110,8 +116,27 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           return this;
         },
         
-        // prepare the region selection and the specific prognoses views
-        // id: id of selected prognosis (available regions depend on this)
+        /*
+         * rerender graphical elements to adapt to current window size
+         */
+        rerender: function(){       
+          // rerender visualisations of the demographic development view
+          if(this.ddView)
+            this.ddView.renderData();
+          
+          // resize the map
+          if(this.map){
+            var vis = this.el.querySelector('#map');            
+            var width = parseInt(vis.offsetWidth) - 20, // rendering exceeds given limits -> 10px less
+                height = width;
+            this.map.changeViewport(width, height);
+          }
+        },
+        
+        /*
+         * prepare the region selection and the specific prognoses views
+         * id: id of selected prognosis (available regions depend on this)
+         */
         prepareSelections: function(prognosis){
           var _this = this;
           var loader = Loader(this.el.querySelector('#map'));
@@ -122,7 +147,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             },
             success: function(){
               loader.remove();
-              _this.createMap(success = function(){
+              _this.createMap(callback = function(){
                 _this.el.querySelector('#description-div').style.display = 'block';
                 _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
                 _this.el.querySelector('#sub-map-nav').style.display = 'block';
@@ -163,17 +188,17 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             this.ddView.close();
           if(this.hhView)
             this.hhView.close();
-
-          // create new views (in newly created divs, because 'close' will remove them)
           this.ddView = new DemographicDevelopmentView({
-            el: this.el.querySelector('#dd-tab').appendChild(document.createElement('div')),
-            visTabWidth: parseInt(this.el.querySelector('#vis-reference').offsetWidth)
+            el: this.el.querySelector('#dd-tab').appendChild(document.createElement('div'))
           });
           this.hhView = new HouseholdsDevelopmentView({
             el: this.el.querySelector('#hh-tab').appendChild(document.createElement('div'))
           });
         },
         
+        /*
+         * render the start messages like description and title
+         */
         renderOverview: function(prognosis){
           var map = this.el.querySelector('#map');
           var title = this.el.querySelector('#title');
@@ -196,8 +221,10 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           }
         },
         
-        // change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
-        // gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
+        /*
+         * change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
+         * gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
+         */
         changeLayer: function(layerId){
           var _this = this;
           var progId = app.get('activePrognosis').id;
@@ -220,7 +247,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             var region = {id: 0, name: 'Gesamtgebiet', rs: allCommunities};
             _this.renderMap({
               aggregates: [region],
-              success: function(){
+              callback: function(){
                 _this.map.select(0);
               }
             }); // update map
@@ -342,7 +369,10 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           }
         },
         
-        createMap: function(success){    
+        /*
+         * create the map with a background-layer containing germany
+         */
+        createMap: function(callback){    
           var vis = this.el.querySelector('#map');
           while(vis.firstChild)
             vis.removeChild(vis.firstChild);
@@ -358,18 +388,20 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             background: {
               source: './shapes/bundeslaender.json',
               isTopoJSON: true,
-              success: success
+              callback: callback
             }
           });
         },
         
-        // render the map of regions
-        // aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
-        // options.success: only if renderregions
+        /*
+         * render the map of regions
+         * optiona.aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
+         * options.callback: called after map is rendered
+         */
         renderMap: function(options){
           
           var _this = this,
-              units = [],
+              subunits = [],
               options = options || {};
 
           // click handler, if map is clicked, render data of selected region
@@ -400,7 +432,7 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
             'features': []
           };
           this.communities.each(function(model){
-            units.push(model.get('rs'));
+            subunits.push(model.get('rs'));
             var feature = {
               'type': 'Feature',
               'geometry': JSON.parse(model.get('geom_json')),
@@ -417,19 +449,21 @@ define(['app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDe
           
           _this.map.removeMaps();
 
-          _this.map.renderMap({
+          _this.map.render({
             topology: topology,
-            units: units,
+            subunits: subunits,
             aggregates: options.aggregates,
             isTopoJSON: false,
-            success: options.success,
+            callback: options.callback,
             boundaries: prog.get('boundaries'),
             onClick: onClick
           });
           
         },
         
-        //remove the view
+        /*
+         * remove the view
+         */
         close: function(){
           app.unbind('activePrognosis');
           if(this.ddView)

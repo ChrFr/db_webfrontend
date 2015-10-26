@@ -1,9 +1,18 @@
-define(["backbone", "models/DDModel", 'models/DDAggregate'],
+define(['backbone', 'models/DDModel', 'models/DDAggregate'],
   function (Backbone, DDModel, DDAggregate) {
 
-    // Creates a new Backbone Collection class object
+    /** 
+     * @author Christoph Franke
+     * 
+     * @desc collection to store models for demographic data 
+     * 
+     * @param  options.progId  id of the prognosis the demo. data belongs to  
+     *  
+     * @return the DemographicDevelopmentCollection class
+     */   
     var DemographicDevelopmentCollection = Backbone.Collection.extend({
-      // Tells the Backbone Collection that all of it's models will be of type Model (listed up top as a dependency)
+      // Tells the Backbone Collection that all of it's models will be of type Model 
+      // (listed up top as a dependency), models can be AggregateModels as well (derived) 
       model: DDModel,
       url: 'api/prognosen/{progId}/bevoelkerungsprognose/',
       
@@ -25,19 +34,27 @@ define(["backbone", "models/DDModel", 'models/DDAggregate'],
           if (callback)
             callback(collection, res, opt);
         };
+        // call overriden method of prototype
         return Backbone.Model.prototype.fetch.call(this, options);     
       },
       
-      // get demographic model according to given region
-      // region: object with id, name and rs (if aggregated)
+      /*
+       * @desc get demographic model according to given region
+       * 
+       * @param region: object with id, name and rs (if aggregated)
+       * 
+       * @return
+       */
       getRegion: function (region) {
-        // not aggregated -> get simple community-model        
+        // not aggregated -> get simple community-model ("gemeinde")        
         if (!region.rs){
           var model = this.find(
-            // for single communities rs is the id, only aggregates get an id (see _getAggregateRegion)
+            // for single communities rs is the id, only aggregates get an id 
+            // (see _getAggregateRegion)
             function (model) {return model.get('rs') == region.id;
           }); 
-          model.set('name', region.name); // set name here, because server doesn't send it when fetching
+          // set name here, because server doesn't send it when fetching
+          model.set('name', region.name); 
           return model;
         }
         // aggregated -> get aggregation of communities
@@ -45,10 +62,16 @@ define(["backbone", "models/DDModel", 'models/DDAggregate'],
           return this._getAggregateRegion(region.id, region.name, region.rs);
       },
       
-      // get an aggregated region from the collection or create it (as cache)
-      // id: the id of the aggregate region you look for ( respectively a newly created one gets, if not exists)
-      // rsAggr: array of the keys of the regions (= rs) the aggregate consists of
-      // name: the name the newly created aggregate gets if id not found
+      /*
+       * @desc get an aggregated region from the collection or create it (as cache)
+       * 
+       * @param id     the id of the aggregate region you look for 
+       *               (respectively a newly created one gets, if not exists)
+       * @param rsAggr array of the keys of the regions (= rs) the aggregate consists of
+       * @param name   the name the newly created aggregate gets if id not found
+       * 
+       * @return
+       */
       _getAggregateRegion: function (id, name, rsAggr) {
         var model = this.find(function (model) {
           return model.get('id') == id;
@@ -61,11 +84,9 @@ define(["backbone", "models/DDModel", 'models/DDAggregate'],
             rsAggr: rsAggr
           });
           this.add(model);
-        }
-        ;
+        };
         return model;
       }
-
     });
     return DemographicDevelopmentCollection;
   }

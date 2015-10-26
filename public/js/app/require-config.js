@@ -51,7 +51,7 @@ require.config({
     // pnglink as jquery-plugin
     'rgbcolor': ['pnglink'],
     'stackblur': ['pnglink'],
-    'pnglink': ['jquery'],
+    'pnglink': ['jquery']
   }  
 });
 // load main file

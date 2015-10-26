@@ -1,121 +1,126 @@
 <div id="rootwizard" class="col-md-8">    
-    <ul class="nav nav-pills">
-        <li id="userLink" class="active"><a href="#tab1" data-toggle="tab">Nutzer</a></li>
-        <li id="progLink"><a href="#tab2" data-toggle="tab">Prognosen</a></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane active" id="tab1">   
-            <!--<div class="btn-group" role="group" aria-label="...">-->
-                <button id="deleteUser" type="button" class="btn btn-primary">Löschen</button> 
-                <button id="editUser" type="button" class="btn btn-primary">Editieren</button> 
-           <!-- </div>-->
-            <button id="newUser" type="button" class="btn btn-primary">Neu</button> 
-            <div id="usertable" class="table"></div>
-        </div>
-        <div class="tab-pane" id="tab2">  
-            <!--<div class="btn-group" role="group" aria-label="...">-->
-                <button id="deletePrognosis" type="button" class="btn btn-primary">Löschen</button> 
-                <button id="editPrognosis" type="button" class="btn btn-primary">Editieren</button> 
-           <!-- </div>-->
-            <button id="newPrognosis" type="button" class="btn btn-primary">Neu</button>           
-            <div id="prognosestable" class="table"></div>
-        </div>
+  <ul class="nav nav-tabs">
+    <li id="userLink" class="active"><a href="#tab1" data-toggle="tab">Nutzer</a></li>
+    <li id="progLink"><a href="#tab2" data-toggle="tab">Prognosen</a></li>
+  </ul>
+  <div class='tab-content shadow-box'>    
+    <div class='tab-pane active' id="tab1">   
+      <div id="usertable" class="table"></div>
+      <!--<div class="btn-group" role="group" aria-label="...">-->
+      <button id="deleteUser" type="button" class="btn btn-primary">Löschen</button> 
+      <button id="editUser" type="button" class="btn btn-primary">Editieren</button> 
+      <!-- </div>-->
+      <button id="newUser" type="button" class="btn btn-primary">Neu</button> 
     </div>
-    <div class="alert alert-warning">
-        <strong>Achtung!</strong> 
-        <label class="status"></label>
+    <div class="tab-pane" id="tab2">       
+      <div id="prognosestable" class="table"></div>
+      <!--<div class="btn-group" role="group" aria-label="...">-->
+      <button id="deletePrognosis" type="button" class="btn btn-primary">Löschen</button> 
+      <button id="editPrognosis" type="button" class="btn btn-primary">Editieren</button> 
+      <!-- </div>-->
+      <button id="newPrognosis" type="button" class="btn btn-primary">Neu</button>      
     </div>
+  </div>
+  <div class="alert alert-warning">
+    <strong>Achtung!</strong> 
+    <label class="status"></label>
+  </div>
 
-    <div class="alert alert-success">
-        <strong>Erfolg!</strong> 
-        <label class="status"></label>
-    </div>	
-    
-    <div class="alert alert-danger">
-        <strong>Fehler!</strong> 
-        <label class="status"></label>
-    </div>	
+  <div class="alert alert-success">
+    <strong>Erfolg!</strong> 
+    <label class="status"></label>
+  </div>	
+
+  <div class="alert alert-danger">
+    <strong>Fehler!</strong> 
+    <label class="status"></label>
+  </div>	
 </div>
 
 <div id="editUserDialog" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Nutzer bearbeiten</h4>
-            </div>
-            <div class="modal-body">
-                <!-- name attribute of inputs have to match attributes in data models and database! -->
-                <form>
-                    <div class="form-group">
-                        <label for="username">Username&#042;</label>
-                        <input name="name" type="text" class="form-control needed" id="username" placeholder="Name">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">E-Mail</label>
-                        <input id="email" type="email" class="form-control" name="email" placeholder="E-Mail">
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Passwort&#042;</label>
-                        <input name="password" type="text" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
-                    </div>                    
-                    <div class="checkbox">
-                      <label style="font-style: italic">
-                        Superuser
-                        <input name="superuser" type="checkbox"> 
-                      </label>
-                    </div>       
-                </form>
-                <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
-                <label id="status"></label>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
-                <button type="submit" class="btn btn-primary post">Speichern</button>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Nutzer bearbeiten</h4>
+      </div>
+      <div class="modal-body">
+        <!-- name attribute of inputs have to match attributes in data models and database! -->
+        <form>
+          <div class="form-group">
+            <label for="username">Username&#042;</label>
+            <input name="name" type="text" class="form-control needed" id="username" placeholder="Name">
+          </div>
+          <div class="form-group">
+            <label for="email">E-Mail</label>
+            <input id="email" type="email" class="form-control" name="email" placeholder="E-Mail">
+          </div>
+          <div class="form-group">
+            <label for="password">Passwort&#042;</label>
+            <!-- password is shown (to hide: type="password") -->
+            <input type="password" name="password" type="text" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
+          </div>                    
+          <div class="checkbox">
+            <label style="font-style: italic">
+              Superuser
+              <input name="superuser" type="checkbox"> 
+            </label>
+          </div>       
+        </form>
+        <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
+        <label id="status"></label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+        <button type="submit" class="btn btn-primary post">Speichern</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <div id="deleteDialog" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <p style="text-align: center; font-weight: bold; vertical-align: center;">Wollen Sie die Auswahl wirklich löschen?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary delete">Löschen</button>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p style="text-align: center; font-weight: bold; vertical-align: center;">Wollen Sie die Auswahl wirklich löschen?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary delete">Löschen</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <div id="editPrognosisDialog" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Prognose bearbeiten</h4>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="progname">Name der Prognose&#042;</label>
-                        <input name="name" type="text" class="form-control needed" id="progname" placeholder="Name">
-                    </div>
-                    <div class="form-group">
-                        <label for="description">Beschreibung</label>
-                        <textarea name="description" rows="10" class="form-control" id="description"></textarea>
-                    </div>      
-                </form>
-                <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
-                <label id="status"></label>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
-                <button type="submit" class="btn btn-primary post">Speichern</button>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Prognose bearbeiten</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="progname">Name der Prognose&#042;</label>
+            <input name="name" type="text" class="form-control needed" id="progname" placeholder="Name">
+          </div>
+          <div class="form-group">
+            <label for="description">Beschreibung</label>
+            <textarea name="description" rows="10" class="form-control" id="description"></textarea>
+          </div>      
+          <div class="form-group">
+            <label>Textvorschau</label>
+            <div class="form-control" id="preview" style="height: 200px; overflow: scroll"></div>
+          </div>      
+        </form>
+        <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
+        <label id="status"></label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+        <button type="submit" class="btn btn-primary post">Speichern</button>
+      </div>
     </div>
+  </div>
 </div>

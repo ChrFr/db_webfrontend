@@ -1,4 +1,4 @@
-define(["app", "backbone", "filesaver"],
+define(["app", "backbone"],
 
     function(app, Backbone) {
 
@@ -26,6 +26,7 @@ define(["app", "backbone", "filesaver"],
                     var maxAge, maxNumber;
                     var maxAge = maxNumber = 0;
 
+                    // preprocess other characteristic numbers
                     _.each(data, function(item){
                         var femaleAges = item.alter_weiblich,
                             maleAges = item.alter_maennlich;
@@ -54,6 +55,8 @@ define(["app", "backbone", "filesaver"],
                 if(progId)
                     this.urlRoot = this.urlRoot.replace('{progId}', progId);
             },
+            /*
+            serverside rendering is deactivated by now! rendered clientside
             
             download: function(url, mimeType, fn){                
                 var xhr = new XMLHttpRequest();
@@ -88,6 +91,7 @@ define(["app", "backbone", "filesaver"],
                 
                 this.download(url, "image/png", fn ||  this.get('rs') + "-" + year + ".png");
             }
+            */
         });
         return DemographicDevelopmentModel;
     }

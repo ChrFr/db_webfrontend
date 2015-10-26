@@ -1,8 +1,6 @@
 //enter valid entries and rename the file to dbconfig.js
 module.exports = function(){
     var config = {
-        //grants access to all accounts
-        masterkey: 'password',
         serverconfig: {
             port: "port the service will listen to",
             sessionSecret: "some secret",

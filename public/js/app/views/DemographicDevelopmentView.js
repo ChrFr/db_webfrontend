@@ -1,24 +1,29 @@
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
-  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visuals/AgeTree', 'views/visuals/Map',
-  'views/visuals/LineChart', 'views/visuals/GroupedBarChart', 'views/visuals/StackedBarChart',
-  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader'],
+  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
+  'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
+  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/svgConversion'],
   function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
             
     /** 
-    * @author Christoph Franke
-    * 
-    * @desc view on demographic development 
-    * 
-    * @param visTabWidth  initial size of the visualizations; is taken, 
-    * if width of wrapping div can't be determined (if in inactive tab)
-    * 
-    * @return the DemographicDevelopmentView class
-    * @see    region-selectors, map, data-visualisations, data-tables
-    */        
+     * @author Christoph Franke
+     * 
+     * @desc view on demographic development 
+     * 
+     * @param options.width  initial size of the visualizations; is taken, 
+     *                       if width of wrapping div can't be determined 
+     *                       (if in inactive tab)
+     * @param options.el     html-element, the view will be rendered in                      
+     * 
+     * @return the DemographicDevelopmentView class (for chaining)
+     * @see    data-visualisations, data-tables
+     */        
     var DemographicDevelopmentView = Backbone.View.extend({
       // The DOM Element associated with this view
       el: document,
-      // View constructor
+      
+      /*
+       * view-constructor
+       */
       initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
 
@@ -29,11 +34,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           // serves as cache
           this.collection = new DDCollection({progId: progId});
           this.collection.fetch({success: this.render});
-          this.visTabWidth = options.visTabWidth;
-        }
+          this.width = options.width;
+        }       
       },
       
-      // dom events (managed by jquery)
+      
+      /*
+       * dom events (managed by jquery)
+       */
       events: {
         // age group controls
         'click #new-group': 'addAgeGroup',
@@ -57,17 +65,23 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         'click #fix-scale': 'fixScale'
       },
       
-      // render view
+      /*
+       * render view
+       */ 
       render: function () {
         this.template = _.template(template, {});
-        this.el.innerHTML = this.template;        
+        this.el.innerHTML = this.template;     
+        // aux. canvas for conversion into png
+        this.canvas = document.getElementById('pngRenderer');
         
         this.validateAgeGroups();
         app.bind('activeRegion', this.renderRegion);
         return this;
       },
       
-      // render the given region by fetching and visualizing it's demographic data
+      /*
+       * render the given region by fetching and visualizing it's demographic data
+       */
       renderRegion: function (region) {         
         
         var model = this.collection.getRegion(region);
@@ -83,136 +97,151 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         Loader(this.el.querySelector('#agetree'));
         
         model.fetch({success: function () {
-            //_this.el.querySelector('#visualizations').style.display = 'block';
-            _this.el.querySelector('#tables').style.display = 'block';
-            var sideControls = _this.el.getElementsByClassName('side-controls');
-            for (var i = 0; i < sideControls.length; i++) 
-              sideControls[i].style.display = 'block';   
-            var bottomControls =  _this.el.getElementsByClassName('bottom-controls');
-            for (var i = 0; i < bottomControls.length; i++) 
-              bottomControls[i].style.display = 'block';   
-            
-            // you get 0 as widths of elements in inactive tabs
-            var width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
-            this.visTabWidth = width? width: this.visTabWidth; // if you can't determine current width get last known
-            
-            var data = model.get('data')[0],
-                maxYear = model.get('maxYear'),
-                minYear = model.get('minYear'),
-                data = model.get('data');
-            _this.currentModel = model;
-            //draw first year if not assigned yet
-            if (!_this.currentYear) {
-              _this.yearData = data[0];
-              _this.currentYear = minYear;
-            }
-            //keep year of previous region, if new region has data for it
-            else {
-              var found = false;
-              _.each(model.get('data'), (function (yd) {
-                if (yd.jahr == _this.currentYear) {
-                  found = true;
-                  _this.yearData = yd;
-                }
-              }));
-              if (!found) {
-                _this.currentYear = minYear;
-                _this.yearData = data[0];
+          //_this.el.querySelector('#visualizations').style.display = 'block';
+          _this.el.querySelector('#tables').style.display = 'block';
+          var sideControls = _this.el.getElementsByClassName('side-controls');
+          for (var i = 0; i < sideControls.length; i++) 
+            sideControls[i].style.display = 'block';   
+          var bottomControls =  _this.el.getElementsByClassName('bottom-controls');
+          for (var i = 0; i < bottomControls.length; i++) 
+            bottomControls[i].style.display = 'block';   
+
+          // you get 0 as widths of elements in inactive tabs
+          _this.width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
+
+          //_this.width = width? width: _this.width // if you can't determine current width get last known
+
+          var maxYear = model.get('maxYear'),
+              minYear = model.get('minYear'),
+              data = model.get('data');
+
+          _this.currentModel = model;
+          //draw first year if not assigned yet
+          if (!_this.currentYear) {
+            _this.yearData = data[0];
+            _this.currentYear = minYear;
+          }
+          //keep year of previous region, if new region has data for it
+          else {
+            var found = false;
+            _.each(model.get('data'), (function (yd) {
+              if (yd.jahr == _this.currentYear) {
+                found = true;
+                _this.yearData = yd;
               }
+            }));
+            if (!found) {
+              _this.currentYear = minYear;
+              _this.yearData = data[0];
             }
-            // UPDATE SLIDERS    
-            var width = _this.visTabWidth - 150; // - padding etc.
-            var sliderDiv = _this.el.querySelector('#year-slider');
-            while (sliderDiv.firstChild)
-              sliderDiv.removeChild(sliderDiv.firstChild);
-            //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
-            sliderDiv.style.width = width + 'px';
-            var yearStep = Math.floor((maxYear - minYear) / 4);
+          }
+          // UPDATE SLIDERS    
+          var width = _this.width - 150; // - padding etc.
+          var sliderDiv = _this.el.querySelector('#year-slider');
+          clearElement(sliderDiv);
+          //var btnWidth = parseInt(_this.el.querySelector('#play').clientWidth; returns 0, why?
+          sliderDiv.style.width = width + 'px';
+          var yearStep = Math.floor((maxYear - minYear) / 4);
 
-            _this.yearSlider = d3slider()
-                    .axis(
-                      d3.svg.axis().orient('down')
-                        //4 ticks
-                        .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
-                        .tickFormat(d3.format('d'))
-                        .ticks(maxYear - minYear)
-                        .tickSize(10)
-                    )
-                    .min(minYear)
-                    .max(maxYear)
-                    .step(1)
-                    .value(_this.currentYear);
+          _this.yearSlider = d3slider()
+              .axis(
+                d3.svg.axis().orient('down')
+                  //4 ticks
+                  .tickValues([minYear, minYear + yearStep, minYear + yearStep * 2, minYear + yearStep * 3, maxYear])
+                  .tickFormat(d3.format('d'))
+                  .ticks(maxYear - minYear)
+                  .tickSize(10)
+              )
+              .min(minYear)
+              .max(maxYear)
+              .step(1)
+              .value(_this.currentYear);
 
-            d3.select('#year-slider').call(_this.yearSlider);
+          d3.select('#year-slider').call(_this.yearSlider);
 
-            _this.yearSlider.on('slide', function (evt, value) {
-              evt.stopPropagation();
-              _this.changeYear(value);
-            });
+          _this.yearSlider.on('slide', function (evt, value) {
+            evt.stopPropagation();
+            _this.changeYear(value);
+          });
 
-            sliderDiv = _this.el.querySelector('#scale-slider');
-            var locked = (_this.el.querySelector('#fix-scale').className === 'active');
-            while (sliderDiv.firstChild)
-              sliderDiv.removeChild(sliderDiv.firstChild);
+          sliderDiv = _this.el.querySelector('#scale-slider');
+          var locked = (_this.el.querySelector('#fix-scale').className === 'active');
+          clearElement(sliderDiv);
 
-            //you can only scale below highest number, if you fixed scale before (for comparison)
-            var min = Math.ceil(model.get('maxNumber'));
-            var minScale = (!_this.xScale || min < _this.xScale) ? min : _this.xScale;
-            if (minScale < 1)
-              minScale = 1;
+          //you can only scale below highest number, if you fixed scale before (for comparison)
+          var min = Math.ceil(model.get('maxNumber'));
+          var minScale = (!_this.xScale || min < _this.xScale) ? min : _this.xScale;
+          if (minScale < 1)
+            minScale = 1;
 
-            if (!_this.xScale || !locked) {
-              _this.xScale = model.get('maxNumber');
-              _this.xScale *= 1.3;
-              _this.xScale = Math.ceil(_this.xScale);
-              _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-            }
+          if (!_this.xScale || !locked) {
+            _this.xScale = model.get('maxNumber');
+            _this.xScale *= 1.3;
+            _this.xScale = Math.ceil(_this.xScale);
+            _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
+          }
 
-            var maxScale = 10000;
+          var maxScale = 10000;
 
-            var xScale = d3.scale.log()
-                    .domain([minScale, maxScale]);
+          var xScale = d3.scale.log()
+              .domain([minScale, maxScale]);
 
-            _this.el.querySelector('#min-scale').innerHTML = minScale;
-            _this.el.querySelector('#max-scale').innerHTML = maxScale;
+          _this.el.querySelector('#min-scale').innerHTML = minScale;
+          _this.el.querySelector('#max-scale').innerHTML = maxScale;
 
+          var scaleSlider = d3slider()
+              .scale(xScale)
+              .value(_this.xScale)
+              .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
+              .orientation('vertical');
 
+          d3.select('#scale-slider').call(scaleSlider);
 
-            var scaleSlider = d3slider().scale(xScale)
-                    .value(_this.xScale)
-                    .axis(d3.svg.axis().orient('right').tickFormat(d3.format('')).ticks(10).tickFormat(''))
-                    .orientation('vertical');
+          scaleSlider.on('slide', function (evt, value) {
+            evt.stopPropagation();
+            _this.xScale = Math.ceil(value);
+            _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
+            _this.renderAgeTree(_this.yearData);
+          });
 
-            d3.select('#scale-slider').call(scaleSlider);
-
-            scaleSlider.on('slide', function (evt, value) {
-              evt.stopPropagation();
-              _this.xScale = Math.ceil(value);
-              _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
-              _this.renderTree(_this.yearData);
-            });
-            
-            _this.calculateAgeGroups();
-            //visualizations
-            _this.renderTree(_this.yearData);
-            _this.renderDevelopment(data);
-            _this.renderBarChart(data);
-            _this.renderAgeGroupChart(_this.groupedData);
-
-            //data tables
-            _this.renderAgeGroupTable(_this.currentYear);
-            _this.renderAgeTable(_this.yearData);
-            _this.renderRawData(data);
-          }});
+          _this.calculateAgeGroups();            
+          _this.renderData();
+        }});
       },
       
-      renderTree: function (data) {
+      /*
+       * call functions to render visualizations and tables with active data
+       */
+      renderData: function(){
+        // no active model -> nothing to render
+        if(!this.currentModel)
+          return;        
+        
+        this.width = parseInt(this.el.querySelector('.tab-content').offsetWidth);
+        var data = this.currentModel.get('data');
+        
+        //visualizations        
+        this.renderAgeTree(this.yearData);
+        this.renderDevelopment(data);
+        this.renderBarChart(data);
+        this.renderAgeGroupChart(this.groupedData);
+        //data tables
+        this.renderAgeGroupTable(this.currentYear);
+        this.renderAgeTable(this.yearData);
+        this.renderRawData(data);
+        
+        // TODO: change size of yearSlider
+      },
+      
+      /* 
+       * render the agetree 
+       */     
+      renderAgeTree: function(data) {
         var vis = this.el.querySelector('#agetree');
+        
+        clearElement(vis);
 
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
-
-        var width = this.visTabWidth - 80;
+        var width = this.width - 5;
         //width / height ratio is 1 : 1.2
         var height = width * 0.8;
         this.ageTree = new AgeTree({
@@ -229,6 +258,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTree.render();
       },
       
+      /*
+       * render 2 line charts with demo. development
+       */
       renderDevelopment: function (data) {
         var total = [],
             years = [];
@@ -240,16 +272,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           years.push(d.jahr);
         });
 
-        var dataAbs = {label: '',
+        var dataAbs = {
+          label: '',
           x: years,
           y: total
         };
 
         var vis = this.el.querySelector('#absolute');
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
+        clearElement(vis);
 
-        var width = this.visTabWidth - 40;
+        var width = this.width - 40;
         var height = width * 0.5;
         this.absoluteChart = new LineChart({
           el: vis,
@@ -278,9 +310,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         ;
 
         vis = this.el.querySelector('#relative');
-
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
+        clearElement(vis);
 
         this.relativeChart = new LineChart({
           el: vis,
@@ -296,6 +326,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.relativeChart.render();
       },
       
+      /*
+       * render bar chart with factors influencing the development
+       */
       renderBarChart: function (data) {
         var dataSets = [];
 
@@ -313,10 +346,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
 
         var vis = this.el.querySelector('#barchart');
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
-
-        var width = this.visTabWidth - 70;
+        clearElement(vis);
+        
+        var width = this.width - 70;
         var height = width * 0.8;
         this.barChart = new GroupedBarChart({
           el: vis,
@@ -333,6 +365,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.barChart.render();
       },
       
+      /*
+       * render a table with mail and female ages for given year
+       */
       renderAgeTable: function (yearData) {
         var columns = [],
             title = '';
@@ -375,6 +410,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      /*
+       * render a table with the raw data received from the server
+       */
       renderRawData: function (data) {
         var columns = [];
         Object.keys(data[0]).forEach(function (i) {
@@ -390,6 +428,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      /*
+       * divide the range of ages into the defined agegroups 
+       */
       calculateAgeGroups: function () {
         var _this = this;
         this.groupedData = [];
@@ -429,13 +470,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      /*
+       * render a stacked bar-chart with agegroups
+       */
       renderAgeGroupChart: function (data) {
         var vis = this.el.querySelector('#agegroupchart');
+        clearElement(vis);
 
-        while (vis.firstChild)
-          vis.removeChild(vis.firstChild);
-
-        var width = this.visTabWidth - 70;
+        var width = this.width - 70;
         var height = width * 0.8;
 
         var groupNames = [];
@@ -458,6 +500,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageGroupChart.render();
       },
       
+      /*
+       * render a table with ages divided into agegroups
+       */
       renderAgeGroupTable: function (year) {
         var columns = [],
             title = '';
@@ -529,6 +574,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           selectable: true
         });
       },
+      
       /*
        * sorted insertion of user defined agegroups (in app)
        */
@@ -564,6 +610,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.renderAgeGroupTable(this.currentYear);
         this.renderAgeGroupChart(this.groupedData);
       },
+      
       /*
        * flags intersections of groups, condition: sorted order of agegroups
        */
@@ -594,6 +641,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           tab.appendChild(createAlert('warning', text));
         }
       },
+      
       /*
        * adjust age input range, if first input field changed
        */
@@ -608,6 +656,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           toInput.value = from + 1;
         }
       },
+      
       /*
        * remove agegroups
        */
@@ -635,15 +684,18 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.renderAgeGroupTable(this.currentYear);
         this.renderAgeGroupChart(this.groupedData);
       },
-      changeYear: function (year) {
+      
+      /*
+       * rerender visualisations according to the given year
+       */
+      changeYear: function(year) {
         this.currentYear = year;
         var data = this.currentModel.get('data');
         var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
         this.yearData = data[idx];
         this.ageTree.changeData(this.yearData);
         this.renderAgeGroupTable(this.currentYear);
-        this.renderAgeTable(this.yearData);
-        
+        this.renderAgeTable(this.yearData);        
       },
       
       /*
@@ -669,8 +721,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
       },
       
+      /*
+       * cycle through the years (change year every 1000 ms)
+       */
       play: function (event) {
         var _this = this;
+        var t = 1000;
         if (!this.timerId) {
           var btn = event.target;
           btn.classList.remove('stopped');
@@ -691,12 +747,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               _this.yearSlider.value(currentYear + 1);
               _this.changeYear(currentYear + 1);
             }
-          }, 1000);
+          }, t);
         }
         else
           this.stop();
       },
       
+      /*
+       * stop the cycle through the years
+       */
       stop: function () {
         var btn = this.el.querySelector('#play');
         if (!btn)
@@ -709,7 +768,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }
       },
       
-      // watch/unwatch the current model
+      /*
+       * watch/unwatch the current model
+       */
       watchYear: function (event) {
         var watchBtn = event.target;
         if (!this.compareData) {
@@ -720,9 +781,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           watchBtn.classList.remove('active');
           this.compareData = null;
         }
-        this.renderTree(this.yearData);
+        this.renderAgeTree(this.yearData);
       },
       
+      /*
+       * fix the current scale (agetree)
+       */
       fixScale: function (event) {
         var btn = event.target;
         var slider = this.el.querySelector('#scale-slider-container');
@@ -736,46 +800,48 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         }
       },
       
+      // FUNCTIONS FOR CONVERTING CURRENT MODELDATA TO CSV/PNG
+      
       downloadAgeTableCsv: function () {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv'
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv';
         this.ageTable.save(filename);
       },
       
       downloadRawCsv: function () {
-        var filename = this.currentModel.get('name') + '-Rohdaten.csv'
+        var filename = this.currentModel.get('name') + '-Rohdaten.csv';
         this.rawTable.save(filename);
       },
       
       downloadAgeGroupCsv: function () {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv'
+        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv';
         this.ageGroupTable.save(filename);
       },
       
       downloadAgeTreePng: function (e) {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
-        var svgDiv = $('#agetree>svg');
-        downloadPng(svgDiv, filename);//, {width: 2, height: 2});
+        var svg = $('#agetree>svg');
+        downloadPng(svg, filename, this.canvas);//, {width: 2, height: 2});
       },
       
       downloadBarChartPng: function (e) {
         var filename = this.currentModel.get('name') + '-Barchart.png';
-        var svgDiv = $('#barchart>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#barchart>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadAgeGroupChartPng: function (e) {
         var filename = this.currentModel.get('name') + '-Altersgruppen.png';
-        var svgDiv = $('#agegroupchart>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#agegroupchart>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadDevelopmentPng: function (e) {
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
-        var svgDiv = $('#absolute>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#absolute>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-relativ.png';
-        var svgDiv = $('#relative>svg');
-        downloadPng(svgDiv, filename, {width: 2, height: 2});
+        var svg = $('#relative>svg');
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       //remove the view
@@ -788,68 +854,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
     });
 
-    function downloadPng(svgDiv, filename, scale) {
-      var oldWidth = svgDiv.width(),
-              oldHeight = svgDiv.height(),
-              oldScale = svgDiv.attr('transform') || '';
-
-      //change scale
-      if (scale) {
-        svgDiv.width(scale.width * oldWidth);
-        svgDiv.height(scale.height * oldHeight);
-        svgDiv.attr('transform', 'scale(' + scale.width + ' ' + scale.height + ')');
-      }
-
-      //get svg plain text (eventually scaled)
-      var svg = new XMLSerializer().serializeToString(svgDiv[0]),
-              canvas = document.getElementById('pngRenderer');
-
-      //reset scale
-      if (scale) {
-        svgDiv.height(oldHeight);
-        svgDiv.width(oldWidth),
-                svgDiv.attr('transform', oldScale);
-      }
-
-      //draw svg on hidden canvas
-      canvg(canvas, svg);
-
-      //save canvas to file
-      var dataURL = canvas.toDataURL('image/png');
-      var blob = dataURItoBlob(dataURL);
-      window.saveAs(blob, filename);
-
-      /*
-       // this kind of download works with Chrome only
-       var link = document.createElement('a');
-       link.download = filename;
-       link.href = dataURL;            
-       link.click();
-       */
-    };
-
-    // source:
-    // http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
-    function dataURItoBlob(dataURI) {
-      // convert base64/URLEncoded data component to raw binary data held in a string
-      var byteString;
-      if (dataURI.split(',')[0].indexOf('base64') >= 0)
-        byteString = atob(dataURI.split(',')[1]);
-      else
-        byteString = unescape(dataURI.split(',')[1]);
-
-      // separate out the mime component
-      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-
-      // write the bytes of the string to a typed array
-      var ia = new Uint8Array(byteString.length);
-      for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-
-      return new Blob([ia], {type: mimeString});
-    };
-
+    /*
+     * create and return a div containing a bootstrap-alert with the given type and text
+     * available types: success, info, danger, warning
+     */
     function createAlert(type, text) {
       var div = document.createElement('div');
       div.innerHTML = '<div class="alert alert-' + type + '">' +
@@ -857,8 +865,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               text;
       return div;
     };
+    
+    /*
+     * clear given dom-element by removing its children
+     */
+    function clearElement(el){
+      while (el.firstChild)
+        el.removeChild(el.firstChild);
+    }
 
-    // Returns the View class
+    // return the view class (for chaining)
     return DemographicDevelopmentView;
   }
 );

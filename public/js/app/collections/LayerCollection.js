@@ -5,7 +5,7 @@ define(["backbone"],
         // Creates a new Backbone Collection class object
         var LayerCollection = Backbone.Collection.extend({
             
-            url: 'api/layers/',
+            url: 'api/layer/',
 
             initialize: function(){   
             },    

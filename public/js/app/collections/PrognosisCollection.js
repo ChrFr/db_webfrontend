@@ -12,6 +12,11 @@ define(["backbone","models/PrognosisModel"],
 
             initialize: function(options){ 
             },    
+            
+            //order function
+            comparator: function(model) {
+                return model.id;
+            },
         });
         return PrognosisCollection;
     }

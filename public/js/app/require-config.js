@@ -33,7 +33,8 @@ require.config({
     'stackblur': '../libs/StackBlur',
     'rgbcolor': '../libs/rgbcolor',
     'canvg': '../libs/canvg',
-    'pnglink': '../libs/jquery.pnglink'
+    'pnglink': '../libs/jquery.pnglink',
+    'jspdf': '../libs/jspdf.min'
   },
   // configuration for scripts that are not AMD compatible
   shim: {

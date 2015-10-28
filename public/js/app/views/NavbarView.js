@@ -105,34 +105,40 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
         $('.submenu').removeClass('active');
         var id = event.target.id;
         if (id === 'prognosis')
-          $('#prognosis-menu').addClass('active');
+          $('#prognosis-submenu').addClass('active');
         else if (id === 'login')
-          $('#login-menu').addClass('active');
+          $('#login-submenu').addClass('active');
         else if (id === 'admin')
-          $('#admin-menu').addClass('active');
+          $('#admin-submenu').addClass('active');
+        else if (id === 'legaldetails')
+          $('#legaldetails-submenu').addClass('active');
       },
       
       // display the current active url-route by activating/deactivating menus/submenus
-      displayRoute: function (route, params) {
+      displayRoute: function (route) {
         $('.submenu').removeClass('active');
         var item = $('');
         var subitem = $('');
         if (route === 'home') {
           item = $('#main-menu').find('#home').parent();
-          $('#home-menu').addClass('active');
+          $('#home-submenu').addClass('active');
         }
-        else if (route === 'prognoses') {
+        else if (route === 'prognosen') {
           item = $('#main-menu').find('#prognosis').parent();
           subitem = $('.submenu').find('#prognosis-content').parent();
-          $('#prognosis-menu').addClass('active');
+          $('#prognosis-submenu').addClass('active');
         }
         else if (route === 'login') {
           item = $('#main-menu').find('#login').parent();
-          $('#login-menu').addClass('active');
+          $('#login-submenu').addClass('active');
         }
         else if (route === 'admin') {
           item = $('#main-menu').find('#admin').parent();
-          $('#admin-menu').addClass('active');
+          $('#admin-submenu').addClass('active');
+        }
+        else if (route === 'impressum') {
+          item = $('#main-menu').find('#legaldetails').parent();
+          $('#legaldetails-submenu').addClass('active');
         }
         item.siblings().removeClass('active');
         item.addClass('active');

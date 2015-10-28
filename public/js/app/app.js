@@ -12,7 +12,7 @@ define(['backbone'],
     var app = {
       root: '/', // root path of the application
       URL: '/', // base application URL
-      API: '/api', // base Rest-API URL
+      API: '/api' // base Rest-API URL
     };
     
     // closure (private variables)
@@ -35,12 +35,12 @@ define(['backbone'],
       if(!callbacks[attribute])
         callbacks[attribute] = [];
       callbacks[attribute].push(callback);
-    }
+    };
     
     // unbind an attribute (possible ToDo: keep track of object asking, so not all listeners have to removed)
     app.unbind = function (attribute, callback) {     
       delete callbacks[attribute];
-    }
+    };
 
     // set value of an attribute, bound callback is called 
     // (callbacks can be suppressed by passing doIgnore = true)
@@ -51,12 +51,12 @@ define(['backbone'],
           callback(value);
         });        
       }
-    }
+    };
 
     // get the value of an attribute
     app.get = function (attribute) {
       return attributes[attribute];
-    }
+    };
 
     return app;
   }

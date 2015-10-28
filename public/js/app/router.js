@@ -1,8 +1,7 @@
-define(['app', 'backbone', 'views/HomeView',
+define(['app', 'backbone', 'views/CustomView',
   'views/LoginView', 'views/PrognosisView', 'views/AdminView',
-  'views/DemographicDevelopmentView', 'views/HouseholdsDevelopmentView'],
-  function (app, Backbone, Home, Login, Prognosis, Admin,
-          DemographicDevelopmentView, HouseholdsDevelopmentView) {
+  'text!templates/home.html', 'text!templates/legaldetails.html'],
+  function (app, Backbone, Custom, Login, Prognosis, Admin, homeTemplate, legalTemplate) {
             
     /** 
     * @author Christoph Franke
@@ -18,34 +17,44 @@ define(['app', 'backbone', 'views/HomeView',
       // the routes (<baseURL>/#<name of route>)
       routes: {
         '': 'home',
-        'prognosen': 'prognoses',
+        'prognosen': 'prognosen',
         'login': 'login',
         'admin': 'admin',
-        'bevoelkerungsprognose': 'demodevelop',
-        'haushaltsprognose': 'hhdevelop'
+        'impressum': 'impressum'
       },
       
       // welcome page
-      home: function () {
+      home: function(){
         this.resetView();
-        this.view = new Home({el: document.getElementById('mainFrame')});
+        this.view = new Custom({
+          el: document.getElementById('mainFrame'),
+          templateString: homeTemplate
+        });
+      },
+      
+      impressum: function(){  
+        this.resetView();      
+        this.view = new Custom({
+          el: document.getElementById('mainFrame'),
+          templateString: legalTemplate
+        });
       },
       
       // prognoses overview / selection
-      prognoses: function () {
+      prognosen: function() {
         this.resetView();
         this.view = new Prognosis({el: document.getElementById('mainFrame')});
       },
       
       // login page
-      login: function () {
+      login: function() {
         this.resetView();
         this.view = new Login({el: document.getElementById('mainFrame'),
           session: this.session});
       },
       
       // admin area
-      admin: function () {
+      admin: function(){
         this.resetView();
         var user = app.get('session').get('user');
         if (user && user.superuser)
@@ -53,7 +62,7 @@ define(['app', 'backbone', 'views/HomeView',
       },
       
       // remove old view and events on it
-      resetView: function () {
+      resetView: function(){
         if (this.view)
           this.view.close();
         //unbinding and removing views removes the parent element too

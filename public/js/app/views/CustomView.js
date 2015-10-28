@@ -1,21 +1,15 @@
+define(['backbone'],
 
-define(["backbone", "text!templates/home.html"],
-
-    function(Backbone, template){
+    function(Backbone){
         var HomeView = Backbone.View.extend({
-            // The DOM Element associated with this view
             el: document,
-            // View constructor
-            initialize: function() {         
-                // Calls the view's render method
-                this.render();  
-            },
-
-            events: {
+            initialize: function(options) {   
+              this.templateString = options.templateString;
+              this.render();  
             },
 
             render: function() {
-                this.template = _.template(template, {});
+                this.template = _.template(this.templateString, {});
                 this.el.innerHTML = this.template;     
                 return this;
             },        

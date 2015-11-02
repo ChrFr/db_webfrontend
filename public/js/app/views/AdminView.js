@@ -213,7 +213,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             preview.innerHTML = textinput.value;
             
             // users
-            var usersCheck = _this.el.querySelector("#user-select>div");
+            var usersCheck = _this.el.querySelector("#user-select");
             var userIDs = [];
             while (usersCheck.firstChild)
               usersCheck.removeChild(usersCheck.firstChild);
@@ -242,14 +242,14 @@ define(["jquery", "backbone", "text!templates/admin.html",
       
       // fill the form inside the given dialog with the attributes of the model (the 'name' of the field hast to match an attribute of the model to be filled)
       fillForm: function(dialog, model){
-        var inputs = dialog.find('input, textarea');
-        _.each(inputs, function(input){
-          var input = $(input);
-          var value = model.get(input.attr('name'));
-          if(input.attr('type') === 'checkbox')
-            input.prop('checked', value);
+        var attributes = dialog.find('.attribute');
+        _.each(attributes, function(attribute){
+          var attribute = $(attribute);
+          var value = model.get(attribute.attr('name'));
+          if(attribute.attr('type') === 'checkbox')
+            attribute.prop('checked', value);
           else
-            value = input.val(value);
+            value = attribute.val(value);
         });
       },
       
@@ -262,16 +262,24 @@ define(["jquery", "backbone", "text!templates/admin.html",
         var model = _this.selectedModels[0];
         if(this.validateForm()){
           this.activeDialog.modal('hide');
-          var inputs = this.activeDialog.find('input');
-          _.each(inputs, function(input){
-            var input = $(input);
+          var attributes = this.activeDialog.find('.attribute');
+          _.each(attributes, function(attribute){
+            var attribute = $(attribute);
             var value = '';
-            if(input.attr('type') === 'checkbox')
-              value = input.prop('checked');
+            if(attribute.attr('type') === 'checkbox')
+              value = attribute.prop('checked');
+            // multi-checkbox to array
+            else if(attribute.hasClass('multi-checkbox')){
+              value = [];
+              _.each(attribute.children(), function(checkbox){
+                if(checkbox.checked)
+                  value.push(checkbox.value);
+              });
+            }
             else
-              value = input.val();
-            model.set(input.attr('name'), value);
-          });
+              value = attribute.val();
+            model.set(attribute.attr('name'), value);
+          });          
           model.save({}, {
             dataType: 'text',
             success: function(m, response){
@@ -316,7 +324,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
           input = $(input);
           if(input.hasClass('needed') && !input.val()){
             input.addClass('invalid');
-            errMsg = 'Bitte alle Pflichtfelder ausfüllen!'
+            errMsg = 'Bitte alle Pflichtfelder ausfüllen!';
           }
         });
         this.activeDialog.find('#status').text(errMsg);

@@ -50,16 +50,16 @@
         <form>
           <div class="form-group">
             <label for="username">Username&#042;</label>
-            <input name="name" type="text" class="form-control needed" id="username" placeholder="Name">
+            <input name="name" type="text" class="form-control needed attribute" id="username" placeholder="Name">
           </div>
           <div class="form-group">
             <label for="email">E-Mail</label>
-            <input id="email" type="email" class="form-control" name="email" placeholder="E-Mail">
+            <input id="email" type="email" class="form-control attribute" name="email" placeholder="E-Mail">
           </div>
           <div class="form-group">
             <label for="password">Passwort&#042;</label>
             <!-- password is shown (to hide: type="password") -->
-            <input type="password" name="password" type="text" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
+            <input name="password" type="text" class="form-control needed attribute" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
           </div>                    
           <div class="checkbox">
             <label style="font-style: italic">
@@ -104,21 +104,18 @@
         <form>
           <div class="form-group">
             <label for="progname">Name der Prognose&#042;</label>
-            <input name="name" type="text" class="form-control needed" id="progname" placeholder="Name">
+            <input name="name" type="text" class="form-control needed attribute" id="progname" placeholder="Name">
           </div>
           <div class="form-group">
             <label for="description">Beschreibung</label>
-            <textarea name="description" rows="10" class="form-control" id="description"></textarea>
+            <textarea name="description" rows="10" class="form-control attribute" id="description"></textarea>
           </div>      
           <div class="form-group">
             <label>Textvorschau</label>
             <div class="form-control" id="preview" style="height: 200px; overflow: scroll"></div>
           </div>      
         </form>
-        <form id="user-select" class='multi-checkbox' name="form" method="post" action="CheckBox.jsp">
-          <div class='form-control' style="overflow: auto; width: 100%; height: 80px; padding-left: 5px">
-          </div>
-          <br>
+        <form id="user-select" name="users" class='form-control multi-checkbox attribute' name="form" method="post" action="CheckBox.jsp" style="overflow: auto; width: 100%; height: 80px; padding-left: 5px">
         </form>
         <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
         <label id="status"></label>

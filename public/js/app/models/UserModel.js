@@ -10,7 +10,7 @@ define(["backbone"],
                 name: '',
                 email: '',
                 password: '',
-                superuser: ''
+                superuser: false
             },
 
             initialize: function() {

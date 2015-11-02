@@ -10,6 +10,10 @@
  * @param canvas   auxiliary canvas element, the svg element will be drawn into
  */
 function downloadPng(svg, filename, canvas, scale) {
+  downloadDataURL(svgToDataURL(svg, canvas, 'image/png', scale), filename);
+}
+
+function svgToDataURL(svg, canvas, type, scale) {
   var oldWidth = svg.width(),
       oldHeight = svg.height(),
       oldScale = svg.attr('transform') || '';
@@ -35,19 +39,16 @@ function downloadPng(svg, filename, canvas, scale) {
   canvg(canvas, svgText);
 
   //save canvas to file
-  var dataURL = canvas.toDataURL('image/png');
+  var dataURL = canvas.toDataURL(type);  
+  
+  return dataURL;
+}
+
+function downloadDataURL(dataURL, filename) {
   // convert the dataURL to a blob-string
   var blob = dataURLtoBlob(dataURL);
   //call saveas-dialog
   window.saveAs(blob, filename);
-
-  /*
-   // this kind of download works with Chrome only
-   var link = document.createElement('a');
-   link.download = filename;
-   link.href = dataURL;            
-   link.click();
-   */
 };
 
 /*

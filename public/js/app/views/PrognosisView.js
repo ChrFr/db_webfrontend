@@ -205,16 +205,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           var text = this.el.querySelector('#description') || '';
           var warningGlyph = '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp';
           if(!app.get('session').get('user')){
-            map.innerHTML = '<br>' + warningGlyph + ' <b>Sie sind nicht eingeloggt</b><br>';
+            map.innerHTML = '<h3>' + warningGlyph + 'Sie sind nicht eingeloggt</h3>';
             map.innerHTML += 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
             return false;
           }
           else if(!prognosis){
-            map.innerHTML = '<br>' + warningGlyph + '<b>keine Prognose gewählt!</b><br>';
+            map.innerHTML = '<h3>' + warningGlyph + 'Es wurde keine Prognose gewählt!<h3>';
             map.innerHTML += 'Bitte wählen Sie eine Prognose im Menü aus.';
             return false;
           }
-          else{
+          else{       
             title.innerText = prognosis.get('name');
             text.innerHTML = prognosis.get('description');
             return true;

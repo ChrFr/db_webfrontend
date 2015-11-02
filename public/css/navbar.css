@@ -49,6 +49,10 @@
     background-color: #408080;
 }
 
+#main-menu #legaldetails{  
+    background-color: #ADB8CD;
+}
+
 /* SUBMENUS*/
 .submenu{
     position: relative;
@@ -66,25 +70,29 @@
     padding: 8px 8px;
 }
 
-#home-menu{
+#home-submenu{
     background-color: navy;
 }
 
-#prognosis-menu{
+#legaldetails-submenu{
+    background-color: #ADB8CD;
+}
+
+#prognosis-submenu{
     background-color: #454545;
     height: 60px;
     padding-top: 5px;
 }
 
-#admin-menu{
+#admin-submenu{
     background-color: lightcoral;
 }
 
-#login-menu{
+#login-submenu{
     background-color: #408080;
 }
 
-#prognosis-menu a, #prognosis-menu .navbar-header{
+#prognosis-submenu a, #prognosis-submenu .navbar-header{
     color: white;
     box-sizing: border-box;
     background-color: #454545;
@@ -101,7 +109,7 @@
     margin-top: 0;
 }
     
-#prognosis-menu .active a{
+#prognosis-submenu .active a{
     color: #454545;
     background-color: gold;
 }
@@ -143,7 +151,7 @@
     .submenu{        
         position: absolute;
         width: 100%;
-        top: 0px;
+        top: -10px;
         transition: all 0.2s;
         transition-timing-function: ease-out;
         display: block;        
@@ -157,12 +165,12 @@
         display: block;       
     }
     
-    #prognosis-menu .active a{
+    #prognosis-submenu .active a{
         color: #454545;
         background-color: gold;
     }
     
-    #prognosis-menu .active a, #prognosis-menu a:hover{
+    #prognosis-submenu .active a, #prognosis-submenu a:hover{
         color: white;
         background-color: #454545;
         box-sizing: border-box;

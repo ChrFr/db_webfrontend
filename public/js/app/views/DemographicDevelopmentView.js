@@ -1,8 +1,8 @@
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
-  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
+  'views/TableView', 'd3', 'd3slider', 'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
   'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
   'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/conversion', 'jspdf'],
-  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
+  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider, CustomView) {
             
     /** 
      * @author Christoph Franke
@@ -849,6 +849,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       createReport: function (e){
+        /*
         var svg = $('#agetree>svg');
         var imgData = svgToDataURL(svg, this.canvas, 'image/png', {width: 2, height: 2});
         var doc = new jsPDF();
@@ -856,7 +857,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         doc.setFontSize(40);
         doc.text(35, 25, "Testbericht");
         doc.addImage(imgData, 'PNG', 15, 40, 180, 160);
-        doc.save('test.pdf');
+        doc.save('test.pdf');*/
+        var report = new CustomView()
       },
       
       //remove the view

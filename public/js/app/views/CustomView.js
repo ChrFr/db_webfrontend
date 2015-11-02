@@ -1,15 +1,16 @@
 define(['backbone'],
 
     function(Backbone){
-        var HomeView = Backbone.View.extend({
+        var CustomView = Backbone.View.extend({
             el: document,
             initialize: function(options) {   
               this.templateString = options.templateString;
+              this.values = options.values;
               this.render();  
             },
 
             render: function() {
-                this.template = _.template(this.templateString, {});
+                this.template = _.template(this.templateString, this.values);
                 this.el.innerHTML = this.template;     
                 return this;
             },        
@@ -23,7 +24,7 @@ define(['backbone'],
         });
 
         // Returns the View class
-        return HomeView;
+        return CustomView;
 
     }
 

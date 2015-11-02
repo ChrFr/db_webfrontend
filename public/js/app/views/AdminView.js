@@ -81,45 +81,42 @@ define(["jquery", "backbone", "text!templates/admin.html",
       
       showPrognoses: function(){
 
-        if(this.prognoses)
-          return;
-
         this.prognoses = new PrognosisCollection();
         var _this = this;
         this.prognoses.fetch({success: function(){
-            var columns = [];
-            var data = [];
+          var columns = [];
+          var data = [];
 
-            columns.push({name: "id", description: "ID"});
-            columns.push({name: "name", description: "Name"});
-            columns.push({name: "description", description: "Beschreibung"});
-            columns.push({name: "users", description: "berechtigte Nutzer"});
+          columns.push({name: "id", description: "ID"});
+          columns.push({name: "name", description: "Name"});
+          columns.push({name: "description", description: "Beschreibung"});
+          columns.push({name: "users", description: "berechtigte Nutzer"});
 
-            _this.prognoses.each(function(prog){
-              var description = prog.get('description') || '';
-              if(description.length > 100)
-                description = description.substring(0, 100) + " [...]";
-              data.push({
-                'id': prog.get('id'),
-                'name': prog.get('name'),
-                'description': description,
-                'users': prog.get('users')
-              });
+          _this.prognoses.each(function(prog){
+            var description = prog.get('description') || '';
+            if(description.length > 100)
+              description = description.substring(0, 100) + " [...]";
+            data.push({
+              'id': prog.get('id'),
+              'name': prog.get('name'),
+              'description': description,
+              'users': prog.get('users')
             });
+          });
 
-            _this.prognosisTable = new TableView({
-              el: _this.el.querySelector("#prognosestable"),
-              columns: columns,
-              data: data,
-              selectable: true
-            });
-          }});
+          _this.prognosisTable = new TableView({
+            el: _this.el.querySelector("#prognosestable"),
+            columns: columns,
+            data: data,
+            selectable: true
+          });    
+        }});
         
         var preview = this.el.querySelector("#preview");
         var textinput = this.el.querySelector("#description");
         textinput.oninput = function(){
           preview.innerHTML = textinput.value;
-        };
+        };        
       },
       
       //show modal dialogs depending on button clicked
@@ -194,6 +191,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
           dialog = $('#editPrognosisDialog');
           var progId = selected[0].id;
           models = [this.prognoses.get(progId)];
+          
         }
 
         if(dialog){
@@ -205,11 +203,39 @@ define(["jquery", "backbone", "text!templates/admin.html",
           this.activeDialog = dialog;
           this.selectedModels = models;    
           
-          // fill the preview text field for prognoses additionally
-          if(target === 'newPrognosis' || target === 'editPrognosis'){          
+          // ADDITIONAL FILLINGS
+          
+          // Prognoses          
+          if(target === 'newPrognosis' || target === 'editPrognosis'){   
+            // description text
             var preview = this.el.querySelector("#preview");
             var textinput = this.el.querySelector("#description");
             preview.innerHTML = textinput.value;
+            
+            // users
+            var usersCheck = _this.el.querySelector("#user-select>div");
+            var userIDs = [];
+            while (usersCheck.firstChild)
+              usersCheck.removeChild(usersCheck.firstChild);
+            if (target === 'editPrognosis')
+              userIDs = models[0].get('users');
+            
+            _this.users.fetch({success: function(){
+              _this.users.each(function(user){
+                // add checkbox for each user in db (superusers can access everything anyway)
+                if(!user.get('superuser')){
+                  var checkbox = document.createElement('input');              
+                  checkbox.type = "checkbox";
+                  var id = user.get('id');            
+                    if(userIDs.indexOf(id) > -1)
+                      checkbox.checked = true;
+                    checkbox.value = id;
+                    usersCheck.appendChild(checkbox);
+                    usersCheck.appendChild(document.createTextNode(user.get('name') + " - ID " + id));
+                    usersCheck.appendChild(document.createElement('br'));   
+                };
+              });
+            }});
           }      
         }        
       },
@@ -250,6 +276,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             dataType: 'text',
             success: function(m, response){
               _this.alert('success', 'Anfrage war erfolgreich!');
+              // update tables
               _this.showUserTable();
               _this.showPrognoses();
             },
@@ -268,6 +295,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             dataType: 'text',
             success: function(m, response){
               _this.alert('success', 'Löschen war erfolgreich!');
+              // update tables
               _this.showUserTable();
               _this.showPrognoses();
             },

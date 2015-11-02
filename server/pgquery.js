@@ -14,6 +14,9 @@ module.exports = {
             }
             client.query(queryString, parameters, function(err, result) {
                 //call `done()` to release the client back to the pool
+                
+            console.log(queryString)
+            console.log(parameters)
                 done();
                 if(err) {
                     return callback(err);

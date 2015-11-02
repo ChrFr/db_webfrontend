@@ -1,9 +1,9 @@
 define(["jquery", "backbone", "text!templates/admin.html",
   "collections/UserCollection", "collections/PrognosisCollection",
-  "models/UserModel", "models/PrognosisModel",
+   "collections/DDCollection", "models/UserModel", "models/PrognosisModel", 
   "views/TableView", "bootstrap"],
-  function($, Backbone, template, UserCollection, PrognosisCollection,
-            UserModel, PrognosisModel, TableView){
+  function($, Backbone, template, UserCollection, PrognosisCollection, DDCollection, 
+           UserModel, PrognosisModel, TableView){
                             
     /** 
     * @author Christoph Franke
@@ -122,9 +122,9 @@ define(["jquery", "backbone", "text!templates/admin.html",
       //show modal dialogs depending on button clicked
       showModal: function(event){
         var dialog,
-                models = [],
-                _this = this,
-                target = event.target.id;
+            models = [],
+            _this = this,
+            target = event.target.id;
 
         // USERS
 
@@ -255,8 +255,8 @@ define(["jquery", "backbone", "text!templates/admin.html",
       
       // combination of put and post forms
       // parse form inputs into model and submit it
-      onSubmit: function(){
-        //console.log(event);
+      onSubmit: function(event){
+        var dialog = findAncestor(event.target, 'modal');
         var _this = this;
         //by now only one model supported for submission
         var model = _this.selectedModels[0];
@@ -284,9 +284,20 @@ define(["jquery", "backbone", "text!templates/admin.html",
             dataType: 'text',
             success: function(m, response){
               _this.alert('success', 'Anfrage war erfolgreich!');
-              // update tables
-              _this.showUserTable();
-              _this.showPrognoses();
+              // upload file
+                if(dialog.id === 'editPrognosisDialog'){
+                  var files = dialog.querySelector("#upload-demo-csv").files;
+                  if(files.length > 0){
+                    var file = files[0];
+                    var dd = new DDCollection({progId: model.get('id')});
+                    dd.fromCSV(file);
+                  }
+               }
+               else{
+                // update tables
+                _this.showUserTable();
+                _this.showPrognoses();
+              }
             },
             error: function(m, response){
               _this.alert('danger', response.responseText);
@@ -349,7 +360,12 @@ define(["jquery", "backbone", "text!templates/admin.html",
       }
 
     });
-
+    
+  
+    function findAncestor (el, cls) {
+      while ((el = el.parentElement) && !el.classList.contains(cls));
+      return el;
+    }
     // Returns the View class
     return AdminView;
   }

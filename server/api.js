@@ -450,7 +450,7 @@ function aggregateByKey(array, key, options) {
           });
         });
     },
-    
+        
     /* DEACTIVATED: serverside conversion of data into csv, png, svg */
     
     csv: function (req, res) {
@@ -842,7 +842,7 @@ function aggregateByKey(array, key, options) {
           get: demodevelop.list,
           
           '/aggregiert': {
-            get: demodevelop.getAggregation,
+            get: demodevelop.getAggregation
             /*
             '/svg': {
               get: demodevelop.svg
@@ -855,7 +855,7 @@ function aggregateByKey(array, key, options) {
             }*/
           },
           '/:rs': {
-            get: demodevelop.getJSON,
+            get: demodevelop.getJSON
             /*
             '/svg': {
               get: demodevelop.svg

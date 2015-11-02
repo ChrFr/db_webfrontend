@@ -86,7 +86,17 @@ define(['backbone', 'models/DDModel', 'models/DDAggregate'],
           this.add(model);
         };
         return model;
-      }
+      },
+      
+      fromCSV: function(file){
+        var reader = new FileReader();
+        reader.onload = (function(theFile) {
+          return function(e) {
+            console.log(e.target.result);
+          };
+        })(file);
+      reader.readAsText(file);
+      }       
     });
     return DemographicDevelopmentCollection;
   }

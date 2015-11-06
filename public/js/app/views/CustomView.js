@@ -5,7 +5,7 @@ define(['backbone'],
             el: document,
             initialize: function(options) {   
               this.templateString = options.templateString;
-              this.values = options.values;
+              this.values = options.values || {};
               this.render();  
             },
 

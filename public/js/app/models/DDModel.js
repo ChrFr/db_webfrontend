@@ -31,13 +31,13 @@ define(["app", "backbone"],
                         var femaleAges = item.alter_weiblich,
                             maleAges = item.alter_maennlich;
 
-                        item.sumFemale = femaleAges.reduce(function(sum,e){return sum + e});                            
-                        item.sumMale = maleAges.reduce(function(sum,e){return sum + e});
+                        item.sumFemale = femaleAges.reduce(function(sum,e){return sum + e;});                            
+                        item.sumMale = maleAges.reduce(function(sum,e){return sum + e;});
 
                         var max = Math.max(femaleAges.length, maleAges.length);
                         if (maxAge < max) maxAge = max;
                         max = Math.max(Math.max.apply(null, femaleAges), 
-                                       Math.max.apply(null, maleAges))
+                                       Math.max.apply(null, maleAges));
                         if (maxNumber < max) maxNumber = max;
                     });
 
@@ -54,7 +54,7 @@ define(["app", "backbone"],
             setURL: function(progId) {
                 if(progId)
                     this.urlRoot = this.urlRoot.replace('{progId}', progId);
-            },
+            }
             /*
             serverside rendering is deactivated by now! rendered clientside
             

@@ -272,6 +272,62 @@ function aggregateByKey(array, key, options) {
         });
     },
     
+    // update prognosis
+    put: function (req, res) {
+      authenticate(req.headers, function (err, status, user) {
+        if (err)
+          return res.status(status).send(err);
+        if (!user.superuser)
+          return res.status(403);
+        query("UPDATE prognosen SET name=$2, description=$3, users=$4 WHERE id=$1;",
+          [req.params.pid, req.body.name, req.body.description, req.body.users],
+          function (err, result) {
+            if (err)
+              return res.status(500).send('Interner Fehler.');
+            res.set('Content-Type', 'application/json');
+            return res.status(200).send('Prognose erfolgreich aktualisiert');
+          });
+      });
+    },
+    
+    
+    // add prognosis to database
+    post: function (req, res) {
+      authenticate(req.headers, function (err, status, user) {
+        if (err)
+          return res.status(status).send(err);
+        if (!user.superuser)
+          return res.status(403);
+
+        query("INSERT INTO prognosen (name, description, users) VALUES ($1, $2, $3);",
+          [req.body.name, req.body.description, req.body.users],
+          function (err, result) {
+            if (err)
+              return res.status(409).send('Name "' + req.body.name + '" ist bereits vergeben!');
+
+            res.set('Content-Type', 'application/json');
+            return res.status(200).send('Prognose erfolgreich angelegt');
+          });
+      });
+    },
+    
+    // remove prognosis from database
+    delete: function (req, res) {
+      authenticate(req.headers, function (err, status, user) {
+        if (err)
+          return res.status(status).send(err);
+        if (!user.superuser)
+          return res.status(403);
+        query("DELETE FROM prognosen WHERE id=$1;", [req.params.pid],
+          function (err, result) {
+            if (err)
+              return res.status(500).send('Interner Fehler.');
+            res.set('Content-Type', 'application/json');
+            return res.status(200).send('Prognose erfolgreich gelöscht');
+          });
+      });
+    },
+    
     // get specific prognosis including borders of its region
     get: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
@@ -394,7 +450,7 @@ function aggregateByKey(array, key, options) {
           });
         });
     },
-    
+        
     /* DEACTIVATED: serverside conversion of data into csv, png, svg */
     
     csv: function (req, res) {
@@ -501,50 +557,50 @@ function aggregateByKey(array, key, options) {
       });
     },
     
-// get a layer with all it's regions and the gemeinden they are composed of
-get: function (req, res) {
-  query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
-    if (err)
-      return res.sendStatus(500);
-    if (result.length === 0)
-      return res.sendStatus(404);
-    // the meta data from layer table
-    var name = result[0].name,
-        table = result[0].tabelle,
-        key = result[0].key, // name of the column referencing the corresponding layer
-        params = [],
-        subquery;
+    // get a layer with all it's regions and the gemeinden they are composed of
+    get: function (req, res) {
+      query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
+        if (err)
+          return res.sendStatus(500);
+        if (result.length === 0)
+          return res.sendStatus(404);
+        // the meta data from layer table
+        var name = result[0].name,
+            table = result[0].tabelle,
+            key = result[0].key, // name of the column referencing the corresponding layer
+            params = [],
+            subquery;
 
-    // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
-    var queryStr = "SELECT {key} AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
-            "FROM {table} AS T INNER JOIN {subquery} AS G USING ({key}) " + 
-            "GROUP BY T.name, {key}";
-    
-    // for which communities does data exist belonging to this prognosis?
-    var progId = req.query.progId;
-    if (progId) {
-      subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden " +
-              "WHERE prognose_id=$1)";
-      params.push(progId);
-    }
-    // take the table as is, if no prognosis id is given
-    else
-      subquery = 'gemeinden';
+        // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
+        var queryStr = "SELECT {key} AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
+                "FROM {table} AS T INNER JOIN {subquery} AS G USING ({key}) " + 
+                "GROUP BY T.name, {key}";
 
-    // pgquery doesn't seem to allow passing table/columnnames
-    // they are taken from a db-table anyway, so it's be safe to replace directly
-    queryStr = queryStr.replace('{subquery}', subquery)
-            .replace(new RegExp('{table}', 'g'), table)
-            .replace(new RegExp('{key}', 'g'), key);
-    query(queryStr, params, function (err, result) {
-      return res.status(200).send({
-        'id': req.params.id,
-        'name': name,
-        'regionen': result
+        // for which communities does data exist belonging to this prognosis?
+        var progId = req.query.progId;
+        if (progId) {
+          subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden " +
+                  "WHERE prognose_id=$1)";
+          params.push(progId);
+        }
+        // take the table as is, if no prognosis id is given
+        else
+          subquery = 'gemeinden';
+
+        // pgquery doesn't seem to allow passing table/columnnames
+        // they are taken from a db-table anyway, so it's be safe to replace directly
+        queryStr = queryStr.replace('{subquery}', subquery)
+                .replace(new RegExp('{table}', 'g'), table)
+                .replace(new RegExp('{key}', 'g'), key);
+        query(queryStr, params, function (err, result) {
+          return res.status(200).send({
+            'id': req.params.id,
+            'name': name,
+            'regionen': result
+          });
+        });
       });
-    });
-  });
-},
+    },
     
     gemeinden: {
       list: function (req, res) {
@@ -683,7 +739,6 @@ get: function (req, res) {
             return res.status(200).send('User erfolgreich gelöscht');
           });
       });
-
     },
     
     // validate cookie for established login
@@ -778,13 +833,16 @@ get: function (req, res) {
     
     '/prognosen': {
       get: prognosen.list,
+      post: prognosen.post,
       '/:pid': {
         get: prognosen.get,
+        put: prognosen.put,
+        delete: prognosen.delete,
         '/bevoelkerungsprognose': {
           get: demodevelop.list,
           
           '/aggregiert': {
-            get: demodevelop.getAggregation,
+            get: demodevelop.getAggregation
             /*
             '/svg': {
               get: demodevelop.svg
@@ -797,7 +855,7 @@ get: function (req, res) {
             }*/
           },
           '/:rs': {
-            get: demodevelop.getJSON,
+            get: demodevelop.getJSON
             /*
             '/svg': {
               get: demodevelop.svg

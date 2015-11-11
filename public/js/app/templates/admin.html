@@ -50,16 +50,16 @@
         <form>
           <div class="form-group">
             <label for="username">Username&#042;</label>
-            <input name="name" type="text" class="form-control needed" id="username" placeholder="Name">
+            <input name="name" type="text" class="form-control needed attribute" id="username" placeholder="Name">
           </div>
           <div class="form-group">
             <label for="email">E-Mail</label>
-            <input id="email" type="email" class="form-control" name="email" placeholder="E-Mail">
+            <input id="email" type="email" class="form-control attribute" name="email" placeholder="E-Mail">
           </div>
           <div class="form-group">
             <label for="password">Passwort&#042;</label>
             <!-- password is shown (to hide: type="password") -->
-            <input type="password" name="password" type="text" class="form-control needed" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
+            <input name="password" type="text" class="form-control needed attribute" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;">
           </div>                    
           <div class="checkbox">
             <label style="font-style: italic">
@@ -86,7 +86,7 @@
         <p style="text-align: center; font-weight: bold; vertical-align: center;">Wollen Sie die Auswahl wirklich löschen?</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
         <button type="submit" class="btn btn-primary delete">Löschen</button>
       </div>
     </div>
@@ -104,17 +104,24 @@
         <form>
           <div class="form-group">
             <label for="progname">Name der Prognose&#042;</label>
-            <input name="name" type="text" class="form-control needed" id="progname" placeholder="Name">
+            <input name="name" type="text" class="form-control needed attribute" id="progname" placeholder="Name">
           </div>
           <div class="form-group">
             <label for="description">Beschreibung</label>
-            <textarea name="description" rows="10" class="form-control" id="description"></textarea>
+            <textarea name="description" rows="10" class="form-control attribute" id="description"></textarea>
           </div>      
           <div class="form-group">
             <label>Textvorschau</label>
             <div class="form-control" id="preview" style="height: 200px; overflow: scroll"></div>
           </div>      
         </form>
+        <label>berechtigte Nutzer</label>
+        <form id="user-select" name="users" class='form-control multi-checkbox attribute' method="post" action="CheckBox.jsp" style="overflow: auto; width: 100%; height: 80px; padding-left: 5px">
+        </form>
+        <br><!--
+        <label>Bevölkerungsprognosedaten</label> 
+        (vorhandene Daten werden überschrieben)
+        <input id='upload-demo-csv' type='file' accept='text/csv' />-->
         <font style="font-size: 0.5em">&#042Pflichtfelder</font><br>
         <label id="status"></label>
       </div>

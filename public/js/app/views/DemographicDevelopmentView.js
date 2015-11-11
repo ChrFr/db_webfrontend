@@ -1,8 +1,8 @@
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
-  'views/TableView', 'd3', 'd3slider', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
+  'views/TableView', 'd3', 'd3slider', 'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
   'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
   'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/conversion', 'jspdf'],
-  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider) {
+  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider, CustomView) {
             
     /** 
      * @author Christoph Franke
@@ -43,10 +43,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        * dom events (managed by jquery)
        */
       events: {
-        // age group controls
-        'click #new-group': 'addAgeGroup',
-        'change #agegroup-from': 'ageInput',
-        'click #delete-agegroups': 'deleteAgeGroups',
         
         // download buttons clicked
         'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
@@ -65,7 +61,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         'click #agetree-tab .watch': 'watchYear',
         'click #visualizations li': 'tabChange',
         'click #hiddenPng': 'test',
-        'click #fix-scale': 'fixScale'
+        'click #fix-scale': 'fixScale',
+        
+        // agegroup controls
+        'click #add-agegroups': 'showAgeGroupDialog',
+        'change #agegroup-from': 'ageInput',
+        'click #delete-agegroups': 'deleteAgeGroups',
+        'click :submit.post': 'addAgeGroup'
         
       },
       
@@ -579,18 +581,24 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      
+      showAgeGroupDialog: function() {
+        $('#agegroup-dialog').modal('show');
+      },
+      
       /*
        * sorted insertion of user defined agegroups (in app)
        */
       addAgeGroup: function () {
         var from = parseInt(this.el.querySelector('#agegroup-from').value),
-                to = parseInt(this.el.querySelector('#agegroup-to').value),
-                groupName = from + ((to === null || isNaN(to)) ? '+' : ' - ' + to);
+            to = parseInt(this.el.querySelector('#agegroup-to').value),
+            groupName = from + ((to === null || isNaN(to)) ? '+' : ' - ' + to);
 
         //you need at least one input
         if (isNaN(to) && isNaN(from))
           return alert('Sie müssen mindestens ein Feld ausfüllen!');
 
+         $('#agegroup-dialog').modal('hide');
         //no 'to' input is treated like 'from' to infinite (from+)
         if (isNaN(to))
           to = null;
@@ -849,6 +857,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       createReport: function (e){
+        /*
         var svg = $('#agetree>svg');
         var imgData = svgToDataURL(svg, this.canvas, 'image/png', {width: 2, height: 2});
         var doc = new jsPDF();
@@ -856,7 +865,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         doc.setFontSize(40);
         doc.text(35, 25, "Testbericht");
         doc.addImage(imgData, 'PNG', 15, 40, 180, 160);
-        doc.save('test.pdf');
+        doc.save('test.pdf');*/
+        var report = new CustomView()
       },
       
       //remove the view

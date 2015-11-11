@@ -87,6 +87,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             this.el.querySelector('#description-div').style.display = 'block';
             this.prepareSelections(prog.id);
           }
+          this.createMap();
 
           //id of active prognosis changed in navbar -> render it
           app.bind('activePrognosis', function(prognosis){
@@ -105,9 +106,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 _this.ddView.close();
               if(_this.hhView)
                 _this.hhView.close();
-              var map = _this.el.querySelector('#map');
-              while(map.firstChild)
-                map.removeChild(map.firstChild);
+              _this.map.removeMaps();
               _this.el.querySelector('#selection-label').innerHTML = '';
             }
           });
@@ -146,40 +145,43 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             error: function(){
             },
             success: function(){
-              loader.remove();
-              _this.createMap(callback = function(){
-                _this.el.querySelector('#description-div').style.display = 'block';
-                _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
-                _this.el.querySelector('#sub-map-nav').style.display = 'block';
-                // remove old options
-                var layerSelector = _this.el.querySelector('#layer-select');
-                while(layerSelector.firstChild)
-                  layerSelector.removeChild(layerSelector.firstChild);
+              loader.remove();              
+              var prog = app.get('activePrognosis');
+              _this.map.zoomTo(prog.get('boundaries'), true);
+              
+              _this.el.querySelector('#description-div').style.display = 'block';
+              _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
+              _this.el.querySelector('#sub-map-nav').style.display = 'block';
+              // remove old options
+              var layerSelector = _this.el.querySelector('#layer-select');
+              while(layerSelector.firstChild)
+                layerSelector.removeChild(layerSelector.firstChild);
 
-                // create options for layer selection in preparation for map rendering
-                new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
-                new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
-                new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
+              // create options for layer selection in preparation for map rendering
+              new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
+              new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
+              new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
 
-                _this.layers.each(function(layer){
-                  new OptionView({
-                    el: layerSelector,
-                    name: layer.get('name'),
-                    value: layer.get('id')
-                  });
+              _this.layers.each(function(layer){
+                new OptionView({
+                  el: layerSelector,
+                  name: layer.get('name'),
+                  value: layer.get('id')
                 });
-
-                _this.communities.comparator = 'name';
-                _this.communities.sort();
-
-
-                // change layer on selection of different one
-                layerSelector.onchange = function(e){
-                  if(e.target.value !== null){
-                    _this.changeLayer(e.target.value);
-                  }
-                };
               });
+
+              _this.communities.comparator = 'name';
+              _this.communities.sort();
+
+
+              _this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
+              _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>keine</b> <br> (Bitte klicken Sie auf der Karte ein Gebiet an!)';
+              // change layer on selection of different one
+              layerSelector.onchange = function(e){
+                if(e.target.value !== null){
+                  _this.changeLayer(e.target.value);
+                }
+              };
             }
           });
 
@@ -200,21 +202,19 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
          * render the start messages like description and title
          */
         renderOverview: function(prognosis){
-          var map = this.el.querySelector('#map');
+          var map = this.el.querySelector('#map-header');
           var title = this.el.querySelector('#title');
           var text = this.el.querySelector('#description') || '';
-          var warningGlyph = '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp';
           if(!app.get('session').get('user')){
-            map.innerHTML = '<h3>' + warningGlyph + 'Sie sind nicht eingeloggt</h3>';
-            map.innerHTML += 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
+            this.map.setOverlayText('Bitte loggen Sie sich zunächst ein!');
             return false;
           }
           else if(!prognosis){
-            map.innerHTML = '<h3>' + warningGlyph + 'Es wurde keine Prognose gewählt!<h3>';
-            map.innerHTML += 'Bitte wählen Sie eine Prognose im Menü aus.';
+            this.map.setOverlayText('Bitte wählen Sie eine Prognose im Menü aus.');
             return false;
           }
           else{       
+            this.map.setOverlayText('');
             title.innerText = prognosis.get('name');
             text.innerHTML = prognosis.get('description');
             return true;
@@ -226,6 +226,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
          * gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
          */
         changeLayer: function(layerId){
+          this.map.setOverlayText('');          
           var _this = this;
           var progId = app.get('activePrognosis').id;
           var regionSelector = this.el.querySelector('#region-select');
@@ -235,6 +236,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // SPECIAL CASE: WHOLE area (all communities summed up); needs no region-selection
           if(layerId == -2){
+            // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
+            document.querySelector('#li-dd a').click();
             var _this = this;
             regionSelector.style.display = 'none';
             this.el.querySelector('#region-label').style.display = 'none';
@@ -274,6 +277,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
             // multiple selector
             regionSelector.onchange = function(e){
+              // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
+              document.querySelector('#li-dd a').click();
               if(regionSelector.selectedIndex <= 0)
                 return;
               var rsAggr = [], model, names = [], id;
@@ -364,6 +369,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           }
           // nothing selected (id == 0 - "Bitte wählen"))
           else{
+            this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
             _this.el.querySelector('#region-select').style.display = 'none';
             _this.el.querySelector('#region-label').style.display = 'none';
           }
@@ -389,13 +395,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               source: './shapes/bundeslaender.json',
               isTopoJSON: true,
               callback: callback
+            },
+            copyright: {
+              text: 'Kartenmaterial: © Bundesamt für Kartographie und Geodäsie, Frankfurt am Main',
+              link: 'http://www.bkg.bund.de'
             }
           });
         },
         
         /*
          * render the map of regions
-         * optiona.aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
+         * options.aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
          * options.callback: called after map is rendered
          */
         renderMap: function(options){
@@ -406,7 +416,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // click handler, if map is clicked, render data of selected region
           var onClick = function(rs, name, rsAggr){
-
             //update selector to match clicked region
             var regionSelector = _this.el.querySelector('#region-select');
             for(var i = 0, j = regionSelector.options.length; i < j; ++i){
@@ -443,12 +452,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             };
             topology.features.push(feature);
           });
-          
-
-          var prog = app.get('activePrognosis');
-          
+                    
           _this.map.removeMaps();
 
+/*
           _this.map.render({
             topology: topology,
             subunits: subunits,
@@ -458,7 +465,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             boundaries: prog.get('boundaries'),
             onClick: onClick
           });
-          
+            */
+          _this.map.render({
+            topology: topology,
+            subunits: subunits,
+            aggregates: options.aggregates,
+            isTopoJSON: false,
+            callback: options.callback,
+            onClick: onClick
+          });
         },
         
         /*

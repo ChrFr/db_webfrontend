@@ -10,7 +10,8 @@
  * @param options.width the width of the viewport
  * @param options.height the height of the viewport
  * @param options.background options for a background map, see comments above function renderMap() to see how it is formed
- *  
+ * @param options.copyright.text copyright of the map
+ * @param options.copyright.link link to the site that owns the copyright
  */
 var Map = function(options){  
   
@@ -26,7 +27,6 @@ var Map = function(options){
   * 
   * @param options.topology ready map-data, excludes options.source
   * @param options.source path to file with map-data, excludes options.topology
-  * @param options.boundaries boundaries (needed for bounding box) can not be computed with geoJSON-data, pass boundaries instead, if you want a zoom to the bbox (ignored when topoJSON-data is passed) 
   * @param options.subunits the subunits, their names and their ids
   * @param options.aggregates the areas that will be aggregated from subunits (e.g. landkreise are composed of gemeinden)
   * @param options.isTopoJSON indicator for the data-type, if the data is topoJSON set it to true else false (or don't set at all)
@@ -48,12 +48,7 @@ var Map = function(options){
       });
     }
   };
-  
-  
-  // remember if zoomed in on submap once
-  // continued zooms mess up mouse-zoom
-  var initialZoom = false;
-  
+    
   //server-side d3 needs to be loaded seperately
   if(!d3)
     var d3 = require('d3');
@@ -92,8 +87,6 @@ var Map = function(options){
   var timerId;
   //ZOOM EVENT
   function zoomed(){
-    if(!initialZoom)
-      return;
     var scale = d3.event.scale;
     projection.translate(d3.event.translate).scale(scale);
     g.selectAll('path').attr('d', path);
@@ -181,6 +174,54 @@ var Map = function(options){
       this.render(options.background);
   }
   
+  // add overlaying text, can be addressed by id
+  svg.append('text')
+    .attr('id', 'overlay-text')
+    .attr('x', innerwidth / 2)
+    .attr('y', innerheight / 2)
+    .attr("text-anchor", "middle")
+    .attr('font-size', '1.5em');
+    
+  // copyright notes
+  if(options.copyright){
+   svg.append("svg")
+     .append("a")
+     .attr({'xlink:href': options.copyright.link})
+     .attr('target', '_blank')
+     .append("text")
+       .attr('id', 'copyright')
+       .attr('x', innerwidth)
+       .attr('y', innerheight - 5)
+       .text(options.copyright.text)
+       .attr('text-anchor', 'end')
+       .attr('fill', 'grey');
+  }
+  
+  /* 
+   * Zoom to bounding box of given boundarie
+   * 
+   * @param options.boundaries boundaries (needed for bounding box) can not be computed with geoJSON-data, pass boundaries instead, if you want a zoom to the bbox (ignored when topoJSON-data is passed) 
+   * @param smooth smooth transition if true, prompt zoom else
+   */
+  function zoomTo(boundaries, smooth){    
+    // ZOOM TO OUTER PATH
+    var bounds = path.bounds(boundaries),
+        bdx = bounds[1][0] - bounds[0][0],
+        bdy = bounds[1][1] - bounds[0][1],
+        bx = (bounds[0][0] + bounds[1][0]) / 2,
+        by = (bounds[0][1] + bounds[1][1]) / 2,
+        bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
+        translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];
+
+    if(smooth)
+      g.transition()
+          .duration(1500)
+          .style("stroke-width", 1.5 / bscale + "px")
+          .attr("transform", "translate(" + translate + ")scale(" + bscale + ")"); 
+    else
+      g.attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
+  };
+  this.zoomTo = zoomTo;
   
   /*
    * does the job for this.render(); seperated, for optional asynchronous file-loading by d3
@@ -277,27 +318,7 @@ var Map = function(options){
           return a === b;
         });
       }
-
-      // ZOOM TO OUTER PATH
-      var bounds = path.bounds(boundaries),
-          bdx = bounds[1][0] - bounds[0][0],
-          bdy = bounds[1][1] - bounds[0][1],
-          bx = (bounds[0][0] + bounds[1][0]) / 2,
-          by = (bounds[0][1] + bounds[1][1]) / 2,
-          bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-          translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];
-
-        g.attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
-
-      // prepend a white background (needed for mouse interactions)
-      g.insert('rect', ":first-child")
-          .attr('class', 'background')
-          .attr('x', bounds[0][0])
-          .attr('y', bounds[0][1])
-          .attr('width', bdx)
-          .attr('height', bdy)
-          .attr('cursor', 'move');
-
+      zoomTo(boundaries, false);
     }
 
     /* render GeoJSON */
@@ -321,31 +342,6 @@ var Map = function(options){
                 if(d.id)
                   options.onClick(d.id, d.properties.name, d.properties.rsArr);
               });
-
-      // Zoom to outer boundaries of submap
-      // WARNING: messes up the mouse-zoom! -> do it only once
-      if(options.boundaries && !initialZoom){         
-
-          // center map for zoom slider (zooms to center)
-          projection.center(d3.geo.centroid(options.boundaries));
-          g.selectAll('path').attr('d', path);
-
-          var bounds = path.bounds(options.boundaries),
-              bdx = bounds[1][0] - bounds[0][0],
-              bdy = bounds[1][1] - bounds[0][1],
-              bx = (bounds[0][0] + bounds[1][0]) / 2,
-              by = (bounds[0][1] + bounds[1][1]) / 2,
-              scale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-              translate = [innerwidth / 2 - scale * bx, innerheight / 2 - scale * by];   
-          
-          g.transition()
-              .duration(1500)
-              .style("stroke-width", 1.5 / scale + "px")
-              .attr("transform", "translate(" + translate + ")scale(" + scale + ")");   
-          
-          initialZoom = true;
-        
-      }
     }
 
     // disable the zoom-controls
@@ -398,6 +394,18 @@ var Map = function(options){
       
     // resize slider
     slideDiv.style('width', iw - 45 + 'px');
+    
+    svg.select('#copyright')
+      .attr('x', iw)
+      .attr('y', ih - 5);
+      
+    svg.select('#overlay-text')
+      .attr('x', iw / 2)
+      .attr('y', ih / 2);
+  };
+  
+  this.setOverlayText = function(text){
+    svg.select('#overlay-text').text(text);
   };
 
 };

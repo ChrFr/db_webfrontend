@@ -35,14 +35,18 @@
           Einflussfaktoren
         </a>
       </li>
+      <!--
       <li>
-          <!-- <button type='button' id='createDDReport' style='margin-top: 3px;' class='btn btn-primary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Bericht erstellen</button>-->
+          <button type='button' id='createDDReport' style='margin-top: 3px;' class='btn btn-primary download-btn csv' title='Einen Bericht im PDF-Format bherunterladen.'>Bericht erstellen</button>
       </li>
+      -->
     </ul>
     
     <div class='tab-content shadow-box'>    
       <div class='tab-pane active' id='development-tab'>     
-        <div id='absolute'></div>
+        <div id='absolute' class='centered'>  
+          <h3> Kein Gebiet ausgewählt! </h3>
+        </div>
         <div id='relative'></div>
         <div class='side-controls' style='display: none'> 
           <button class='download-btn png' title='Grafik als png-Datei speichern'> 
@@ -51,7 +55,9 @@
         </div>
       </div>          
       <div class='tab-pane' id='agegroupchart-tab'>    
-        <div id='agegroupchart'></div>
+        <div id='agegroupchart' class='centered'>  
+          <h3> Kein Gebiet ausgewählt! </h3>
+        </div>
         <div class='side-controls' style='display: none'> 
           <button class='download-btn png' title='Grafik als png-Datei speichern'> 
             <img src='img/camera-black.png'> 
@@ -59,7 +65,9 @@
         </div>
       </div>  
       <div class='tab-pane' id='barchart-tab'>    
-        <div id='barchart'></div>
+        <div id='barchart' class='centered'>  
+          <h3> Kein Gebiet ausgewählt! </h3>
+        </div>
         <div class='side-controls' style='display: none'> 
           <button class='download-btn png' title='Grafik als png-Datei speichern'> 
             <img src='img/camera-black.png'> 
@@ -67,7 +75,9 @@
         </div>
       </div>
       <div class='tab-pane' id='agetree-tab'>            
-        <div id='agetree'></div>
+        <div id='agetree' class='centered'>  
+          <h3> Kein Gebiet ausgewählt! </h3>
+        </div>
         <div class='side-controls' style='display: none'> 
           <button id='play' class='stopped' title='Prognose abspielen'> 
           </button>
@@ -105,39 +115,41 @@
       <div class='tab-pane active' id='agegroup-tab'>  
         <div id='agegroup-data'></div> 
         <br>
+        <button id='add-agegroups' type='button' class='btn btn-secondary' title='Altersgruppe hinzufügen'>Hinzufügen</button> 
         <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button> 
-        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
         <br>
       </div>
       <div class='tab-pane' id='age-tab'>    
         <div id='age-data'></div>
         <br>
-        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
         <br>
       </div>
       <div class='tab-pane' id='raw-tab'>    
         <div id='raw-data'></div>
         <br>
-        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Speichern</button>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
         <br>
       </div>
     </div>    
-    <div class='grouped'>
-      <label>Altersgruppe</label>
-      <br>
-      <div class='col-md-3'>
-        <input class='form-control' id='agegroup-from' type='number' min='0' max='200'>
+  </div>
+</div>
+
+<div id="agegroup-dialog" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+          <label>Altersgruppe</label>
+          <br>
+          <input class='form-control' id='agegroup-from' type='number' value='0' min='0' max='200' style='width: 100px; float: left; margin-right: 5px'>
+          <label style='float: left'>_</label>
+          <input class='form-control' id='agegroup-to' type='number' value='1' min='0' max='201' style='width: 100px; float: left; margin-left: 5px'>
       </div>
-      <div class='col-xs-1'>
-        <label>_</label>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+        <button type="submit" class="btn btn-primary post">Hinzufügen</button>
       </div>
-      <div class='col-md-3'>
-        <input class='form-control' id='agegroup-to' type='number' min='0' max='201'>
-      </div>
-      <div class='col-md-2'>
-        <button type='button' id='new-group' class='btn btn-secondary' title='Altersgruppe hinzufügen'>Hinzufügen</button>
-      </div>
-      <br><br>
     </div>
   </div>
 </div>

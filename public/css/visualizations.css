@@ -3,7 +3,12 @@
     Publisher: GGR
 */
 
+/*tables*/
+td, th{
+    font-size: 0.9em;
+}
 
+/* d3 generated svgs */
 svg {
     font: 0.9em sans-serif;
 }

@@ -7,6 +7,9 @@ define(["backbone"],
             urlRoot: 'api/prognosen',            
             
             defaults: {
+              name: '',
+              description: '',
+              users: []
             },
 
             initialize: function() {

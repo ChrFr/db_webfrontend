@@ -1,9 +1,9 @@
 define(["jquery", "backbone", "text!templates/admin.html",
   "collections/UserCollection", "collections/PrognosisCollection",
-  "models/UserModel", "models/PrognosisModel",
+   "collections/DDCollection", "models/UserModel", "models/PrognosisModel", 
   "views/TableView", "bootstrap"],
-  function($, Backbone, template, UserCollection, PrognosisCollection,
-            UserModel, PrognosisModel, TableView){
+  function($, Backbone, template, UserCollection, PrognosisCollection, DDCollection, 
+           UserModel, PrognosisModel, TableView){
                             
     /** 
     * @author Christoph Franke
@@ -81,53 +81,50 @@ define(["jquery", "backbone", "text!templates/admin.html",
       
       showPrognoses: function(){
 
-        if(this.prognoses)
-          return;
-
         this.prognoses = new PrognosisCollection();
         var _this = this;
         this.prognoses.fetch({success: function(){
-            var columns = [];
-            var data = [];
+          var columns = [];
+          var data = [];
 
-            columns.push({name: "id", description: "ID"});
-            columns.push({name: "name", description: "Name"});
-            columns.push({name: "description", description: "Beschreibung"});
-            columns.push({name: "users", description: "berechtigte Nutzer"});
+          columns.push({name: "id", description: "ID"});
+          columns.push({name: "name", description: "Name"});
+          columns.push({name: "description", description: "Beschreibung"});
+          columns.push({name: "users", description: "berechtigte Nutzer"});
 
-            _this.prognoses.each(function(prog){
-              var description = prog.get('description') || '';
-              if(description.length > 100)
-                description = description.substring(0, 100) + " [...]";
-              data.push({
-                'id': prog.get('id'),
-                'name': prog.get('name'),
-                'description': description,
-                'users': prog.get('users')
-              });
+          _this.prognoses.each(function(prog){
+            var description = prog.get('description') || '';
+            if(description.length > 100)
+              description = description.substring(0, 100) + " [...]";
+            data.push({
+              'id': prog.get('id'),
+              'name': prog.get('name'),
+              'description': description,
+              'users': prog.get('users')
             });
+          });
 
-            _this.prognosisTable = new TableView({
-              el: _this.el.querySelector("#prognosestable"),
-              columns: columns,
-              data: data,
-              selectable: true
-            });
-          }});
+          _this.prognosisTable = new TableView({
+            el: _this.el.querySelector("#prognosestable"),
+            columns: columns,
+            data: data,
+            selectable: true
+          });    
+        }});
         
         var preview = this.el.querySelector("#preview");
         var textinput = this.el.querySelector("#description");
         textinput.oninput = function(){
           preview.innerHTML = textinput.value;
-        };
+        };        
       },
       
       //show modal dialogs depending on button clicked
       showModal: function(event){
         var dialog,
-                models = [],
-                _this = this,
-                target = event.target.id;
+            models = [],
+            _this = this,
+            target = event.target.id;
 
         // USERS
 
@@ -194,6 +191,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
           dialog = $('#editPrognosisDialog');
           var progId = selected[0].id;
           models = [this.prognoses.get(progId)];
+          
         }
 
         if(dialog){
@@ -205,53 +203,100 @@ define(["jquery", "backbone", "text!templates/admin.html",
           this.activeDialog = dialog;
           this.selectedModels = models;    
           
-          // fill the preview text field for prognoses additionally
-          if(target === 'newPrognosis' || target === 'editPrognosis'){          
+          // ADDITIONAL FILLINGS
+          
+          // Prognoses          
+          if(target === 'newPrognosis' || target === 'editPrognosis'){   
+            // description text
             var preview = this.el.querySelector("#preview");
             var textinput = this.el.querySelector("#description");
             preview.innerHTML = textinput.value;
+            
+            // users
+            var usersCheck = _this.el.querySelector("#user-select");
+            var userIDs = [];
+            while (usersCheck.firstChild)
+              usersCheck.removeChild(usersCheck.firstChild);
+            if (target === 'editPrognosis')
+              userIDs = models[0].get('users');
+            
+            _this.users.fetch({success: function(){
+              _this.users.each(function(user){
+                // add checkbox for each user in db (superusers can access everything anyway)
+                if(!user.get('superuser')){
+                  var checkbox = document.createElement('input');              
+                  checkbox.type = "checkbox";
+                  var id = user.get('id');            
+                    if(userIDs.indexOf(id) > -1)
+                      checkbox.checked = true;
+                    checkbox.value = id;
+                    usersCheck.appendChild(checkbox);
+                    usersCheck.appendChild(document.createTextNode(user.get('name') + " - ID " + id));
+                    usersCheck.appendChild(document.createElement('br'));   
+                };
+              });
+            }});
           }      
         }        
       },
       
       // fill the form inside the given dialog with the attributes of the model (the 'name' of the field hast to match an attribute of the model to be filled)
       fillForm: function(dialog, model){
-        var inputs = dialog.find('input, textarea');
-        _.each(inputs, function(input){
-          var input = $(input);
-          var value = model.get(input.attr('name'));
-          if(input.attr('type') === 'checkbox')
-            input.prop('checked', value);
+        var attributes = dialog.find('.attribute');
+        _.each(attributes, function(attribute){
+          var attribute = $(attribute);
+          var value = model.get(attribute.attr('name'));
+          if(attribute.attr('type') === 'checkbox')
+            attribute.prop('checked', value);
           else
-            value = input.val(value);
+            value = attribute.val(value);
         });
       },
       
       // combination of put and post forms
       // parse form inputs into model and submit it
-      onSubmit: function(){
-        //console.log(event);
+      onSubmit: function(event){
+        var dialog = findAncestor(event.target, 'modal');
         var _this = this;
         //by now only one model supported for submission
         var model = _this.selectedModels[0];
         if(this.validateForm()){
           this.activeDialog.modal('hide');
-          var inputs = this.activeDialog.find('input');
-          _.each(inputs, function(input){
-            var input = $(input);
+          var attributes = this.activeDialog.find('.attribute');
+          _.each(attributes, function(attribute){
+            var attribute = $(attribute);
             var value = '';
-            if(input.attr('type') === 'checkbox')
-              value = input.prop('checked');
+            if(attribute.attr('type') === 'checkbox')
+              value = attribute.prop('checked');
+            // multi-checkbox to array
+            else if(attribute.hasClass('multi-checkbox')){
+              value = [];
+              _.each(attribute.children(), function(checkbox){
+                if(checkbox.checked)
+                  value.push(checkbox.value);
+              });
+            }
             else
-              value = input.val();
-            model.set(input.attr('name'), value);
-          });
+              value = attribute.val();
+            model.set(attribute.attr('name'), value);
+          });          
           model.save({}, {
             dataType: 'text',
             success: function(m, response){
               _this.alert('success', 'Anfrage war erfolgreich!');
+              /* file upload deactivated
+              if(dialog.id === 'editPrognosisDialog'){  
+                // upload file              
+                var files = dialog.querySelector("#upload-demo-csv").files;
+                if(files.length > 0){
+                  var file = files[0];
+                  var dd = new DDCollection({progId: model.get('id')});
+                  dd.fromCSV(file);
+                }
+               }*/
+              // update tables
               _this.showUserTable();
-              _this.showPrognoses();
+              _this.showPrognoses();              
             },
             error: function(m, response){
               _this.alert('danger', response.responseText);
@@ -268,6 +313,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             dataType: 'text',
             success: function(m, response){
               _this.alert('success', 'Löschen war erfolgreich!');
+              // update tables
               _this.showUserTable();
               _this.showPrognoses();
             },
@@ -288,7 +334,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
           input = $(input);
           if(input.hasClass('needed') && !input.val()){
             input.addClass('invalid');
-            errMsg = 'Bitte alle Pflichtfelder ausfüllen!'
+            errMsg = 'Bitte alle Pflichtfelder ausfüllen!';
           }
         });
         this.activeDialog.find('#status').text(errMsg);
@@ -313,7 +359,12 @@ define(["jquery", "backbone", "text!templates/admin.html",
       }
 
     });
-
+    
+  
+    function findAncestor (el, cls) {
+      while ((el = el.parentElement) && !el.classList.contains(cls));
+      return el;
+    }
     // Returns the View class
     return AdminView;
   }

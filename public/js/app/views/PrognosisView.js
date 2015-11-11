@@ -205,8 +205,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           var title = this.el.querySelector('#title');
           var text = this.el.querySelector('#description') || '';
           if(!app.get('session').get('user')){
-            this.map.setOverlayText('Bitte loggen Sie sich ein, um auf die Prognosen zuzugreifen.');
-            //map.innerHTML += 'Sie müssen sich <a href="#login">einloggen</a>, um auf die Prognosen zugreifen zu können.';
+            this.map.setOverlayText('Bitte loggen Sie sich zunächst ein!');
             return false;
           }
           else if(!prognosis){
@@ -391,6 +390,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               source: './shapes/bundeslaender.json',
               isTopoJSON: true,
               callback: callback
+            },
+            copyright: {
+              text: '© Bundesamt für Kartographie und Geodäsie, Frankfurt am Main',
+              link: 'http://www.bkg.bund.de'
             }
           });
         },

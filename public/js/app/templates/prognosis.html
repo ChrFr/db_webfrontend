@@ -2,36 +2,34 @@
 <br><br>
 <div class='container-fluid'>    
   <div class='col-lg-3 col-sm-5'>
-    <div id='map-wrapper'> 
-      <div class='row shadow-box' id='map-header'>
-        <div class='col-md-5' id='layer-select-wrapper' style='display: none'> 
-          Gliederungsebene
-          <select class='form-control' id='layer-select'> </select> <br>
-        </div>
-        <div class='col-md-7'> 
-          <div id='region-label' style='display: none'> Region </div>
-          <select id='region-select' style='display: none' multiple> </select><br>
-        </div>
+    <div class='row shadow-box' id='map-header'>
+      <div class='col-md-5' id='layer-select-wrapper' style='display: none'> 
+        Gliederungsebene
+        <select class='form-control' id='layer-select'> </select> <br>
       </div>
-      <div class='row shadow-box centered' id='map'></div> 
-      <div class='row shadow-box' id='sub-map-nav' style='display: none'>
-        <div id='selection-label'></div> 
-        <a href='#overview-tab' data-toggle='tab'>
-          Übersicht 
-          <span class='glyphicon glyphicon-play'></span>        
-        </a>    
-        <br>
-        <a href='#dd-tab' data-toggle='tab'>
-          Bevölkerungsprognose 
-          <span class='glyphicon glyphicon-play'></span>
-        </a>    
-        <br>
-        <a href='#hh-tab' data-toggle='tab'>
-          Haushaltsprognose 
-          <span class='glyphicon glyphicon-play'></span>
-        </a>    
-        <br>
-      </div>   
+      <div class='col-md-7'> 
+        <div id='region-label' style='display: none'> Region </div>
+        <select id='region-select' style='display: none' multiple> </select><br>
+      </div>
+    </div>
+    <div class="row shadow-box" id='map'></div> 
+    <div class='row shadow-box' id='sub-map-nav' style='display: none'>
+      <div id='selection-label'></div> 
+      <a href='#overview-tab' data-toggle='tab'>
+        Übersicht 
+        <span class='glyphicon glyphicon-play'></span>        
+      </a>    
+      <br>
+      <a href='#dd-tab' data-toggle='tab'>
+        Bevölkerungsprognose 
+        <span class='glyphicon glyphicon-play'></span>
+      </a>    
+      <br>
+      <a href='#hh-tab' data-toggle='tab'>
+        Haushaltsprognose 
+        <span class='glyphicon glyphicon-play'></span>
+      </a>    
+      <br> 
     </div>
   </div>
   

@@ -48,12 +48,7 @@ var Map = function(options){
       });
     }
   };
-  
-  
-  // remember if zoomed in on submap once
-  // continued zooms mess up mouse-zoom
-  var initialZoom = false;
-  
+    
   //server-side d3 needs to be loaded seperately
   if(!d3)
     var d3 = require('d3');
@@ -92,8 +87,6 @@ var Map = function(options){
   var timerId;
   //ZOOM EVENT
   function zoomed(){
-    if(!initialZoom)
-      return;
     var scale = d3.event.scale;
     projection.translate(d3.event.translate).scale(scale);
     g.selectAll('path').attr('d', path);
@@ -181,6 +174,32 @@ var Map = function(options){
       this.render(options.background);
   }
   
+  // add overlaying text, can be addressed by id
+  svg.append('text')
+    .attr('id', 'overlay-text')
+    .attr('x', innerwidth / 2)
+    .attr('y', innerheight / 2)
+    .attr("text-anchor", "middle");
+  
+  function zoomTo(boundaries, smooth){    
+    // ZOOM TO OUTER PATH
+    var bounds = path.bounds(boundaries),
+        bdx = bounds[1][0] - bounds[0][0],
+        bdy = bounds[1][1] - bounds[0][1],
+        bx = (bounds[0][0] + bounds[1][0]) / 2,
+        by = (bounds[0][1] + bounds[1][1]) / 2,
+        bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
+        translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];
+
+    if(smooth)
+      g.transition()
+          .duration(1500)
+          .style("stroke-width", 1.5 / bscale + "px")
+          .attr("transform", "translate(" + translate + ")scale(" + bscale + ")"); 
+    else
+      g.attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
+  };
+  this.zoomTo = zoomTo;
   
   /*
    * does the job for this.render(); seperated, for optional asynchronous file-loading by d3
@@ -277,27 +296,7 @@ var Map = function(options){
           return a === b;
         });
       }
-
-      // ZOOM TO OUTER PATH
-      var bounds = path.bounds(boundaries),
-          bdx = bounds[1][0] - bounds[0][0],
-          bdy = bounds[1][1] - bounds[0][1],
-          bx = (bounds[0][0] + bounds[1][0]) / 2,
-          by = (bounds[0][1] + bounds[1][1]) / 2,
-          bscale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-          translate = [innerwidth / 2 - bscale * bx, innerheight / 2 - bscale * by];
-
-        g.attr("transform", "translate(" + translate + ")scale(" + bscale + ")");
-
-      // prepend a white background (needed for mouse interactions)
-      g.insert('rect', ":first-child")
-          .attr('class', 'background')
-          .attr('x', bounds[0][0])
-          .attr('y', bounds[0][1])
-          .attr('width', bdx)
-          .attr('height', bdy)
-          .attr('cursor', 'move');
-
+      zoomTo(boundaries, false);
     }
 
     /* render GeoJSON */
@@ -321,31 +320,6 @@ var Map = function(options){
                 if(d.id)
                   options.onClick(d.id, d.properties.name, d.properties.rsArr);
               });
-
-      // Zoom to outer boundaries of submap
-      // WARNING: messes up the mouse-zoom! -> do it only once
-      if(options.boundaries && !initialZoom){         
-
-          // center map for zoom slider (zooms to center)
-          projection.center(d3.geo.centroid(options.boundaries));
-          g.selectAll('path').attr('d', path);
-
-          var bounds = path.bounds(options.boundaries),
-              bdx = bounds[1][0] - bounds[0][0],
-              bdy = bounds[1][1] - bounds[0][1],
-              bx = (bounds[0][0] + bounds[1][0]) / 2,
-              by = (bounds[0][1] + bounds[1][1]) / 2,
-              scale = .9 / Math.max(bdx / innerwidth, bdy / innerheight),
-              translate = [innerwidth / 2 - scale * bx, innerheight / 2 - scale * by];   
-          
-          g.transition()
-              .duration(1500)
-              .style("stroke-width", 1.5 / scale + "px")
-              .attr("transform", "translate(" + translate + ")scale(" + scale + ")");   
-          
-          initialZoom = true;
-        
-      }
     }
 
     // disable the zoom-controls
@@ -398,6 +372,10 @@ var Map = function(options){
       
     // resize slider
     slideDiv.style('width', iw - 45 + 'px');
+  };
+  
+  this.setOverlayText = function(text){
+    svg.select('#overlay-text').text(text);
   };
 
 };

@@ -175,6 +175,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
 
               _this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
+              _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>keine</b> <br> (Bitte klicken Sie auf der Karte ein Gebiet an!)';
               // change layer on selection of different one
               layerSelector.onchange = function(e){
                 if(e.target.value !== null){
@@ -225,7 +226,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
          * gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
          */
         changeLayer: function(layerId){
-          this.map.setOverlayText('');
+          this.map.setOverlayText('');          
           var _this = this;
           var progId = app.get('activePrognosis').id;
           var regionSelector = this.el.querySelector('#region-select');
@@ -235,6 +236,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // SPECIAL CASE: WHOLE area (all communities summed up); needs no region-selection
           if(layerId == -2){
+            // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
+            document.querySelector('#li-dd a').click();
             var _this = this;
             regionSelector.style.display = 'none';
             this.el.querySelector('#region-label').style.display = 'none';
@@ -392,7 +395,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               callback: callback
             },
             copyright: {
-              text: '© Bundesamt für Kartographie und Geodäsie, Frankfurt am Main',
+              text: 'Kartenmaterial: © Bundesamt für Kartographie und Geodäsie, Frankfurt am Main',
               link: 'http://www.bkg.bund.de'
             }
           });

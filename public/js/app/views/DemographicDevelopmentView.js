@@ -43,10 +43,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        * dom events (managed by jquery)
        */
       events: {
-        // age group controls
-        'click #new-group': 'addAgeGroup',
-        'change #agegroup-from': 'ageInput',
-        'click #delete-agegroups': 'deleteAgeGroups',
         
         // download buttons clicked
         'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
@@ -65,7 +61,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         'click #agetree-tab .watch': 'watchYear',
         'click #visualizations li': 'tabChange',
         'click #hiddenPng': 'test',
-        'click #fix-scale': 'fixScale'
+        'click #fix-scale': 'fixScale',
+        
+        // agegroup controls
+        'click #add-agegroups': 'showAgeGroupDialog',
+        'change #agegroup-from': 'ageInput',
+        'click #delete-agegroups': 'deleteAgeGroups',
+        'click :submit.post': 'addAgeGroup'
         
       },
       
@@ -579,18 +581,24 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
       },
       
+      
+      showAgeGroupDialog: function() {
+        $('#agegroup-dialog').modal('show');
+      },
+      
       /*
        * sorted insertion of user defined agegroups (in app)
        */
       addAgeGroup: function () {
         var from = parseInt(this.el.querySelector('#agegroup-from').value),
-                to = parseInt(this.el.querySelector('#agegroup-to').value),
-                groupName = from + ((to === null || isNaN(to)) ? '+' : ' - ' + to);
+            to = parseInt(this.el.querySelector('#agegroup-to').value),
+            groupName = from + ((to === null || isNaN(to)) ? '+' : ' - ' + to);
 
         //you need at least one input
         if (isNaN(to) && isNaN(from))
           return alert('Sie müssen mindestens ein Feld ausfüllen!');
 
+         $('#agegroup-dialog').modal('hide');
         //no 'to' input is treated like 'from' to infinite (from+)
         if (isNaN(to))
           to = null;

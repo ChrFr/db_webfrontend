@@ -284,20 +284,19 @@ define(["jquery", "backbone", "text!templates/admin.html",
             dataType: 'text',
             success: function(m, response){
               _this.alert('success', 'Anfrage war erfolgreich!');
-              // upload file
-                if(dialog.id === 'editPrognosisDialog'){
-                  var files = dialog.querySelector("#upload-demo-csv").files;
-                  if(files.length > 0){
-                    var file = files[0];
-                    var dd = new DDCollection({progId: model.get('id')});
-                    dd.fromCSV(file);
-                  }
-               }
-               else{
-                // update tables
-                _this.showUserTable();
-                _this.showPrognoses();
-              }
+              /* file upload deactivated
+              if(dialog.id === 'editPrognosisDialog'){  
+                // upload file              
+                var files = dialog.querySelector("#upload-demo-csv").files;
+                if(files.length > 0){
+                  var file = files[0];
+                  var dd = new DDCollection({progId: model.get('id')});
+                  dd.fromCSV(file);
+                }
+               }*/
+              // update tables
+              _this.showUserTable();
+              _this.showPrognoses();              
             },
             error: function(m, response){
               _this.alert('danger', response.responseText);

@@ -277,6 +277,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
             // multiple selector
             regionSelector.onchange = function(e){
+              // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
+              document.querySelector('#li-dd a').click();
               if(regionSelector.selectedIndex <= 0)
                 return;
               var rsAggr = [], model, names = [], id;
@@ -414,8 +416,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // click handler, if map is clicked, render data of selected region
           var onClick = function(rs, name, rsAggr){
-            // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
-            document.querySelector('#li-dd a').click();
             //update selector to match clicked region
             var regionSelector = _this.el.querySelector('#region-select');
             for(var i = 0, j = regionSelector.options.length; i < j; ++i){

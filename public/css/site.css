@@ -206,6 +206,10 @@ li.active img{
     opacity: 1.0;
 }
 
+.alert{
+    margin-top: 20px;
+}
+
 @media (min-width: 768px) {
     
     #mainFrame{

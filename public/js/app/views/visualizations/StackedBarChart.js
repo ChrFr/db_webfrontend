@@ -190,7 +190,7 @@ var StackedBarChart = function (options) {
 
     // BARS
 
-    var groups = svg.selectAll('.year')
+    var groups = svg.selectAll('.group')
             .data(this.data)
             .enter().append('g')
             .attr('class', 'g')

@@ -72,6 +72,22 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     background: lightgrey;
 }
 
+#age-data td{
+    line-height: 0.5;
+}
+
+td, th{
+    font-size: 0.9em;
+}
+
+td{
+    text-align: right;
+}
+
+th{
+    text-align: center;
+}
+
 .shadow-box, #summary{
     background-color: white;
     border: solid 1px lightgrey;

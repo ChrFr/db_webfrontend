@@ -85,15 +85,74 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           var prog = app.get('activePrognosis');
           if(prog){
             this.el.querySelector('#description-div').style.display = 'block';
-            this.prepareSelections(prog.id);
           }
           this.createMap();
-
-          //id of active prognosis changed in navbar -> render it
-          app.bind('activePrognosis', function(prognosis){
+          
+         /*
+          * prepare the region selection and the specific prognoses views
+          * id: id of selected prognosis (available regions depend on this)
+          */
+          function prepareViews(prognosis){            
             var success = _this.renderOverview(app.get('activePrognosis'));
             if(success){
-              _this.prepareSelections(prognosis);
+              var loader = Loader(_this.el.querySelector('#map'));
+
+              _this.communities.fetch({//get the smallest entities (=communities) to build up regions
+                data: {progId: prognosis.id},
+                error: function(){
+                },
+                success: function(){
+                  loader.remove();              
+                  var prog = app.get('activePrognosis');
+                  _this.map.zoomTo(prog.get('boundaries'), true);
+
+                  _this.el.querySelector('#description-div').style.display = 'block';
+                  _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
+                  _this.el.querySelector('#sub-map-nav').style.display = 'block';
+                  // remove old options
+                  var layerSelector = _this.el.querySelector('#layer-select');
+                  while(layerSelector.firstChild)
+                    layerSelector.removeChild(layerSelector.firstChild);
+
+                  // create options for layer selection in preparation for map rendering
+                  new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
+                  new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
+                  new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
+
+                  _this.layers.each(function(layer){
+                    new OptionView({
+                      el: layerSelector,
+                      name: layer.get('name'),
+                      value: layer.get('id')
+                    });
+                  });
+
+                  _this.communities.comparator = 'name';
+                  _this.communities.sort();
+
+
+                  _this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
+                  _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>keine</b> <br> (Bitte klicken Sie auf der Karte ein Gebiet an!)';
+                  // change layer on selection of different one
+                  layerSelector.onchange = function(e){
+                    if(e.target.value !== null){
+                      _this.changeLayer(e.target.value);
+                    }
+                  };
+                }
+              });
+
+              // remove old views        
+              if(_this.ddView)
+                _this.ddView.close();
+              if(_this.hhView)
+                _this.hhView.close();
+              _this.ddView = new DemographicDevelopmentView({
+                el: _this.el.querySelector('#dd-tab').appendChild(document.createElement('div'))
+              });
+              this.hhView = new HouseholdsDevelopmentView({
+                el: _this.el.querySelector('#hh-tab').appendChild(document.createElement('div'))
+              });
             }
             else{
               // hide all elements interacting with prognoses, when no prognosis is loaded
@@ -109,9 +168,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               _this.map.removeMaps();
               _this.el.querySelector('#selection-label').innerHTML = '';
             }
-          });
-
-          _this.renderOverview(app.get('activePrognosis'));
+          }
+          
+          // id of active prognosis changed in navbar -> prepare prognosis to be viewed
+          app.bind('activePrognosis', prepareViews);
+          
+          // do the same right at start
+          prepareViews(app.get('activePrognosis'));
           return this;
         },
         
@@ -130,72 +193,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 height = width;
             this.map.changeViewport(width, height);
           }
-        },
-        
-        /*
-         * prepare the region selection and the specific prognoses views
-         * id: id of selected prognosis (available regions depend on this)
-         */
-        prepareSelections: function(prognosis){
-          var _this = this;
-          var loader = Loader(this.el.querySelector('#map'));
-
-          this.communities.fetch({//get the smallest entities (=communities) to build up regions
-            data: {progId: prognosis.id},
-            error: function(){
-            },
-            success: function(){
-              loader.remove();              
-              var prog = app.get('activePrognosis');
-              _this.map.zoomTo(prog.get('boundaries'), true);
-              
-              _this.el.querySelector('#description-div').style.display = 'block';
-              _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
-              _this.el.querySelector('#sub-map-nav').style.display = 'block';
-              // remove old options
-              var layerSelector = _this.el.querySelector('#layer-select');
-              while(layerSelector.firstChild)
-                layerSelector.removeChild(layerSelector.firstChild);
-
-              // create options for layer selection in preparation for map rendering
-              new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
-              new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
-              new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
-
-              _this.layers.each(function(layer){
-                new OptionView({
-                  el: layerSelector,
-                  name: layer.get('name'),
-                  value: layer.get('id')
-                });
-              });
-
-              _this.communities.comparator = 'name';
-              _this.communities.sort();
-
-
-              _this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
-              _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>keine</b> <br> (Bitte klicken Sie auf der Karte ein Gebiet an!)';
-              // change layer on selection of different one
-              layerSelector.onchange = function(e){
-                if(e.target.value !== null){
-                  _this.changeLayer(e.target.value);
-                }
-              };
-            }
-          });
-
-          // remove old views        
-          if(this.ddView)
-            this.ddView.close();
-          if(this.hhView)
-            this.hhView.close();
-          this.ddView = new DemographicDevelopmentView({
-            el: this.el.querySelector('#dd-tab').appendChild(document.createElement('div'))
-          });
-          this.hhView = new HouseholdsDevelopmentView({
-            el: this.el.querySelector('#hh-tab').appendChild(document.createElement('div'))
-          });
         },
         
         /*

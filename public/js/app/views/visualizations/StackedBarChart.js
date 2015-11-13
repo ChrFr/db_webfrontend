@@ -75,14 +75,14 @@ var StackedBarChart = function (options) {
       }) * 1.1;
 
     var margin = {
-      top: 30,
-      right: 0,
+      top: 50,
+      right: 50,
       bottom: 70,
       left: 60
     };
 
     var innerwidth = this.width - margin.left - margin.right,
-            innerheight = this.height - margin.top - margin.bottom;
+        innerheight = this.height - margin.top - margin.bottom;
 
     var top = d3.select(this.el).append('svg')
             .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -133,14 +133,14 @@ var StackedBarChart = function (options) {
 
     svg.append('text')
             .attr('class', 'title')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .text(this.title);
 
     svg.append('text')
             .attr('class', 'subtitle')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);
@@ -170,12 +170,17 @@ var StackedBarChart = function (options) {
     var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .tickSize(-this.width);
+            .tickSize(-innerwidth);
 
     var xApp = svg.append('g')
             .attr('class', 'x axis')
             .attr('transform', translation(0, innerheight))
-            .call(xAxis);
+            .call(xAxis)
+            .selectAll("text")  
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)" );
 
     var yApp = svg.append('g')
             .attr('class', 'y axis')
@@ -220,7 +225,7 @@ var StackedBarChart = function (options) {
               return d.mapped;
             })
             .enter().append('rect')
-            .attr('width', xScale.rangeBand() * 0.75)
+            .attr('width', xScale.rangeBand() * 0.6)
             .attr('y', function (d, i) {
               return yScale(d.summed);
             })
@@ -232,6 +237,15 @@ var StackedBarChart = function (options) {
             })
             .on('mouseover', mouseOverBar)
             .on('mouseout', mouseOutBar);
+        
+    
+    
+    svg.append('text')
+            .attr('x', innerwidth)
+            .attr('y', 10)
+            .attr('font-size', '1em')
+            .attr('dy', '1em')
+            .text('Legende');
 
     var legend = svg.selectAll('.legend')
             .data(_this.stackLabels.slice())
@@ -239,8 +253,8 @@ var StackedBarChart = function (options) {
             .attr('class', 'legend')
             // mod operations move all uneven numbers to line below even numbers
             .attr('transform', function (d, i) {
-              return translation((i - (i % 2)) * 40, innerheight + 20 + 25 * (i % 2));
-            });
+              return translation(innerwidth, 30 + i * 20);
+            });            
 
     legend.append('rect')
             .attr('x', 0)
@@ -252,7 +266,7 @@ var StackedBarChart = function (options) {
 
     legend.append('text')
             .attr('x', 12)
-            .attr('y', 9)
+            .attr('y', 6)
             .attr('dy', '.35em')
             .text(function (d) {
               return d;

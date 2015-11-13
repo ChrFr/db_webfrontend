@@ -62,12 +62,12 @@ var GroupedBarChart = function (options) {
     var margin = {
       top: 50,
       right: 0,
-      bottom: 70,
+      bottom: 90,
       left: 40
     };
 
     var innerwidth = this.width - margin.left - margin.right,
-            innerheight = this.height - margin.top - margin.bottom;
+        innerheight = this.height - margin.top - margin.bottom;
 
     var top = d3.select(this.el).append('svg')
             .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -117,14 +117,14 @@ var GroupedBarChart = function (options) {
 
     svg.append('text')
             .attr('class', 'title')
-            .attr('x', margin.left / 2)
-            .attr('y', 20 - (margin.top))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .text(this.title);
 
     svg.append('text')
             .attr('class', 'subtitle')
-            .attr('x', margin.left / 2)
-            .attr('y', 20 - (margin.top))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);
@@ -173,7 +173,12 @@ var GroupedBarChart = function (options) {
     var xApp = svg.append('g')
             .attr('class', 'x axis')
             .attr('transform', translation(0, innerheight))
-            .call(xAxis);
+            .call(xAxis)
+            .selectAll("text")  
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)" );
 
     /*
      xApp.append('text')
@@ -262,11 +267,11 @@ var GroupedBarChart = function (options) {
             .enter().append('g')
             .attr('class', 'legend')
             .attr('transform', function (d, i) {
-              return translation(0, innerheight + 20 + i * 15);
+              return translation(0, innerheight + 40 + i * 15);
             });
 
     legend.append('rect')
-            .attr('x', innerwidth - 18)
+            .attr('x', innerwidth - 14)
             .attr('width', 10)
             .attr('height', 10)
             .style('fill', function (d, i) {
@@ -275,7 +280,7 @@ var GroupedBarChart = function (options) {
 
     legend.append('text')
             .attr('x', innerwidth - 24)
-            .attr('y', 9)
+            .attr('y', 6)
             .attr('dy', '.35em')
             .style('text-anchor', 'end')
             .text(function (d) {

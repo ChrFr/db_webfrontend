@@ -2,9 +2,10 @@
 <link rel='stylesheet' type='text/css' href='css/visualizations.css'>
 <div class='container-fluid'>    
   <div id='visualizations' class='col-lg-7 col-md-12'>    
+    <!-- links activate vis-tabs and data-tabs as well, because addressed by class -->
     <ul class='nav nav-tabs'>
       <li class='active'>
-        <a href='#development-tab' data-toggle='tab'>     
+        <a href='.development-tab' data-toggle='tab'>     
           <div class = 'icon'>
             <img src='img/linechart.png'>
           </div>
@@ -12,7 +13,7 @@
         </a>
       </li>
       <li id='ageTreeBtn'>
-        <a href='#agetree-tab' data-toggle='tab'>                    
+        <a href='.age-tab' data-toggle='tab'>                    
           <div class = 'icon'>
             <img src='img/agetree.png'>
           </div>
@@ -20,7 +21,7 @@
         </a>
       </li>
       <li>
-        <a href='#agegroupchart-tab' data-toggle='tab'>          
+        <a href='.agegroup-tab' data-toggle='tab'>          
           <div class = 'icon'>
             <img src='img/barchart.png'>
           </div>
@@ -28,7 +29,7 @@
         </a>
       </li>
       <li>
-        <a href='#barchart-tab' data-toggle='tab'>          
+        <a href='.factor-tab' data-toggle='tab'>          
           <div class = 'icon'>
             <img src='img/groupedbarchart.png'>
           </div>
@@ -43,7 +44,7 @@
     </ul>
     
     <div class='tab-content shadow-box'>    
-      <div class='tab-pane active' id='development-tab'>     
+      <div class='tab-pane active development-tab'>     
         <div id='absolute' class='centered'>  
           <h3> Kein Gebiet ausgewählt! </h3>
         </div>
@@ -54,7 +55,7 @@
           </button>
         </div>
       </div>          
-      <div class='tab-pane' id='agegroupchart-tab'>    
+      <div class='tab-pane agegroup-tab'>    
         <div id='agegroupchart' class='centered'>  
           <h3> Kein Gebiet ausgewählt! </h3>
         </div>
@@ -64,8 +65,8 @@
           </button>
         </div>
       </div>  
-      <div class='tab-pane' id='barchart-tab'>    
-        <div id='barchart' class='centered'>  
+      <div class='tab-pane factor-tab'>    
+        <div id='factorchart' class='centered'>  
           <h3> Kein Gebiet ausgewählt! </h3>
         </div>
         <div class='side-controls' style='display: none'> 
@@ -74,7 +75,7 @@
           </button>
         </div>
       </div>
-      <div class='tab-pane' id='agetree-tab'>            
+      <div class='tab-pane age-tab'>            
         <div id='agetree' class='centered'>  
           <h3> Kein Gebiet ausgewählt! </h3>
         </div>
@@ -106,36 +107,48 @@
   </div>
 
   <div id='tables' class='col-lg-4 col-md-12' style='display: none'> 
+    <!--
     <ul class='nav nav-tabs'>
-      <li class='active'><a href='#agegroup-tab' data-toggle='tab'>Altersgruppen</a></li>
-      <li><a href='#age-tab' data-toggle='tab'>Alterstabelle</a></li>
-      <li><a href='#raw-tab' data-toggle='tab'>Rohdaten</a></li>
-    </ul>
-    <div class='tab-content shadow-box'>            
-      <div class='tab-pane active' id='agegroup-tab'>  
+      <li class='active'><a href='#age-tab' data-toggle='tab'>Alterstabelle</a></li>
+      <li><a href='#agegroup-tab' data-toggle='tab'>Altersgruppen</a></li>
+      <li><a href='#dev-tab' data-toggle='tab'>Entwicklung</a></li>
+      <li><a href='#factor-tab' data-toggle='tab'>Einflussfaktoren</a></li>
+    </ul>-->
+    <div class='shadow-box box-header'></div>
+    <div class='tab-content shadow-box'>      
+      <div class='tab-pane active development-tab'>  <!-- this one is active at first, because corresponding development vis is the first active one-->
+        <div id='dev-data'></div> 
+        <br>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
+        <br>
+      </div>    
+      <div class='tab-pane age-tab'>    
+        <div id='age-data'></div>
+        <br>
+        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
+        <br>
+      </div>       
+      <div class='tab-pane agegroup-tab'>  
         <div id='agegroup-data'></div> 
         <br>
         <button id='add-agegroups' type='button' class='btn btn-secondary' title='Altersgruppe hinzufügen'>Hinzufügen</button> 
         <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button> 
         <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
         <br>
-      </div>
-      <div class='tab-pane' id='age-tab'>    
-        <div id='age-data'></div>
+      </div>   
+      <div class='tab-pane factor-tab'>  
+        <div id='factor-data'></div> 
         <br>
         <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
         <br>
-      </div>
-      <div class='tab-pane' id='raw-tab'>    
-        <div id='raw-data'></div>
-        <br>
-        <button type='button' class='btn btn-primary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Export als csv</button>
-        <br>
-      </div>
-    </div>    
-  </div>
+      </div>    
+    </div>
+    <div class='shadow-box box-footer'>
+      <button type='button' id='raw-data-btn' class='btn btn-secondary download-btn csv' title='Gesamtdaten als csv-Datei speichern.'>Export der Gesamtdaten</button>
+    </div>
+  </div>        
 </div>
-
+        
 <div id="agegroup-dialog" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -154,6 +167,8 @@
   </div>
 </div>
 
+<!-- auxiliary divs that are used to render and convert data, but are not supposed to be seen by user -->
 <div id='pngWrapper' style='display: none'>
   <canvas id='pngRenderer'></canvas>
 </div>
+<div id='raw-data' style='display: none;'> </div>

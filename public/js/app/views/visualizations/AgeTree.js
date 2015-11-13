@@ -62,7 +62,7 @@ var AgeTree = function (options) {
     var svgWidth = this.width,
         svgHeight = this.height;
     
-    this.width -= (margin.left + margin.right);
+    this.width -= (margin.left + margin.right) - 20;
     this.height -= (margin.top + margin.bottom);
 
     var top = d3.select(this.el).append('svg')
@@ -282,7 +282,7 @@ var AgeTree = function (options) {
 
     svg.append('g')
             .attr('class', 'axis y left')
-            .attr('transform', translation(this.width / 2  + margin.left + 2, 0))
+            .attr('transform', translation(this.width / 2  + margin.left / 2 + 2, 0))
             .call(yAxis)
             .selectAll('text')
             .style('text-anchor', 'middle');

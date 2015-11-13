@@ -45,13 +45,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       events: {
         
         // download buttons clicked
-        'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
-        'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
-        'click #agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
-        'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
-        'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
-        'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
-        'click #agegroupchart-tab .download-btn.png': 'downloadAgeGroupChartPng',
+        'click .age-tab>.download-btn.csv': 'downloadAgeTableCsv',
+        'click .age-tab .download-btn.png': 'downloadAgeTreePng',
+        'click .agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
+        'click .agegroup-tab .download-btn.png': 'downloadAgeGroupChartPng',
+        'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
+        'click .factor-tab .download-btn.png': 'downloadFactorsPng',
+        'click #raw-data-btn': 'downloadRawCsv',
         
         //create a PDF
         'click #createDDReport': 'createReport',
@@ -59,9 +59,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // other controls clicked
         'click #play': 'play',
         'click #agetree-tab .watch': 'watchYear',
-        'click #visualizations li': 'tabChange',
         'click #hiddenPng': 'test',
         'click #fix-scale': 'fixScale',
+        
+        // tab of visualizations changed -> stop playback of agetree
+        'click #visualizations li': 'stop',
         
         // agegroup controls
         'click #add-agegroups': 'showAgeGroupDialog',
@@ -91,7 +93,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       renderRegion: function (region) {         
         
         var model = this.collection.getRegion(region);
-        this.el.querySelector('#agetree-tab .watch').classList.remove('active');
+        this.el.querySelector('.age-tab .watch').classList.remove('active');
         this.compareData = null;
         var _this = this;
         this.stop();
@@ -99,7 +101,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // don't need to keep track of loader divs, all children of the visualisations will be removed when rendered (incl. loader-icon)
         Loader(this.el.querySelector('#absolute'));
         Loader(this.el.querySelector('#agegroupchart'));
-        Loader(this.el.querySelector('#barchart'));
+        Loader(this.el.querySelector('#factorchart'));
         Loader(this.el.querySelector('#agetree'));
         
         model.fetch({success: function () {
@@ -229,7 +231,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         //visualizations        
         this.renderAgeTree(this.yearData);
         this.renderDevelopment(data);
-        this.renderBarChart(data);
+        this.renderFactorChart(data);
         this.renderAgeGroupChart(this.groupedData);
         //data tables
         this.renderAgeGroupTable(this.currentYear);
@@ -335,7 +337,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       /*
        * render bar chart with factors influencing the development
        */
-      renderBarChart: function (data) {
+      renderFactorChart: function (data) {
         var dataSets = [];
 
         _.each(data, function (d) {
@@ -351,12 +353,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         });
 
 
-        var vis = this.el.querySelector('#barchart');
+        var vis = this.el.querySelector('#factorchart');
         clearElement(vis);
         
         var width = this.width - 70;
         var height = width * 0.8;
-        this.barChart = new GroupedBarChart({
+        this.factorChart = new GroupedBarChart({
           el: vis,
           data: dataSets,
           width: width,
@@ -368,7 +370,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           ylabel: 'Zuwachs',
           yNegativeLabel: 'Abnahme'
         });
-        this.barChart.render();
+        this.factorChart.render();
       },
       
       /*
@@ -418,13 +420,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       /*
        * render a table with the raw data received from the server
+       * table is currently hidden, but rendered to export the data when requested
        */
       renderRawData: function (data) {
         var columns = [];
         Object.keys(data[0]).forEach(function (i) {
-          columns.push({name: i, description: i});
+          if(i !== 'sumFemale' && i !== 'sumMale') // ignore clientside processed data
+            columns.push({name: i, description: i});
         });
-
+        
         this.rawTable = new TableView({
           el: this.el.querySelector('#raw-data'),
           columns: columns,
@@ -708,30 +712,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTree.changeData(this.yearData);
         this.renderAgeGroupTable(this.currentYear);
         this.renderAgeTable(this.yearData);        
-      },
-      
-      /*
-       * if tab changed, show specific data tables
-       */
-      tabChange: function (event) {
-        this.stop();
-        
-        // no model loaded yet (because no region selected)
-        if(!this.currentModel)
-          return;
-        
-        if (event.target.getAttribute('href') === '#agetree-tab') {
-          // age tree can render multiple years -> render data of current one  
-          this.changeYear(this.currentYear);
-        }
-        //the others render summary over years -> render data of first year (thats the year the predictions base on)
-        else {
-          this.yearData = this.currentModel.get('data')[0];
-          this.renderAgeTable(this.yearData);
-          this.renderAgeGroupTable(this.yearData.jahr);
-        }
-
-      },
+      },      
       
       /*
        * cycle through the years (change year every 1000 ms)
@@ -821,7 +802,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       downloadRawCsv: function () {
         var filename = this.currentModel.get('name') + '-Rohdaten.csv';
+        this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
+        this.el.querySelector('#raw-data').style.display = 'none';
       },
       
       downloadAgeGroupCsv: function () {
@@ -835,9 +818,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         downloadPng(svg, filename, this.canvas);//, {width: 2, height: 2});
       },
       
-      downloadBarChartPng: function (e) {
-        var filename = this.currentModel.get('name') + '-Barchart.png';
-        var svg = $('#barchart>svg');
+      downloadFactorsPng: function (e) {
+        var filename = this.currentModel.get('name') + '-Entwicklung.png';
+        var svg = $('#factorchart>svg');
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       

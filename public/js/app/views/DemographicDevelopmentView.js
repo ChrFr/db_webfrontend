@@ -50,6 +50,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         'click .agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
         'click .agegroup-tab .download-btn.png': 'downloadAgeGroupChartPng',
         'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
+        'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',
         'click .factor-tab .download-btn.png': 'downloadFactorsPng',
         'click #raw-data-btn': 'downloadRawCsv',
         
@@ -236,6 +237,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         //data tables
         this.renderAgeGroupTable(this.groupedData); // render 'Basisjahr'
         this.renderAgeTable(this.yearData);
+        this.renderDevTable(data);
+        this.renderFactorTable(data);
         this.renderRawData(data);
         
         // TODO: change size of yearSlider
@@ -334,6 +337,50 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.relativeChart.render();
       },
       
+      renderDevTable: function (data) {
+        var columns = [],
+            title = 'Bevölkerungsentwicklung',
+            rows = [];
+
+        // adapt age data to build table (arrays to single entries)
+        columns.push({name: 'year', description: 'Jahr'});
+        columns.push({name: 'total', description: 'Bevölkerungszahl'});
+        columns.push({name: 'perc', description: 'Vergleich Vorjahr'});
+        
+        var lastTotal;
+        
+        _.each(data, function (d) {
+          var year = d.jahr,
+              total = Math.round(d.sumFemale + d.sumMale),
+              perc;
+          if(lastTotal === undefined){
+            perc = '-';
+          }
+          else{            
+            perc = Math.round((100 * total / lastTotal - 100) * 100) / 100;
+            if(perc > 0)
+              perc = '+' + perc;
+            perc += '%';
+          }
+          lastTotal = total;
+          rows.push({
+            year: year,
+            total: total,
+            perc: perc
+          });
+        });
+
+        this.devTable = new TableView({
+          el: this.el.querySelector('#dev-data'),
+          columns: columns,
+          title: title,
+          data: rows,
+          dataHeight: 400,
+          pagination: false,
+          highlight: true
+        });
+      },
+      
       /*
        * render bar chart with factors influencing the development
        */
@@ -371,6 +418,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           yNegativeLabel: 'Abnahme'
         });
         this.factorChart.render();
+      },
+      
+      renderFactorTable: function(data){
+        
       },
       
       /*
@@ -776,6 +827,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       downloadAgeTableCsv: function () {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv';
         this.ageTable.save(filename);
+      },
+      
+      downloadDevelopmentCsv: function(){
+        var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung.csv';
+        this.devTable.save(filename);
       },
       
       downloadRawCsv: function () {

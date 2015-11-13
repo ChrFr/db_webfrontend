@@ -52,6 +52,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
         'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',
         'click .factor-tab .download-btn.png': 'downloadFactorsPng',
+        'click .factor-tab .download-btn.csv': 'downloadFactorsCsv',        
         'click #raw-data-btn': 'downloadRawCsv',
         
         //create a PDF
@@ -386,19 +387,21 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        */
       renderFactorChart: function (data) {
         var dataSets = [];
-
-        _.each(data, function (d) {
-          var values = [
-            d.geburten - d.tote,
-            d.zuzug - d.fortzug
-          ];
+        
+        // base year shouldn't have data of development factors
+        for(var i = 1; i < data.length; i++){
+          var d = data[i],
+              values = [
+                d.geburten - d.tote,
+                d.zuzug - d.fortzug
+              ];
+              
           values.push(values[0] + values[1]);
 
           var dataSet = {label: d.jahr,
             values: values};
           dataSets.push(dataSet);
-        });
-
+        };
 
         var vis = this.el.querySelector('#factorchart');
         clearElement(vis);
@@ -420,8 +423,48 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.factorChart.render();
       },
       
-      renderFactorTable: function(data){
+      renderFactorTable: function(data){        
+        var columns = [],
+            title = 'Einflussfaktoren',
+            rows = [];
+
+        columns.push({name: 'year', description: 'Jahr'});
+        columns.push({name: 'births', description: 'Geburten'});
+        columns.push({name: 'deaths', description: 'Sterbefälle'});
+        columns.push({name: 'natSaldo', description: 'Nat. Saldo'});
+        columns.push({name: 'immigration', description: 'Zuzüge'});
+        columns.push({name: 'emigration', description: 'Fortzüge'});
+        columns.push({name: 'migSaldo', description: 'Wanderungs-Saldo'});
+        columns.push({name: 'absSaldo', description: 'Ges. Saldo'});
         
+        // base year shouldn't have data of development factors
+        for(var i = 1; i < data.length; i++){
+          var d = data[i],
+              natSaldo = d.geburten - d.tote,
+              migSaldo = d.zuzug - d.fortzug,
+              absSaldo = natSaldo + migSaldo;
+              
+          rows.push({
+            year: d.jahr,
+            births: d.geburten,
+            deaths: d.tote,
+            natSaldo: natSaldo,
+            immigration: d.zuzug,
+            emigration: d.fortzug,
+            migSaldo: migSaldo,
+            absSaldo: absSaldo
+          })    
+        };        
+
+        this.factorTable = new TableView({
+          el: this.el.querySelector('#factor-data'),
+          columns: columns,
+          title: title,
+          data: rows,
+          dataHeight: 400,
+          pagination: false,
+          highlight: true
+        });
       },
       
       /*
@@ -436,7 +479,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         else
           title = 'Prognose';
 
-        // adapt age data to build table (arrays to single entries)
         columns.push({name: 'age', description: 'Alter'});
         columns.push({name: 'female', description: 'Anzahl weiblich'});
         columns.push({name: 'male', description: 'Anzahl männlich'});
@@ -834,6 +876,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.devTable.save(filename);
       },
       
+      downloadFactorsCsv: function(){
+        var filename = this.currentModel.get('name') + '-Einflussfaktoren.csv';
+        this.factorTable.save(filename);
+      },
+      
       downloadRawCsv: function () {
         var filename = this.currentModel.get('name') + '-Rohdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
@@ -842,7 +889,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       downloadAgeGroupCsv: function () {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv';
+        var filename = this.currentModel.get('name') + '-Altersgruppen.csv';
         this.ageGroupTable.save(filename);
       },
       

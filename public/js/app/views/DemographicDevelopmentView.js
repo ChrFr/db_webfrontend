@@ -416,7 +416,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           title: 'Bevölkerungsentwicklung',
           subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
-          groupLabels: ['A: Geburten - Sterbefälle', 'B: Zuwanderung - Abwanderung', 'gesamt: A + B'],
+          groupLabels: ['Natürlicher Saldo', 'Wanderungssaldo', 'Gesamtsaldo'],
           ylabel: 'Zuwachs',
           yNegativeLabel: 'Abnahme'
         });
@@ -434,8 +434,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         columns.push({name: 'natSaldo', description: 'Nat. Saldo'});
         columns.push({name: 'immigration', description: 'Zuzüge'});
         columns.push({name: 'emigration', description: 'Fortzüge'});
-        columns.push({name: 'migSaldo', description: 'Wanderungs-Saldo'});
-        columns.push({name: 'absSaldo', description: 'Ges. Saldo'});
+        columns.push({name: 'migSaldo', description: 'Wanderungssaldo'});
+        columns.push({name: 'absSaldo', description: 'Gesamtsaldo'});
         
         // base year shouldn't have data of development factors
         for(var i = 1; i < data.length; i++){

@@ -60,7 +60,7 @@ var GroupedBarChart = function (options) {
     var _this = this;
 
     var margin = {
-      top: 30,
+      top: 50,
       right: 0,
       bottom: 70,
       left: 40
@@ -118,13 +118,13 @@ var GroupedBarChart = function (options) {
     svg.append('text')
             .attr('class', 'title')
             .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('y', 20 - (margin.top))
             .text(this.title);
 
     svg.append('text')
             .attr('class', 'subtitle')
             .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('y', 20 - (margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);
@@ -145,7 +145,18 @@ var GroupedBarChart = function (options) {
             .domain([_this.minY, _this.maxY]);
 
     var colorScale = d3.scale.category10()
-            .domain(d3.range(this.groupLabels.length));
+            .domain(d3.range(this.groupLabels.length));     
+    
+    // background of groups, color should change on hover (defined in css)
+    var back = svg.selectAll('rect')
+            .data(this.data)
+            .enter().append('rect')
+            .attr('class', 'group-back')
+            .attr('transform', function (d) {
+              return translation(x0Scale(d.label), 0);
+            })
+            .attr('height', innerheight).attr('height', innerheight)
+            .attr('width', x0Scale.rangeBand());
 
     // AXES
 
@@ -191,19 +202,17 @@ var GroupedBarChart = function (options) {
               .text(this.yNegativeLabel)
               .attr('transform', 'rotate(-90), ' + translation(-innerheight + margin.bottom, 0));
 
-    // BARS
-
+    // BARS        
     var groups = svg.selectAll('.group')
             .data(this.data)
             .enter().append('g')
             .attr('class', 'g')
             .attr('xvalue', function (d) {
-              return d.label
+              return d.label;
             })
             .attr('transform', function (d) {
               return translation(x0Scale(d.label), 0);
             });
-
 
     var mouseOverBar = function (d, i) {
       var tooltip = d3.select('body').append('div').attr('class', 'tooltip');

@@ -81,3 +81,11 @@ div.tooltip {
     pointer-events: none;         
     opacity: 0.9;
 }
+
+.group-back{
+    fill: #ffffff;
+}
+
+.group-back:hover{
+    fill: #D8D8D8;
+}

@@ -50,7 +50,7 @@ body {
 .loader{    
     width: 40px;
     height: 40px;
-    background-image: url('../img/waiting_circle.gif');
+    background-image: url('../img/ajax-loader.gif');
     background-repeat: no-repeat;
     background-size: 100%;
     background-position: center;

@@ -3,18 +3,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "ta
       /*
        * renders a table with given data
        * 
-       * @param options.el                   the parent container of the rendered vis.
-       * @param options.data.alter_maennlich array, ascending number of male population at ages starting from 0
-       * @param options.data.alter_weiblich  array, ascending number of female population at ages starting from 0
-       * @param options.data.jahr            visualized year
-       * @param options.compareData          optional, will be rendered as green outline, same structure as options.data
-       * @param options.width                the width of the rendered svg
-       * @param options.height               the height of the rendered svg
-       * @param options.title                optional, main title
-       * @param options.subtitle             optional, subtitle
-       * @param options.maxX                 optional, end value of the x-Axis
-       * @param options.maxY                 optional, end value of the y-axis
-       * @param options.css                  optional, css instructions, only needed if rendered on server
+       * @param options.el  the parent container of the rendered table
        * 
        * @see table
        */
@@ -29,7 +18,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "ta
           this.title = options.title || '';
           this.selectable = options.selectable;
           this.pagination = options.pagination;
-          this.dataHeight = options.dataHeight || 400;
+          this.dataHeight = options.dataHeight;
           this.startPage = options.startPage || 1;
           this.pageSize = options.pageSize || 20;
           this.clickable = options.highlight;

@@ -58,7 +58,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         
         // other controls clicked
         'click #play': 'play',
-        'click #agetree-tab .watch': 'watchYear',
+        'click .age-tab .watch': 'watchYear',
         'click #hiddenPng': 'test',
         'click #fix-scale': 'fixScale',
         
@@ -549,7 +549,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             ageGroup: groupName,
             firstYear: firstSum,
             lastYear: lastSum,
-            devperc: devperc
+            devperc: devperc + '%'
           });
         };
         
@@ -645,10 +645,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
                 toInput = this.el.querySelector('#agegroup-to'),
                 to = parseInt(toInput.value);
 
-        toInput.setAttribute('min', from + 1);
+        toInput.setAttribute('min', from);
 
-        if (toInput.value && toInput.value <= from) {
-          toInput.value = from + 1;
+        if (toInput.value && toInput.value < from) {
+          toInput.value = from;
         }
       },
       

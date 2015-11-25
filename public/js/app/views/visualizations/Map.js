@@ -131,7 +131,7 @@ var Map = function(options){
   var g = svg.append('g')
       .call(zoom);
   
-  var zoomWrapper = d3.select(this.el).insert('div', ':first-child');
+  var zoomWrapper = d3.select(this.el).insert('div', ':first-child'); 
 
   zoomWrapper.append('span')
       .attr('class', 'glyphicon glyphicon-zoom-out')
@@ -152,10 +152,11 @@ var Map = function(options){
       .attr('class', 'glyphicon glyphicon-zoom-in')
       .attr('aria-hidden', 'true')
       .style('float', 'left')
-      .attr('width', 20);
+      .attr('width', 20);    
   
   var slideZoom = function(event, value){
-   zoom.scale(maxZoom * value / 100).event(g);
+    var scale = maxZoom * value / 100;
+    zoom.scale(scale).event(g);
   };
 
   var zoomSlider = d3slider().axis(d3.svg.axis())
@@ -270,13 +271,13 @@ var Map = function(options){
           .attr('d', path)
           .attr('cursor', 'move');
 
-      var boundaries;
+      var boundaries, submap;
 
       // detailed map
       if(geometries){
 
         // FEATURE-SHAPES
-        g.append('g')
+        submap = g.append('g')
             .attr('class', 'submap')
             .selectAll('.subunit')
             .data(topojson.feature(map, subunits).features)
@@ -312,6 +313,7 @@ var Map = function(options){
             .datum(boundaries)
             .attr('d', path)
             .attr('class', 'subunit-outer-boundary');
+        
       }
       else{
         //  OUTER BOUNDARY OF TOPLAYER      
@@ -324,7 +326,7 @@ var Map = function(options){
 
     /* render GeoJSON */
     else{
-      g.append('g')
+      submap = g.append('g')
           .attr('class', 'submap')
           .selectAll('path')
               .data(subunits.geometries)
@@ -343,7 +345,7 @@ var Map = function(options){
                 if(d.id)
                   options.onClick(d.id, d.properties.name, d.properties.rsArr);
               });
-    }
+    }   
 
     // disable the zoom-controls
     if(options.disableZoom){
@@ -353,7 +355,9 @@ var Map = function(options){
     }
     // enable the zoom-controls
     else{
-      zoomWrapper.classed('disabled', false);
+      
+      // stays disabled at the moment, because slide zoom doesn't center
+      //zoomWrapper.classed('disabled', false);
       sliderHandle.style('display', 'block');
       svg.selectAll('.background').attr('cursor', 'move');
     }

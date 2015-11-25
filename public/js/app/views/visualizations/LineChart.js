@@ -55,7 +55,7 @@ var LineChart = function (options) {
     var _this = this;
 
     var margin = {
-      top: 30,
+      top: 50,
       right: 35,
       bottom: 30,
       left: 50
@@ -111,16 +111,16 @@ var LineChart = function (options) {
 
     // TITLE
 
-    svg.append("text")
+    svg.append('text')
             .attr('class', 'title')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .text(this.title);
 
-    svg.append("text")
+    svg.append('text')
             .attr('class', 'subtitle')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);

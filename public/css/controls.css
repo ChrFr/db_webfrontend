@@ -76,7 +76,7 @@
 
 .side-controls {
     position: absolute;
-    right: 20px;
+    right: 5px;
     /* gap needed because of the tab menu */
     top: 10%;
     z-index: 100;

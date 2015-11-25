@@ -1,4 +1,4 @@
-define(["app", "jquery", "backbone", "text!templates/login.html"],
+define(['app', 'jquery', 'backbone', 'text!templates/login.html', 'views/misc'],
   function (app, $, Backbone, template) {
     
     /**
@@ -24,10 +24,13 @@ define(["app", "jquery", "backbone", "text!templates/login.html"],
           });
         this.render();
       },
+      
       // the Event Handlers of the login form
       events: {
         "click #login-button": "login",
+        "keypress input": "enter"
       },
+      
       // Renders the view's template to the UI
       render: function () {
         // Setting the view's template property using the Underscore template method
@@ -44,12 +47,14 @@ define(["app", "jquery", "backbone", "text!templates/login.html"],
           $(this.el).find('#name').val(user.name);
           $(this.el).find('#email').val(user.email);
           $(this.el).find('#password').val(user.password);
-          var status =
-                  $(this.el).find('#status');
+          var status = this.el.querySelector('#status'),
+              text;
           if (user.superuser)
-            status.text('Sie sind als Superuser angemeldet');
+            text = 'Sie sind als Superuser angemeldet';
           else
-            status.text('Sie sind eingeloggt.');
+            text = 'Sie sind eingeloggt.';
+          
+          status.appendChild(createAlert('success', text));
         }
         else {
           $(this.el).find('#email').hide();
@@ -61,10 +66,20 @@ define(["app", "jquery", "backbone", "text!templates/login.html"],
         // Maintains chainability
         return this;
       },
+      
+      // submit login on enter pressed
+      enter: function (event) {
+        
+        if(event.which == 10 || event.which == 13) {
+          this.login();
+        }
+      },
+      
       //log in with the entries made in the login form
       login: function () {
         var _this = this;
-        if ($(this.el).find('#login-button').text() === 'Einloggen') {
+        // not logged -> log in
+        if (!app.get('session').get('user')) {
           var name = $(this.el).find('#name').val() || '',
                   password = $(this.el).find('#password').val() || '',
                   stayLoggedIn = $(this.el).find('#stay-check').is(":checked");
@@ -73,13 +88,17 @@ define(["app", "jquery", "backbone", "text!templates/login.html"],
             password: password,
             stayLoggedIn: stayLoggedIn,
             error: function (response) {
-              $(_this.el).find('#status').text(response);
+              var status = _this.el.querySelector('#status');
+              clearElement(status); // remove old alerts
+              status.appendChild(createAlert('danger', response));
             }
           });
         }
+        // already logged in -> log out
         else
           app.get('session').logout();
       },
+      
       //remove the view
       close: function () {
         this.unbind(); // Unbind all local event bindings

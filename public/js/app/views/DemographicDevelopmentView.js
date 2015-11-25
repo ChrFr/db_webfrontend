@@ -1,7 +1,7 @@
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
   'views/TableView', 'd3', 'd3slider', 'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
   'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
-  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/conversion', 'jspdf'],
+  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/conversion', 'views/misc', 'jspdf'],
   function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider, CustomView) {
             
     /** 
@@ -942,26 +942,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       }
 
     });
-
-    /*
-     * create and return a div containing a bootstrap-alert with the given type and text
-     * available types: success, info, danger, warning
-     */
-    function createAlert(type, text) {
-      var div = document.createElement('div');
-      div.innerHTML = '<div class="alert alert-' + type + '">' +
-              '<a href="#" class="close" data-dismiss="alert">&times;</a>' +
-              text;
-      return div;
-    };
-    
-    /*
-     * clear given dom-element by removing its children
-     */
-    function clearElement(el){
-      while (el.firstChild)
-        el.removeChild(el.firstChild);
-    }
 
     // return the view class (for chaining)
     return DemographicDevelopmentView;

@@ -1,4 +1,4 @@
-define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/OptionView'],
+define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/OptionView', 'views/misc'],
   function (app, $, Backbone, template, OptionView) {
     
     /**
@@ -62,9 +62,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/navbar.html', 'views/Option
         }
 
         var progSelector = this.el.querySelector('#progSelect');
-        while (progSelector.firstChild) {
-          progSelector.removeChild(progSelector.firstChild);
-        };
+        clearElement(progSelector);
 
         app.set('activePrognosis', null, true); //reset prognosis (suppress event while setting to null, trigger later on)
         var progTabs = this.el.querySelector('#prognosis-collapse').querySelector('ul');

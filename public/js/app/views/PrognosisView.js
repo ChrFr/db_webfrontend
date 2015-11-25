@@ -1,6 +1,6 @@
 define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
   'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection',
-  'views/OptionView', 'views/visualizations/Map', 'views/Loader'],
+  'views/OptionView', 'views/visualizations/Map', 'views/Loader', 'views/misc'],
     function($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
         CommunityCollection, LayerCollection, OptionView){
 
@@ -111,8 +111,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                   _this.el.querySelector('#sub-map-nav').style.display = 'block';
                   // remove old options
                   var layerSelector = _this.el.querySelector('#layer-select');
-                  while(layerSelector.firstChild)
-                    layerSelector.removeChild(layerSelector.firstChild);
+                  clearElement(layerSelector);
 
                   // create options for layer selection in preparation for map rendering
                   new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
@@ -231,9 +230,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           
           multiTip.style.display = 'none';
 
-          while(regionSelector.firstChild)
-            regionSelector.removeChild(regionSelector.firstChild);
-
+          clearElement(regionSelector);
+          
           // SPECIAL CASE: WHOLE area (all communities summed up); needs no region-selection
           if(layerId == -2){
             // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
@@ -382,8 +380,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
          */
         createMap: function(callback){    
           var vis = this.el.querySelector('#map');
-          while(vis.firstChild)
-            vis.removeChild(vis.firstChild);
+          clearElement(vis);
           
           var width = parseInt(vis.offsetWidth) - 20, // rendering exceeds given limits -> 10px less
               height = width;

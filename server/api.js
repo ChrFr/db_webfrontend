@@ -14,6 +14,13 @@ module.exports = function () {
       log = require('log4js').getLogger('access'),
       masterfile = './server/masterkey.txt',
       masterkey;
+  
+  var bouncer = require ("express-bouncer")(500, 900000, 3);
+  
+  bouncer.blocked = function (req, res, next, remaining){
+    res.send (429, 'Sie haben zu viele Anfragen getätigt, bitte warten Sie ' +
+        remaining / 1000 + " Sekunden!");
+  };
     
   fs.stat(masterfile, function(err, stat) {
     if(err == null)
@@ -812,6 +819,7 @@ function aggregateByKey(array, key, options) {
               }
               
               log.info(prefix + ' erfolgreich angemeldet');
+              bouncer.reset(req);
               res.statusCode = 200;
               return res.json({
                 user: user,
@@ -902,7 +910,7 @@ function aggregateByKey(array, key, options) {
       '/login': {
         get: users.validateCookie,
         delete: users.logout,
-        post: users.login
+        //post: users.login
       },
       '/:id': {
         get: users.get,
@@ -911,6 +919,9 @@ function aggregateByKey(array, key, options) {
       }
     }
   });
+  
+  api.post("/users/login", bouncer.block, users.login);
+  
 
   return api;
 }();

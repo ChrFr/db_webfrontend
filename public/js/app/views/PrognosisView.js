@@ -225,8 +225,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         changeLayer: function(layerId){
           this.map.setOverlayText('');          
           var _this = this;
-          var progId = app.get('activePrognosis').id;
-          var regionSelector = this.el.querySelector('#region-select');
+          var progId = app.get('activePrognosis').id,
+              regionSelector = this.el.querySelector('#region-select'),
+              multiTip = this.el.querySelector('#multi-tip');
+          
+          multiTip.style.display = 'none';
 
           while(regionSelector.firstChild)
             regionSelector.removeChild(regionSelector.firstChild);
@@ -257,6 +260,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // BASIC LAYER gemeinden (community, smallest enitity)
           else if(layerId == -1){
+            multiTip.style.display = 'block';
             _this.el.querySelector('#region-label').innerHTML = 'Gemeinde';
             regionSelector.style.display = 'block';
             this.el.querySelector('#region-label').style.display = 'block';
@@ -310,6 +314,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           // SPECIFIC CUSTOM LAYER (e.g. landkreise)
           else if(layerId > 0){
+            multiTip.style.display = 'block';
 
             this.layers.get(layerId).fetch({
               data: {progId: progId},

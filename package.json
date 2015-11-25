@@ -44,8 +44,9 @@
     "amdclean": "1.x",
     "grunt-contrib-uglify": "~0.3.2",
     "pg": "3.x",
-    "morgan": "1.6x",
+    "morgan": "1.6.x",
     "file-stream-rotator": "2.x",
-    "log4js": "0.6x"
+    "log4js": "0.6.x",
+    "express-bouncer": "0.1.x"
   }
 }

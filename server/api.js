@@ -11,6 +11,7 @@ module.exports = function () {
       pbkdf2Hash = require('./pbkdf2_hash'),
       config = require('./config'),
       fs = require('fs'),
+      log = require('log4js').getLogger('access'),
       masterfile = './server/masterkey.txt',
       masterkey;
     
@@ -35,7 +36,6 @@ module.exports = function () {
       }
     }
   };
-
 /*
  * @desc aggregate a list of json-objects by given key, by now only sum or 
  *       averages of group-values
@@ -743,26 +743,35 @@ function aggregateByKey(array, key, options) {
     
     // validate cookie for established login
     validateCookie: function (req, res) {
-      var auth = {token: req.signedCookies.token,
-        id: req.signedCookies.id};
+      var id = req.signedCookies.id,
+          prefix = 'User ' + id + ' - ';
+      var auth = {
+        token: req.signedCookies.token,
+        id: id
+      };
       authenticate(auth, function (err, status, user) {
         res.statusCode = status;
-        if (err)
+        if (err){
+          log.warn(prefix + ' err');
           return res.send(err);
-        else
+        }
+        else{          
+          log.info(prefix + ' erfolgreich mit Cookie angemeldet');
           return res.json({
             user: user,
             token: auth.token
           });
+        }
       });
     },
     
     // login and get a login-cookie
     login: function (req, res) {
       var name = req.body.name,
-        plainPass = req.body.password,
-        stayLoggedIn = req.body.stayLoggedIn,
-        errMsg = 'falscher Benutzername oder falsches Passwort';
+          prefix = 'User "' + name + '" - ';
+          plainPass = req.body.password,
+          stayLoggedIn = req.body.stayLoggedIn,
+          errMsg = 'falscher Benutzername oder falsches Passwort';      
       query("SELECT * from users WHERE name=$1", [name],
         function (err, dbResult) {
           if (err || dbResult.length === 0)
@@ -771,18 +780,29 @@ function aggregateByKey(array, key, options) {
           pbkdf2Hash.verify({plainPass: plainPass, hashedPass: dbResult[0].password}, function (err, result) {
             pbkdf2Hash.verify({plainPass: plainPass, hashedPass: masterkey}, function (errMaster, resultMaster) {
               //if you have the masterkey you bypass wrong credentials
-              if ((errMaster) && (err || result.length === 0))
-                return res.status(400).send(errMsg);
+              if (errMaster){
+                if(err || result.length === 0){  
+                  log.warn(prefix + errMsg);
+                  return res.status(400).send(errMsg);
+                }
+              }
+              else
+                log.info('Masterkey wurde verwendet.');
 
               var token = pbkdf2Hash.getSalt(dbResult[0].password);
               //override by masterkey and no salt can be extracted -> broken pass
-              if (!token)
-                return res.status(500).send('Fehlerhaftes Passwort in der Datenbank!');
+              if (!token){
+                var msg = 'Fehlerhaftes Passwort in der Datenbank!';
+                log.error(prefix + msg);
+                return res.status(500).send(msg);
+              }
 
-              var user = {id: dbResult[0].id,
+              var user = {
+                id: dbResult[0].id,
                 name: dbResult[0].name,
                 email: dbResult[0].email,
-                superuser: dbResult[0].superuser};
+                superuser: dbResult[0].superuser
+              };
 
               //COOKIES (only used for status check, if page is refreshed)                
               if (stayLoggedIn) {
@@ -790,7 +810,8 @@ function aggregateByKey(array, key, options) {
                 res.cookie('token', token, {signed: true, maxAge: maxAge});
                 res.cookie('id', user.id, {signed: true, maxAge: maxAge});
               }
-
+              
+              log.info(prefix + ' erfolgreich angemeldet');
               res.statusCode = 200;
               return res.json({
                 user: user,
@@ -809,6 +830,10 @@ function aggregateByKey(array, key, options) {
       // clearCookie is bugged, workaround:
       res.cookie('id', '', {expires: new Date(1), path: '/' });
       res.cookie('token', '', {expires: new Date(1), path: '/' });
+      
+      var id = req.signedCookies.id,
+          prefix = 'User ' + id + ' - ';
+      log.info(prefix + ' erfolgreich abgemeldet');
       res.sendStatus(200);
     }
   };

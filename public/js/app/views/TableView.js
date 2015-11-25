@@ -1,4 +1,4 @@
-define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "tableexport"],
+define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "tableexport", 'views/misc'],
     function(Backbone, $, template){
       /*
        * renders a table with given data
@@ -102,8 +102,7 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "ta
         
         //remove the view
         close: function(){
-          while(this.table.firstChild)
-            this.table.removeChild(this.table.firstChild);
+          clearElement(this.table);
           this.unbind(); // Unbind all local event bindings
           this.remove(); // Remove view from DOM
         }

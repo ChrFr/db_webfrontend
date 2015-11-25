@@ -1,7 +1,7 @@
 define(["jquery", "backbone", "text!templates/admin.html",
   "collections/UserCollection", "collections/PrognosisCollection",
    "collections/DDCollection", "models/UserModel", "models/PrognosisModel", 
-  "views/TableView", "bootstrap"],
+  "views/TableView", "bootstrap", 'views/misc'],
   function($, Backbone, template, UserCollection, PrognosisCollection, DDCollection, 
            UserModel, PrognosisModel, TableView){
                             
@@ -215,8 +215,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             // users
             var usersCheck = _this.el.querySelector("#user-select");
             var userIDs = [];
-            while (usersCheck.firstChild)
-              usersCheck.removeChild(usersCheck.firstChild);
+            clearElement(usersCheck);
             if (target === 'editPrognosis')
               userIDs = models[0].get('users');
             

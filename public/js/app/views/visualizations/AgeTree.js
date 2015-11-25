@@ -48,7 +48,7 @@ var AgeTree = function (options) {
         maleAges = this.data.alter_maennlich;
 
     var margin = {
-      top: 30,
+      top: 50,
       right: 30,
       bottom: 30,
       left: 20,
@@ -62,7 +62,7 @@ var AgeTree = function (options) {
     var svgWidth = this.width,
         svgHeight = this.height;
     
-    this.width -= (margin.left + margin.right);
+    this.width -= (margin.left + margin.right) - 20;
     this.height -= (margin.top + margin.bottom);
 
     var top = d3.select(this.el).append('svg')
@@ -113,14 +113,14 @@ var AgeTree = function (options) {
 
     svg.append('text')
             .attr('class', 'title')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
-            .text(this.title + ' ' + this.data.jahr);
-    
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
+            .text(this.title);
+
     svg.append('text')
             .attr('class', 'subtitle')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);
@@ -282,7 +282,7 @@ var AgeTree = function (options) {
 
     svg.append('g')
             .attr('class', 'axis y left')
-            .attr('transform', translation(this.width / 2  + margin.left + 2, 0))
+            .attr('transform', translation(this.width / 2  + margin.left / 2 + 2, 0))
             .call(yAxis)
             .selectAll('text')
             .style('text-anchor', 'middle');

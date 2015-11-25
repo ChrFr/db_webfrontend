@@ -60,14 +60,14 @@ var GroupedBarChart = function (options) {
     var _this = this;
 
     var margin = {
-      top: 30,
+      top: 50,
       right: 0,
-      bottom: 70,
+      bottom: 90,
       left: 40
     };
 
     var innerwidth = this.width - margin.left - margin.right,
-            innerheight = this.height - margin.top - margin.bottom;
+        innerheight = this.height - margin.top - margin.bottom;
 
     var top = d3.select(this.el).append('svg')
             .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -117,14 +117,14 @@ var GroupedBarChart = function (options) {
 
     svg.append('text')
             .attr('class', 'title')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .text(this.title);
 
     svg.append('text')
             .attr('class', 'subtitle')
-            .attr('x', margin.left / 2)
-            .attr('y', 10 - (margin.top / 2))
+            .attr('x', 0)
+            .attr('y', 30 - (margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);
@@ -145,7 +145,18 @@ var GroupedBarChart = function (options) {
             .domain([_this.minY, _this.maxY]);
 
     var colorScale = d3.scale.category10()
-            .domain(d3.range(this.groupLabels.length));
+            .domain(d3.range(this.groupLabels.length));     
+    
+    // background of groups, color should change on hover (defined in css)
+    var back = svg.selectAll('rect')
+            .data(this.data)
+            .enter().append('rect')
+            .attr('class', 'group-back')
+            .attr('transform', function (d) {
+              return translation(x0Scale(d.label), 0);
+            })
+            .attr('height', innerheight).attr('height', innerheight)
+            .attr('width', x0Scale.rangeBand());
 
     // AXES
 
@@ -162,7 +173,12 @@ var GroupedBarChart = function (options) {
     var xApp = svg.append('g')
             .attr('class', 'x axis')
             .attr('transform', translation(0, innerheight))
-            .call(xAxis);
+            .call(xAxis)
+            .selectAll("text")  
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)" );
 
     /*
      xApp.append('text')
@@ -191,19 +207,17 @@ var GroupedBarChart = function (options) {
               .text(this.yNegativeLabel)
               .attr('transform', 'rotate(-90), ' + translation(-innerheight + margin.bottom, 0));
 
-    // BARS
-
+    // BARS        
     var groups = svg.selectAll('.group')
             .data(this.data)
             .enter().append('g')
             .attr('class', 'g')
             .attr('xvalue', function (d) {
-              return d.label
+              return d.label;
             })
             .attr('transform', function (d) {
               return translation(x0Scale(d.label), 0);
             });
-
 
     var mouseOverBar = function (d, i) {
       var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
@@ -253,11 +267,11 @@ var GroupedBarChart = function (options) {
             .enter().append('g')
             .attr('class', 'legend')
             .attr('transform', function (d, i) {
-              return translation(0, innerheight + 20 + i * 15);
+              return translation(0, innerheight + 40 + i * 15);
             });
 
     legend.append('rect')
-            .attr('x', innerwidth - 18)
+            .attr('x', innerwidth - 14)
             .attr('width', 10)
             .attr('height', 10)
             .style('fill', function (d, i) {
@@ -266,7 +280,7 @@ var GroupedBarChart = function (options) {
 
     legend.append('text')
             .attr('x', innerwidth - 24)
-            .attr('y', 9)
+            .attr('y', 6)
             .attr('dy', '.35em')
             .style('text-anchor', 'end')
             .text(function (d) {

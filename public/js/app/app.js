@@ -21,8 +21,8 @@ define(['backbone'],
 
     // DEFAULTS      
     attributes.ageGroups =  [ // predefined age groups (may be varied by user)
-      {from: 0, to: 20, name: '0 - 20'},
-      {from: 20, to: 65, name: '20 - 65'},
+      {from: 0, to: 19, name: '0 - 19'},
+      {from: 20, to: 64, name: '20 - 64'},
       {from: 65, to: null, name: '65+'}
     ];
     attributes.session = null;

@@ -3,11 +3,6 @@
     Publisher: GGR
 */
 
-/*tables*/
-td, th{
-    font-size: 0.9em;
-}
-
 /* d3 generated svgs */
 svg {
     font: 0.9em sans-serif;
@@ -85,4 +80,12 @@ div.tooltip {
     border: solid 1px grey;         
     pointer-events: none;         
     opacity: 0.9;
+}
+
+.group-back{
+    fill: #ffffff;
+}
+
+.group-back:hover{
+    fill: #D8D8D8;
 }

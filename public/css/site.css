@@ -43,10 +43,14 @@ body {
     margin-bottom: 65px;
 }
 
+#visualizations .tab-pane{
+    overflow: hidden;
+}
+
 .loader{    
     width: 40px;
     height: 40px;
-    background-image: url('../img/waiting_circle.gif');
+    background-image: url('../img/ajax-loader.gif');
     background-repeat: no-repeat;
     background-size: 100%;
     background-position: center;
@@ -68,10 +72,32 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     background: lightgrey;
 }
 
+#age-data td{
+    line-height: 0.5;
+}
+
+td, th{
+    font-size: 0.9em;
+}
+
+td{
+    text-align: right;
+}
+
+th{
+    text-align: center;
+}
+
 .shadow-box, #summary{
     background-color: white;
     border: solid 1px lightgrey;
     box-shadow: 1px 0px 2px 0px lightgrey;
+}
+
+.box-header, .box-footer{
+    background: #F7F7F3;
+    padding: 5px;
+    min-height: 20px;
 }
 
 .tab-content, #summary{
@@ -90,14 +116,6 @@ table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:
     border: solid 1px lightgrey;
     box-shadow: 1px 0px 2px 0px lightgrey;
     border-bottom: 0;
-}
-
-.grouped{
-    border: solid 1px lightgrey;
-    padding: 10px;    
-    box-shadow: 1px 0px 2px 0px lightgrey;
-    border: solid 1px lightgrey;
-    background: #F7F7F3;
 }
 
 .tab-pane{ 

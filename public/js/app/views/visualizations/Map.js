@@ -180,7 +180,7 @@ var Map = function(options){
     .attr('x', innerwidth / 2)
     .attr('y', innerheight / 2)
     .attr("text-anchor", "middle")
-    .attr('font-size', '1.5em');
+    .attr('font-size', '1.2em');
     
   // copyright notes
   if(options.copyright){
@@ -194,7 +194,8 @@ var Map = function(options){
        .attr('y', innerheight - 5)
        .text(options.copyright.text)
        .attr('text-anchor', 'end')
-       .attr('fill', 'grey');
+       .attr('fill', 'grey')
+       .attr('font-size', '0.8em');;
   }
   
   /* 

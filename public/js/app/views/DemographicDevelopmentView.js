@@ -45,23 +45,27 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       events: {
         
         // download buttons clicked
-        'click #age-tab>.download-btn.csv': 'downloadAgeTableCsv',
-        'click #raw-tab>.download-btn.csv': 'downloadRawCsv',
-        'click #agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
-        'click #agetree-tab .download-btn.png': 'downloadAgeTreePng',
-        'click #development-tab .download-btn.png': 'downloadDevelopmentPng',
-        'click #barchart-tab .download-btn.png': 'downloadBarChartPng',
-        'click #agegroupchart-tab .download-btn.png': 'downloadAgeGroupChartPng',
+        'click .age-tab>.download-btn.csv': 'downloadAgeTableCsv',
+        'click .age-tab .download-btn.png': 'downloadAgeTreePng',
+        'click .agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
+        'click .agegroup-tab .download-btn.png': 'downloadAgeGroupChartPng',
+        'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
+        'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',
+        'click .factor-tab .download-btn.png': 'downloadFactorsPng',
+        'click .factor-tab .download-btn.csv': 'downloadFactorsCsv',        
+        'click #raw-data-btn': 'downloadRawCsv',
         
         //create a PDF
         'click #createDDReport': 'createReport',
         
         // other controls clicked
         'click #play': 'play',
-        'click #agetree-tab .watch': 'watchYear',
-        'click #visualizations li': 'tabChange',
+        'click .age-tab .watch': 'watchYear',
         'click #hiddenPng': 'test',
         'click #fix-scale': 'fixScale',
+        
+        // tab of visualizations changed -> stop playback of agetree
+        'click #visualizations li': 'stop',
         
         // agegroup controls
         'click #add-agegroups': 'showAgeGroupDialog',
@@ -91,7 +95,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       renderRegion: function (region) {         
         
         var model = this.collection.getRegion(region);
-        this.el.querySelector('#agetree-tab .watch').classList.remove('active');
+        this.el.querySelector('.age-tab .watch').classList.remove('active');
         this.compareData = null;
         var _this = this;
         this.stop();
@@ -99,7 +103,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // don't need to keep track of loader divs, all children of the visualisations will be removed when rendered (incl. loader-icon)
         Loader(this.el.querySelector('#absolute'));
         Loader(this.el.querySelector('#agegroupchart'));
-        Loader(this.el.querySelector('#barchart'));
+        Loader(this.el.querySelector('#factorchart'));
         Loader(this.el.querySelector('#agetree'));
         
         model.fetch({success: function () {
@@ -229,11 +233,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         //visualizations        
         this.renderAgeTree(this.yearData);
         this.renderDevelopment(data);
-        this.renderBarChart(data);
+        this.renderFactorChart(data);
         this.renderAgeGroupChart(this.groupedData);
         //data tables
-        this.renderAgeGroupTable(this.currentYear);
+        this.renderAgeGroupTable(this.groupedData); // render 'Basisjahr'
         this.renderAgeTable(this.yearData);
+        this.renderDevTable(data);
+        this.renderFactorTable(data);
         this.renderRawData(data);
         
         // TODO: change size of yearSlider
@@ -332,31 +338,77 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.relativeChart.render();
       },
       
+      renderDevTable: function (data) {
+        var columns = [],
+            title = 'Bevölkerungsentwicklung',
+            rows = [];
+
+        // adapt age data to build table (arrays to single entries)
+        columns.push({name: 'year', description: 'Jahr'});
+        columns.push({name: 'total', description: 'Bevölkerungszahl'});
+        columns.push({name: 'perc', description: 'Vergleich Vorjahr'});
+        
+        var lastTotal;
+        
+        _.each(data, function (d) {
+          var year = d.jahr,
+              total = Math.round(d.sumFemale + d.sumMale),
+              perc;
+          if(lastTotal === undefined){
+            perc = '-';
+          }
+          else{            
+            perc = Math.round((100 * total / lastTotal - 100) * 100) / 100;
+            if(perc > 0)
+              perc = '+' + perc;
+            perc += '%';
+          }
+          lastTotal = total;
+          rows.push({
+            year: year,
+            total: total,
+            perc: perc
+          });
+        });
+
+        this.devTable = new TableView({
+          el: this.el.querySelector('#dev-data'),
+          columns: columns,
+          title: title,
+          data: rows,
+          dataHeight: 400,
+          pagination: false,
+          highlight: true
+        });
+      },
+      
       /*
        * render bar chart with factors influencing the development
        */
-      renderBarChart: function (data) {
+      renderFactorChart: function (data) {
         var dataSets = [];
-
-        _.each(data, function (d) {
-          var values = [
-            d.geburten - d.tote,
-            d.zuzug - d.fortzug
-          ];
+        
+        // base year shouldn't have data of development factors
+        for(var i = 1; i < data.length; i++){
+          var d = data[i],
+              values = [
+                d.geburten - d.tote,
+                d.zuzug - d.fortzug
+              ];
+              
           values.push(values[0] + values[1]);
 
           var dataSet = {label: d.jahr,
             values: values};
           dataSets.push(dataSet);
-        });
+        };
 
-
-        var vis = this.el.querySelector('#barchart');
+        var vis = this.el.querySelector('#factorchart');
         clearElement(vis);
         
         var width = this.width - 70;
         var height = width * 0.8;
-        this.barChart = new GroupedBarChart({
+        this.factorChart = new GroupedBarChart({
           el: vis,
           data: dataSets,
           width: width,
@@ -364,11 +416,55 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           title: 'Bevölkerungsentwicklung',
           subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
-          groupLabels: ['A: Geburten - Sterbefälle', 'B: Zuwanderung - Abwanderung', 'gesamt: A + B'],
+          groupLabels: ['Natürlicher Saldo', 'Wanderungssaldo', 'Gesamtsaldo'],
           ylabel: 'Zuwachs',
           yNegativeLabel: 'Abnahme'
         });
-        this.barChart.render();
+        this.factorChart.render();
+      },
+      
+      renderFactorTable: function(data){        
+        var columns = [],
+            title = 'Einflussfaktoren',
+            rows = [];
+
+        columns.push({name: 'year', description: 'Jahr'});
+        columns.push({name: 'births', description: 'Geburten'});
+        columns.push({name: 'deaths', description: 'Sterbefälle'});
+        columns.push({name: 'natSaldo', description: 'Nat. Saldo'});
+        columns.push({name: 'immigration', description: 'Zuzüge'});
+        columns.push({name: 'emigration', description: 'Fortzüge'});
+        columns.push({name: 'migSaldo', description: 'Wanderungssaldo'});
+        columns.push({name: 'absSaldo', description: 'Gesamtsaldo'});
+        
+        // base year shouldn't have data of development factors
+        for(var i = 1; i < data.length; i++){
+          var d = data[i],
+              natSaldo = d.geburten - d.tote,
+              migSaldo = d.zuzug - d.fortzug,
+              absSaldo = natSaldo + migSaldo;
+              
+          rows.push({
+            year: d.jahr,
+            births: d.geburten,
+            deaths: d.tote,
+            natSaldo: natSaldo,
+            immigration: d.zuzug,
+            emigration: d.fortzug,
+            migSaldo: migSaldo,
+            absSaldo: absSaldo
+          })    
+        };        
+
+        this.factorTable = new TableView({
+          el: this.el.querySelector('#factor-data'),
+          columns: columns,
+          title: title,
+          data: rows,
+          dataHeight: 400,
+          pagination: false,
+          highlight: true
+        });
       },
       
       /*
@@ -383,7 +479,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         else
           title = 'Prognose';
 
-        // adapt age data to build table (arrays to single entries)
         columns.push({name: 'age', description: 'Alter'});
         columns.push({name: 'female', description: 'Anzahl weiblich'});
         columns.push({name: 'male', description: 'Anzahl männlich'});
@@ -418,13 +513,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       
       /*
        * render a table with the raw data received from the server
+       * table is currently hidden, but rendered to export the data when requested
        */
       renderRawData: function (data) {
         var columns = [];
         Object.keys(data[0]).forEach(function (i) {
-          columns.push({name: i, description: i});
+          if(i !== 'sumFemale' && i !== 'sumMale') // ignore clientside processed data
+            columns.push({name: i, description: i});
         });
-
+        
         this.rawTable = new TableView({
           el: this.el.querySelector('#raw-data'),
           columns: columns,
@@ -452,15 +549,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
                     femaleAges = yearData.alter_weiblich,
                     maleAges = yearData.alter_maennlich;
             maleSum = femaleSum = 0;
+            
+            /* the 'to' value is inclusive!! */
 
             //sum up female ages
-            var to = (ageGroup.to === null || ageGroup.to >= femaleAges.length) ? femaleAges.length : ageGroup.to;
-            for (var i = from; i < to; i++)
+            var to = (ageGroup.to === null || ageGroup.to >= maleAges.length - 1) ? femaleAges.length - 1 : ageGroup.to;
+            for (var i = from; i <= to; i++)
               femaleSum += femaleAges[i];
 
             //sum up male ages
-            to = (ageGroup.to === null || ageGroup.to >= maleAges.length) ? maleAges.length : ageGroup.to;
-            for (var i = from; i < to; i++)
+            to = (ageGroup.to === null || ageGroup.to >= maleAges.length - 1) ? maleAges.length - 1 : ageGroup.to;
+            for (var i = from; i <= to; i++)
               maleSum += maleAges[i];
 
             var count = Math.round(maleSum + femaleSum);
@@ -509,73 +608,50 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       /*
        * render a table with ages divided into agegroups
        */
-      renderAgeGroupTable: function (year) {
+      renderAgeGroupTable: function (groupedData) {
         var columns = [],
-            title = '';
-        columns.push({name: 'ageGroup', description: 'Altersgruppe'});
-        columns.push({name: 'female', description: 'weiblich'});
-        columns.push({name: 'male', description: 'männlich'});
-        columns.push({name: 'count', description: 'Anzahl'});
-        columns.push({name: 'percentage', description: 'Anteil gesamt'});
-
-        // find precalculated agegroups for given year
-        var yearData;
-        for (var i = 0; i < this.groupedData.length; i++) {
-          if (this.groupedData[i].jahr == year) {
-            yearData = this.groupedData[i];
-            break;
-          }
-        };
-        // return if no data found
-        if (!yearData)
-          return;
+            title = 'Altersgruppenentwicklung';   
+        var firstYearData = groupedData[0];
+        var lastYearData = groupedData[groupedData.length-1]; 
         
-        if (yearData.jahr == this.currentModel.get('minYear'))
-          title = 'Basisjahr';
-        else
-          title = 'Prognose';
-
+        columns.push({name: 'ageGroup', description: 'Altersgruppe'});
+        columns.push({name: 'firstYear', description: firstYearData.jahr});
+        columns.push({name: 'lastYear', description: lastYearData.jahr});
+        columns.push({name: 'devperc', description: 'Entwicklung'});
+        
         var rows = [];
-        var index = 0;
-        app.get('ageGroups').forEach(function (ageGroup) {
+        
+        var ageGroups = app.get('ageGroups');
+        
+        for (var i = 0; i < ageGroups.length; i++) {          
+          var ageGroup = ageGroups[i];
+          
           var groupName = ageGroup.name;
           if (ageGroup.intersects)
             groupName += '&nbsp&nbsp<span class="glyphicon glyphicon-warning-sign"></span>';
-
-          var count = yearData.values[index],
-                  femaleSum = yearData.female[index],
-                  maleSum = yearData.male[index],
-                  femaleP = (count > 0) ? Math.round((femaleSum / count) * 1000) / 10 + '%' : '-',
-                  maleP = (count > 0) ? Math.round((maleSum / count) * 1000) / 10 + '%' : '-';
-
+          
+          var firstSum = Math.round(firstYearData.female[i] + firstYearData.male[i]);
+          var lastSum = Math.round(lastYearData.female[i] + lastYearData.male[i]);
+          
+          var devperc = Math.round((100 * lastSum / firstSum - 100) * 100) / 100;
+          if(devperc > 0)
+            devperc = '+' + devperc;
+          
           rows.push({
-            index: index,
+            index: i,
             ageGroup: groupName,
-            count: count,
-            female: femaleP,
-            male: maleP
+            firstYear: firstSum,
+            lastYear: lastSum,
+            devperc: devperc + '%'
           });
-          index++;
-        });
-
-        rows.push({
-          index: index,
-          ageGroup: 'gesamt',
-          count: yearData.count,
-          female: Math.round((yearData.femaleTotal / yearData.count) * 1000) / 10,
-          male: Math.round((yearData.maleTotal / yearData.count) * 1000) / 10
-        });
-
-        rows.forEach(function (row) {
-          row.percentage = Math.round((row.count / yearData.count) * 1000) / 10 + '%';
-        });
-
+        };
+        
         this.ageGroupTable = new TableView({
           el: this.el.querySelector('#agegroup-data'),
           columns: columns,
           data: rows,
           dataHeight: 300,
-          title: title + ' ' + yearData.jahr,// + ' - ' + this.currentModel.get('name'),
+          title: title,
           clickable: true,
           selectable: true
         });
@@ -619,7 +695,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.calculateAgeGroups();
 
         //rerender table and chart
-        this.renderAgeGroupTable(this.currentYear);
+        this.renderAgeGroupTable(this.groupedData);
         this.renderAgeGroupChart(this.groupedData);
       },
       
@@ -636,13 +712,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
                   //if any row except last one has no upper limit it is definitely intersecting with successor
                   ageGroups[i].to === null ||
                   //group shouldn't have higher upper limit than successor starts with (special sort order assumed here)
-                  ageGroups[i].to > ageGroups[i + 1].from) {
+                  ageGroups[i].to >= ageGroups[i + 1].from) {
             ageGroups[i].intersects = showWarning = true;
           }
           else
             ageGroups[i].intersects = false;
         }
-        var tab = this.el.querySelector('#agegroup-tab');
+        var tab = this.el.querySelectorAll('#tables .agegroup-tab')[0];
         //remove old alerts
         var warnings = this.el.querySelectorAll('.alert');
         for (var i = 0; i < warnings.length; i++)
@@ -662,10 +738,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
                 toInput = this.el.querySelector('#agegroup-to'),
                 to = parseInt(toInput.value);
 
-        toInput.setAttribute('min', from + 1);
+        toInput.setAttribute('min', from);
 
-        if (toInput.value && toInput.value <= from) {
-          toInput.value = from + 1;
+        if (toInput.value && toInput.value < from) {
+          toInput.value = from;
         }
       },
       
@@ -693,7 +769,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.calculateAgeGroups();
 
         //rerender table and chart
-        this.renderAgeGroupTable(this.currentYear);
+        this.renderAgeGroupTable(this.groupedData);
         this.renderAgeGroupChart(this.groupedData);
       },
       
@@ -706,32 +782,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var idx = data.length - 1 - (this.currentModel.get('maxYear') - year);
         this.yearData = data[idx];
         this.ageTree.changeData(this.yearData);
-        this.renderAgeGroupTable(this.currentYear);
         this.renderAgeTable(this.yearData);        
-      },
-      
-      /*
-       * if tab changed, show specific data tables
-       */
-      tabChange: function (event) {
-        this.stop();
-        
-        // no model loaded yet (because no region selected)
-        if(!this.currentModel)
-          return;
-        
-        if (event.target.getAttribute('href') === '#agetree-tab') {
-          // age tree can render multiple years -> render data of current one  
-          this.changeYear(this.currentYear);
-        }
-        //the others render summary over years -> render data of first year (thats the year the predictions base on)
-        else {
-          this.yearData = this.currentModel.get('data')[0];
-          this.renderAgeTable(this.yearData);
-          this.renderAgeGroupTable(this.yearData.jahr);
-        }
-
-      },
+      },      
       
       /*
        * cycle through the years (change year every 1000 ms)
@@ -819,13 +871,25 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.ageTable.save(filename);
       },
       
+      downloadDevelopmentCsv: function(){
+        var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung.csv';
+        this.devTable.save(filename);
+      },
+      
+      downloadFactorsCsv: function(){
+        var filename = this.currentModel.get('name') + '-Einflussfaktoren.csv';
+        this.factorTable.save(filename);
+      },
+      
       downloadRawCsv: function () {
         var filename = this.currentModel.get('name') + '-Rohdaten.csv';
+        this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
+        this.el.querySelector('#raw-data').style.display = 'none';
       },
       
       downloadAgeGroupCsv: function () {
-        var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Altersgruppen.csv';
+        var filename = this.currentModel.get('name') + '-Altersgruppen.csv';
         this.ageGroupTable.save(filename);
       },
       
@@ -835,9 +899,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         downloadPng(svg, filename, this.canvas);//, {width: 2, height: 2});
       },
       
-      downloadBarChartPng: function (e) {
-        var filename = this.currentModel.get('name') + '-Barchart.png';
-        var svg = $('#barchart>svg');
+      downloadFactorsPng: function (e) {
+        var filename = this.currentModel.get('name') + '-Entwicklung.png';
+        var svg = $('#factorchart>svg');
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
@@ -866,7 +930,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         doc.text(35, 25, "Testbericht");
         doc.addImage(imgData, 'PNG', 15, 40, 180, 160);
         doc.save('test.pdf');*/
-        var report = new CustomView()
+        var report = new CustomView();
       },
       
       //remove the view

@@ -418,15 +418,19 @@ function aggregateByKey(array, key, options) {
           var response = [];
           var entry = {'rs': ''};
           result.forEach(function (r) {
-            //new rs
+            //new rs -> push previous entry in response and create new entry
             if (r.rs !== entry.rs) {
-              if (entry.data)
-                response.push(entry);
+              if (entry.data){
+                response.push(entry);  
+              }
               entry = {'rs': r.rs, 'data': []};
             }
             delete r.rs;
             entry.data.push(r);
           });
+          // push the final entry
+          if(entry) 
+            response.push(entry); 
           return res.status(200).send(response);
         });
       });
@@ -557,7 +561,7 @@ function aggregateByKey(array, key, options) {
   var layers = {
     
     list: function (req, res) {
-      query("SELECT id, name FROM layer", [], function (err, result) {
+      query("SELECT id, name, prognose_id FROM layer", [], function (err, result) {
         if (err)
           return res.sendStatus(500);
         return res.status(200).send(result);
@@ -573,14 +577,13 @@ function aggregateByKey(array, key, options) {
           return res.sendStatus(404);
         // the meta data from layer table
         var name = result[0].name,
-            table = result[0].tabelle,
             key = result[0].key, // name of the column referencing the corresponding layer
             params = [],
             subquery;
 
         // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
         var queryStr = "SELECT {key} AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
-                "FROM {table} AS T INNER JOIN {subquery} AS G USING ({key}) " + 
+                "FROM oberbezirke AS T INNER JOIN {subquery} AS G ON T.oberbezirk_id=G.{key} " + 
                 "GROUP BY T.name, {key}";
 
         // for which communities does data exist belonging to this prognosis?
@@ -597,8 +600,8 @@ function aggregateByKey(array, key, options) {
         // pgquery doesn't seem to allow passing table/columnnames
         // they are taken from a db-table anyway, so it's be safe to replace directly
         queryStr = queryStr.replace('{subquery}', subquery)
-                .replace(new RegExp('{table}', 'g'), table)
                 .replace(new RegExp('{key}', 'g'), key);
+            console.log(queryStr)
         query(queryStr, params, function (err, result) {
           return res.status(200).send({
             'id': req.params.id,
@@ -611,26 +614,14 @@ function aggregateByKey(array, key, options) {
     
     gemeinden: {
       list: function (req, res) {
-        // get gemeinden for specific prognosis
-        var progId = req.query.progId;
-        if (progId)
-          // take all gemeinden belonging to requested prognosis 
-          query("SELECT rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [progId], function (err, result) {
-            if (err)
-              return res.sendStatus(500);
-            if (result.length === 0)
-              return res.sendStatus(404);
-            return res.status(200).send(result);
-          });
-        else {
-          query("SELECT rs, name, geom_json FROM gemeinden", [], function (err, result) {
-            if (err)
-              return res.sendStatus(500);
-            if (result.length === 0)
-              return res.sendStatus(404);
-            return res.status(200).send(result);
-          });
-        }
+        // take all gemeinden belonging to requested prognosis 
+        query("SELECT rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [req.query.progId], function (err, result) {
+          if (err)
+            return res.sendStatus(500);
+          if (result.length === 0)
+            return res.sendStatus(404);
+          return res.status(200).send(result);
+        });
       },
       
       get: function (req, res) {

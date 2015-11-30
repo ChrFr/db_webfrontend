@@ -104,6 +104,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 success: function(){
                   loader.remove();              
                   var prog = app.get('activePrognosis');
+                  var progId = prog.get('id');
                   _this.map.zoomTo(prog.get('boundaries'), true);
 
                   _this.el.querySelector('#description-div').style.display = 'block';
@@ -119,11 +120,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                   new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
 
                   _this.layers.each(function(layer){
-                    new OptionView({
-                      el: layerSelector,
-                      name: layer.get('name'),
-                      value: layer.get('id')
-                    });
+                    if (layer.get('prognose_id') === progId)
+                      new OptionView({
+                        el: layerSelector,
+                        name: layer.get('name'),
+                        value: layer.get('id')
+                      });
                   });
 
                   _this.communities.comparator = 'name';
@@ -138,6 +140,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                       _this.changeLayer(e.target.value);
                     }
                   };
+                  
+                  // select layer 'gemeinden' at first
+                  layerSelector.value = -1;
+                  layerSelector.onchange({target: {value: -1}});
                 }
               });
 
@@ -173,7 +179,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           app.bind('activePrognosis', prepareViews);
           
           // do the same right at start
-          prepareViews(app.get('activePrognosis'));
+          prepareViews(app.get('activePrognosis'));          
+          
           return this;
         },
         
@@ -339,6 +346,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
                 // listen to selection
                 regionSelector.onchange = function(){
+                  // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
+                  document.querySelector('#li-dd a').click();
                   if(regionSelector.selectedIndex <= 0)
                     return;
                   var rsAggr = [], names = [], values = [];

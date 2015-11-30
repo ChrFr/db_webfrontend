@@ -92,8 +92,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       /*
        * render the given region by fetching and visualizing it's demographic data
        */
-      renderRegion: function (region) {         
-        
+      renderRegion: function (region) {       
         var model = this.collection.getRegion(region);
         this.el.querySelector('.age-tab .watch').classList.remove('active');
         this.compareData = null;

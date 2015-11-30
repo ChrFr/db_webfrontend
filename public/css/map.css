@@ -41,8 +41,7 @@ path.background {
 }
 
 .subunit.highlight{
-    stroke-width: 1px;
-    stroke: gold;
+    fill: #999966;
 }
 
 .subunit.selected{

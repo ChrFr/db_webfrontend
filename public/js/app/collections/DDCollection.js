@@ -29,7 +29,7 @@ define(['backbone', 'models/DDModel', 'models/DDAggregate'],
         options.success = function (collection, res, opt) {
           collection.each(function (model) {
             model.setURL(collection.progId);
-          })
+          });
           //call given callback
           if (callback)
             callback(collection, res, opt);

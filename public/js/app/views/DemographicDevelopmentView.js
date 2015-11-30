@@ -322,6 +322,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
         vis = this.el.querySelector('#relative');
         clearElement(vis);
+        
+        var prog = app.get('activePrognosis');
 
         this.relativeChart = new LineChart({
           el: vis,
@@ -331,7 +333,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           title: 'Bevölkerungsentwicklung relativ',
           subtitle: this.currentModel.get('name'),
           xlabel: 'Jahr',
-          ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')'
+          ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')',
+          minY: prog.get('min_rel') * 100,
+          maxY: prog.get('max_rel') * 100
         });
 
         this.relativeChart.render();

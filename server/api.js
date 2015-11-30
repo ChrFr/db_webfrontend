@@ -335,7 +335,7 @@ function aggregateByKey(array, key, options) {
       });
     },
     
-    // get specific prognosis including borders of its region
+    // get specific prognosis including borders of its region and other accumulated significant data
     get: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
         if (err)
@@ -354,8 +354,16 @@ function aggregateByKey(array, key, options) {
           if(err)
             return res.sendStatus(500);
           result.boundaries = err || bbox.length == 0 ? null: bbox = JSON.parse(bbox[0].geom);
-          res.setHeader('Content-Type', 'application/json');
-          return res.status(200).send(result);
+          var min_max_sql = "SELECT min(min_rel) AS min_rel, max(max_rel) AS max_rel " +
+                            "FROM min_max_bevprog WHERE prognose_id = $1";
+          query(min_max_sql, [req.params.pid], function (err, min_max) {   
+            if(err)
+              return res.sendStatus(500);   
+            result.min_rel = min_max[0].min_rel;
+            result.max_rel = min_max[0].max_rel;
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(200).send(result);
+          });
         });
       }, true);
     }

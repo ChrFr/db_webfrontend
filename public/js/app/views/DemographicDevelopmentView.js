@@ -190,7 +190,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             _this.el.querySelector('#current-scale').innerHTML = _this.xScale;
           }
 
-          var maxScale = 10000;
+          // TODO: maximum male - female
+          var maxScale = Math.round(app.get('activePrognosis').get('max_bevstand') / 5000) * 100;
 
           var xScale = d3.scale.log()
               .domain([minScale, maxScale]);

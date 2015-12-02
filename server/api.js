@@ -354,13 +354,18 @@ function aggregateByKey(array, key, options) {
           if(err)
             return res.sendStatus(500);
           result.boundaries = err || bbox.length == 0 ? null: bbox = JSON.parse(bbox[0].geom);
-          var min_max_sql = "SELECT min(min_rel) AS min_rel, max(max_rel) AS max_rel " +
-                            "FROM min_max_bevprog WHERE prognose_id = $1";
-          query(min_max_sql, [req.params.pid], function (err, min_max) {   
+                        
+          var sig_sql = "SELECT a.min_rel, a.max_rel, b.max_bevstand, b.bevstand " + 
+              "FROM (SELECT min(min_rel) AS min_rel, max(max_rel) AS max_rel FROM min_max_bevprog WHERE prognose_id = $1) AS a " + 
+              "NATURAL JOIN (SELECT ARRAY_AGG(bevstand) AS bevstand, max(bevstand) AS max_bevstand FROM gesamtgebiete WHERE prognose_id = $1) AS b"
+          
+          query(sig_sql, [req.params.pid], function (err, sig_data) {   
             if(err)
               return res.sendStatus(500);   
-            result.min_rel = min_max[0].min_rel;
-            result.max_rel = min_max[0].max_rel;
+            result.min_rel = sig_data[0].min_rel;
+            result.max_rel = sig_data[0].max_rel;
+            result.max_bevstand = sig_data[0].max_bevstand;
+            result.bevstand = sig_data[0].bevstand;
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).send(result);
           });

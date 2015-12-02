@@ -346,7 +346,7 @@ function aggregateByKey(array, key, options) {
                       // instead of ST_AsGeoJSON, gets the bounding box from multiple 
                       // geometries (associated with project)
                       "FROM prognosen AS p, " +
-                      "gemeinden g " +
+                      "basiseinheiten g " +
                       "WHERE p.id = $1 " +
                       "AND g.prognose_id = p.id " +
                       "GROUP BY p.id; ";
@@ -569,47 +569,47 @@ function aggregateByKey(array, key, options) {
   var layers = {
     
     list: function (req, res) {
-      query("SELECT id, name, prognose_id FROM layer", [], function (err, result) {
+      query("SELECT id, name, prognose_id, agg_level AS level FROM gebiete", [], function (err, result) {
         if (err)
           return res.sendStatus(500);
         return res.status(200).send(result);
       });
     },
     
-    // get a layer with all it's regions and the gemeinden they are composed of
+    // get a layer with all it's regions and the subunits they are composed of
     get: function (req, res) {
-      query("SELECT * FROM layer WHERE id=$1", [req.params.id], function (err, result) {
+      query("SELECT * FROM gebiete WHERE id=$1", [req.params.id], function (err, result) {
         if (err)
           return res.sendStatus(500);
         if (result.length === 0)
           return res.sendStatus(404);
-        // the meta data from layer table
+        // the meta data from gebiete table
         var name = result[0].name,
-            key = result[0].key, // name of the column referencing the corresponding layer
-            params = [],
-            subquery;
+            progId = req.query.progId,
+            level = result[0].agg_level,
+            params = [];        
 
-        // grouped inner join of specific layer and gemeinden -> aggregate rs of gemeinden
-        var queryStr = "SELECT {key} AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
-                "FROM oberbezirke AS T INNER JOIN {subquery} AS G ON T.oberbezirk_id=G.{key} " + 
-                "GROUP BY T.name, {key}";
-
-        // for which communities does data exist belonging to this prognosis?
-        var progId = req.query.progId;
-        if (progId) {
-          subquery = "(SELECT DISTINCT rs, name, {key} FROM gemeinden " +
-                  "WHERE prognose_id=$1)";
+        // grouped inner join of specific layer and subunits -> aggregate rs of subunits
+        var queryStr = "SELECT T.raumeinheit_id AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
+            "FROM (SELECT * FROM aggregierte_raumeinheiten WHERE ";
+        
+        if (progId){
+          queryStr += "prognose_id=$1 and ";
           params.push(progId);
         }
-        // take the table as is, if no prognosis id is given
-        else
-          subquery = 'gemeinden';
-
-        // pgquery doesn't seem to allow passing table/columnnames
+        params.push(level);
+        
+        queryStr += "agg_level=$2) AS T " +
+            "INNER JOIN (SELECT DISTINCT rs, name, agg_level{level}_id FROM basiseinheiten ";
+        
+        if (progId)
+          queryStr += "WHERE prognose_id=$1";
+        
+        queryStr += ") AS G ON T.raumeinheit_id=G.agg_level{level}_id GROUP BY T.name, raumeinheit_id";
+        
+        // pgquery doesn't seem to allow passing names to columns
         // they are taken from a db-table anyway, so it's be safe to replace directly
-        queryStr = queryStr.replace('{subquery}', subquery)
-                .replace(new RegExp('{key}', 'g'), key);
-            console.log(queryStr)
+        queryStr = queryStr.replace(new RegExp('{level}', 'g'), level);
         query(queryStr, params, function (err, result) {
           return res.status(200).send({
             'id': req.params.id,
@@ -620,10 +620,10 @@ function aggregateByKey(array, key, options) {
       });
     },
     
-    gemeinden: {
+    subunits: {
       list: function (req, res) {
-        // take all gemeinden belonging to requested prognosis 
-        query("SELECT rs, name, geom_json FROM gemeinden WHERE prognose_id=$1;", [req.query.progId], function (err, result) {
+        // take all subunits belonging to requested prognosis 
+        query("SELECT rs, name, geom_json FROM basiseinheiten WHERE prognose_id=$1;", [req.query.progId], function (err, result) {
           if (err)
             return res.sendStatus(500);
           if (result.length === 0)
@@ -633,7 +633,7 @@ function aggregateByKey(array, key, options) {
       },
       
       get: function (req, res) {
-        query('SELECT rs, name, geom_json FROM gemeinden WHERE rs=$1', [req.params.rs],
+        query('SELECT rs, name, geom_json FROM basiseinheiten WHERE rs=$1', [req.params.rs],
           function (err, result) {
             if (err)
               return res.sendStatus(500);
@@ -850,12 +850,12 @@ function aggregateByKey(array, key, options) {
 
   api.map({
     
-    '/layer': {
+    '/gebiete': {
       get: layers.list,
-      '/gemeinden': {
-        get: layers.gemeinden.list,
+      '/basiseinheiten': {
+        get: layers.subunits.list,
         '/:rs': {
-          get: layers.gemeinden.get
+          get: layers.subunits.get
         }
       },
       '/:id': {

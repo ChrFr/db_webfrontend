@@ -2,8 +2,8 @@ define(['backbone'],
   function (Backbone) {
 
     // Creates a new Backbone Collection class object
-    var CommunityCollection = Backbone.Collection.extend({
-      url: 'api/layer/gemeinden',
+    var SubunitCollection = Backbone.Collection.extend({
+      url: 'api/gebiete/basiseinheiten',
       initialize: function () {
       },
       
@@ -12,7 +12,7 @@ define(['backbone'],
         return model.get('rs');
       },
     });
-    return CommunityCollection;
+    return SubunitCollection;
   }
 
 );

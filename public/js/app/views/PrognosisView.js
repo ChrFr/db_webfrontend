@@ -1,8 +1,8 @@
 define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
-  'views/HouseholdsDevelopmentView', 'collections/CommunityCollection', 'collections/LayerCollection',
+  'views/HouseholdsDevelopmentView', 'collections/SubunitCollection', 'collections/LayerCollection',
   'views/OptionView', 'views/visualizations/Map', 'views/Loader', 'views/misc'],
     function($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
-        CommunityCollection, LayerCollection, OptionView){
+        SubunitCollection, LayerCollection, OptionView){
 
       /** 
        * @author Christoph Franke
@@ -19,14 +19,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           // Calls the view's render method
           var _this = this;
           this.layers = new LayerCollection();
-          this.communities = new CommunityCollection();
+          this.subunits = new SubunitCollection();
           // layer information needed to region selection and to finally render map, so you can already fetch them before rendering view
           this.layers.fetch({
             success: function(){
               _this.render();
             },
             error: function(){
-              _this.render(); // render anyway, if fetching layers fails, you can at least choose Gesamtgebiet/Gemeinde on layer selection
+              _this.render(); // render anyway, if fetching layers fails, you can at least choose Gesamtgebiet/subunits on layer selection
             }
           });          
         
@@ -97,7 +97,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             if(success){
               var loader = Loader(_this.el.querySelector('#map'));
 
-              _this.communities.fetch({//get the smallest entities (=communities) to build up regions
+              _this.subunits.fetch({ //get the smallest entities to build up regions
                 data: {progId: prognosis.id},
                 error: function(){
                 },
@@ -115,12 +115,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                   clearElement(layerSelector);
 
                   // create options for layer selection in preparation for map rendering
-                  new OptionView({el: layerSelector, name: 'Bitte wählen', value: null});
-                  new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  // this and next line are default layers and do not depend on any other layer information
-                  new OptionView({el: layerSelector, name: 'Gemeinde', value: -1});
+                  // default layers first
+                  new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  
+                  var basicLayer = _this.layers.find(function(model){ 
+                    return model.get('prognose_id') == progId && model.get('level') == 0; 
+                  });
+                  new OptionView({el: layerSelector, name: basicLayer.get('name'), value: -1});
 
                   _this.layers.each(function(layer){
-                    if (layer.get('prognose_id') === progId)
+                    // only take options of active prognosis, ignore basic level (is already added)
+                    if (layer.get('prognose_id') === progId && layer.get('level') > 0)
                       new OptionView({
                         el: layerSelector,
                         name: layer.get('name'),
@@ -128,8 +132,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                       });
                   });
 
-                  _this.communities.comparator = 'name';
-                  _this.communities.sort();
+                  _this.subunits.comparator = 'name';
+                  _this.subunits.sort();
 
 
                   _this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
@@ -141,7 +145,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                     }
                   };
                   
-                  // select layer 'gemeinden' at first
+                  // select basic layer of subunits at first
                   layerSelector.value = -1;
                   layerSelector.onchange({target: {value: -1}});
                 }
@@ -225,8 +229,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         },
         
         /*
-         * change the region-layer (e.g. whole area, landkreis, gemeinde ...) to given layerId and rerender map
-         * gemeinden (communities) are smallest entities, so all higher layers have to be aggregated from those
+         * change the region-layer (e.g. whole area, landkreis, subunits ...) to given layerId and rerender map
+         * subunits are smallest entities, so all higher layers have to be aggregated from those
          */
         changeLayer: function(layerId){
           this.map.setOverlayText('');          
@@ -239,20 +243,20 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
 
           clearElement(regionSelector);
           
-          // SPECIAL CASE: WHOLE area (all communities summed up); needs no region-selection
+          // SPECIAL CASE: WHOLE area (all subunits summed up); needs no region-selection
           if(layerId == -2){
             // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
             document.querySelector('#li-dd a').click();
             var _this = this;
             regionSelector.style.display = 'none';
             this.el.querySelector('#region-label').style.display = 'none';
-            var allCommunities = [];
-            this.communities.each(function(region){
-              allCommunities.push(region.get('rs'));
+            var allSubunits = [];
+            this.subunits.each(function(region){
+              allSubunits.push(region.get('rs'));
             });
 
-            // aggregation over all available communities
-            var region = {id: 0, name: 'Gesamtgebiet', rs: allCommunities};
+            // aggregation over all available subunits
+            var region = {id: 0, name: 'Gesamtgebiet', rs: allSubunits};
             _this.renderMap({
               aggregates: [region],
               callback: function(){
@@ -263,20 +267,19 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>Gesamtgebiet</b><br>';
           }
 
-          // BASIC LAYER gemeinden (community, smallest enitity)
+          // BASIC LAYER basiseinheiten (subunits, smallest enitity) has level 0 in database
           else if(layerId == -1){
             multiTip.style.display = 'block';
-            _this.el.querySelector('#region-label').innerHTML = 'Gemeinde';
             regionSelector.style.display = 'block';
             this.el.querySelector('#region-label').style.display = 'block';
 
             // selector for entity (single region)
             new OptionView({el: regionSelector, name: 'Bitte wählen', value: -2});
-            this.communities.each(function(community){
+            this.subunits.each(function(subunit){
               new OptionView({
                 el: regionSelector,
-                name: community.get('name'),
-                value: community.get('rs')
+                name: subunit.get('name'),
+                value: subunit.get('rs')
               });
             });
             _this.renderMap();
@@ -298,7 +301,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 }
               }
 
-              // multiple communities selected -> concatenate rs to get a unique id
+              // multiple subunits selected -> concatenate rs to get a unique id
               // if single one is selected, rs becomes id
               id = rsAggr.join('-');
               if(rsAggr.length <= 1)
@@ -325,7 +328,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               data: {progId: progId},
               success: function(layer){
                 // selector for entity (single region)
-                _this.el.querySelector('#region-label').innerHTML = layer.get('name');
                 regionSelector.style.display = 'block';
                 _this.el.querySelector('#region-label').style.display = 'block';
                 new OptionView({el: regionSelector, name: 'Bitte wählen', value: null});
@@ -376,12 +378,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
               }
             });
           }
+          /*
           // nothing selected (id == 0 - "Bitte wählen"))
           else{
             this.map.setOverlayText('Bitte wählen Sie eine Gliederungsebene aus.');
             _this.el.querySelector('#region-select').style.display = 'none';
             _this.el.querySelector('#region-label').style.display = 'none';
           }
+          */
         },
         
         /*
@@ -443,12 +447,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             regionSelector.onchange();
           };
 
-          // build geojson object from geometries attached to the communities
+          // build geojson object from geometries attached to the subunits
           var topology = {
             'type': 'FeatureCollection',
             'features': []
           };
-          this.communities.each(function(model){
+          this.subunits.each(function(model){
             subunits.push(model.get('rs'));
             var feature = {
               'type': 'Feature',

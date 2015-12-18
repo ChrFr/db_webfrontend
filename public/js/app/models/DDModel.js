@@ -26,13 +26,29 @@ define(["app", "backbone"],
                     var maxAge, maxNumber;
                     var maxAge = maxNumber = 0;
 
-                    // preprocess other characteristic numbers
+                    // preprocess other characteristic numbers and round to defined decimals
                     _.each(data, function(item){
                         var femaleAges = item.alter_weiblich,
-                            maleAges = item.alter_maennlich;
+                            maleAges = item.alter_maennlich,
+                            sumFemale = 0, 
+                            sumMale = 0,
+                            roundingFactor = Math.pow(10, app.DECIMALS);
+                            
+                        for(var i = 0; i < femaleAges.length; i++){
+                          femaleAges[i] = Math.round(femaleAges[i] * roundingFactor) / roundingFactor;
+                          sumFemale += femaleAges[i];
+                        };
+                        item.sumFemale = sumFemale;
+                        
+                        for(var i = 0; i < maleAges.length; i++){
+                          maleAges[i] = Math.round(maleAges[i] * roundingFactor) / roundingFactor;
+                          sumMale += maleAges[i];
+                        };
+                        item.sumMale = sumMale;
 
-                        item.sumFemale = femaleAges.reduce(function(sum,e){return sum + e;});                            
-                        item.sumMale = maleAges.reduce(function(sum,e){return sum + e;});
+                        // same as above with reduce and without rounding
+                        //item.sumFemale = femaleAges.reduce(function(sum,e){return sum + e;});                            
+                        //item.sumMale = maleAges.reduce(function(sum,e){return sum + e;});
 
                         var max = Math.max(femaleAges.length, maleAges.length);
                         if (maxAge < max) maxAge = max;

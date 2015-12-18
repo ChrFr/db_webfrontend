@@ -274,7 +274,7 @@ var LineChart = function (options) {
       var text = focus.select("text");
       back.style("width", parseInt(text.style("width")) + 10);
       back.style("height", text.style("height"));
-      text.text(Math.round(yData[i]));
+      text.text(Math.round(yData[i]* 100) / 100);
       //var bb = text.getBBox();
     }
 

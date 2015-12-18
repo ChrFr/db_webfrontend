@@ -19,6 +19,10 @@ define(['backbone'],
     var callbacks = {},
         attributes = {};
 
+    // CONSTANTS
+    
+    app.DECIMALS = 1;
+
     // DEFAULTS      
     attributes.ageGroups =  [ // predefined age groups (may be varied by user)
       {from: 0, to: 19, name: '0 - 19'},
@@ -29,7 +33,6 @@ define(['backbone'],
     attributes.activePrognosis = null;
     attributes.activeRegion = null;
     
-
     // bind an attribute to a callback (is called on change)
     app.bind = function (attribute, callback) {      
       if(!callbacks[attribute])

@@ -314,13 +314,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var dataRel = JSON.parse(JSON.stringify(dataAbs));
 
         var relVal = dataRel.y[0];
+        var roundingFactor = Math.pow(10, app.DECIMALS);
 
         for (var i = 0; i < dataRel.y.length; i++) {
           dataRel.y[i] *= 100 / relVal;
-          dataRel.y[i] = Math.round(dataRel.y[i] * 100) / 100;
-        }
-        ;
-
+          dataRel.y[i] = Math.round(dataRel.y[i] * roundingFactor) / roundingFactor;
+        };
+        
         vis = this.el.querySelector('#relative');
         clearElement(vis);
         
@@ -350,19 +350,21 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // adapt age data to build table (arrays to single entries)
         columns.push({name: 'year', description: 'Jahr'});
         columns.push({name: 'total', description: 'Bevölkerungszahl'});
-        columns.push({name: 'perc', description: 'Vergleich Vorjahr'});
+        columns.push({name: 'perc', description: 'Vergleich Vorjahr'});       
+        
+        var roundingFactor = Math.pow(10, app.DECIMALS);
         
         var lastTotal;
         
         _.each(data, function (d) {
           var year = d.jahr,
-              total = Math.round(d.sumFemale + d.sumMale),
+              total = Math.round(d.sumFemale + d.sumMale * roundingFactor) / roundingFactor,
               perc;
           if(lastTotal === undefined){
             perc = '-';
           }
           else{            
-            perc = Math.round((100 * total / lastTotal - 100) * 100) / 100;
+            perc = Math.round((100 * total / lastTotal - 100) * roundingFactor) / roundingFactor;
             if(perc > 0)
               perc = '+' + perc;
             perc += '%';
@@ -494,8 +496,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         for (var i = 0; i < femaleAges.length; i++) {
           data.push({
             age: i,
-            female: Math.round(femaleAges[i]),
-            male: Math.round(maleAges[i])
+            female: femaleAges[i],
+            male: maleAges[i]
           });
         }
 
@@ -544,6 +546,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var ageGroups = JSON.parse(JSON.stringify(app.get('ageGroups')));
         //calc sum over all ages eventually
         ageGroups.push({from: 0, to: Number.MAX_VALUE});
+        var roundingFactor = Math.pow(10, app.DECIMALS);    
 
         this.currentModel.get('data').forEach(function (yearData) {
           var groupedYearData = {jahr: yearData.jahr, values: [], female: [], male: []};
@@ -566,13 +569,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             for (var i = from; i <= to; i++)
               maleSum += maleAges[i];
 
-            var count = Math.round(maleSum + femaleSum);
+            var total = maleSum + femaleSum;
 
-            groupedYearData.values.push(count);
-            groupedYearData.female.push(femaleSum);
-            groupedYearData.male.push(maleSum);
+            groupedYearData.values.push(Math.round((total) * roundingFactor) / roundingFactor);
+            groupedYearData.female.push(Math.round((femaleSum) * roundingFactor) / roundingFactor);
+            groupedYearData.male.push(Math.round((maleSum) * roundingFactor) / roundingFactor);
           });
-          groupedYearData.count = groupedYearData.values.pop();
+          groupedYearData.total = groupedYearData.values.pop();
           groupedYearData.maleTotal = groupedYearData.male.pop();
           groupedYearData.femaleTotal = groupedYearData.female.pop();
           _this.groupedData.push(groupedYearData);
@@ -634,10 +637,11 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           if (ageGroup.intersects)
             groupName += '&nbsp&nbsp<span class="glyphicon glyphicon-warning-sign"></span>';
           
-          var firstSum = Math.round(firstYearData.female[i] + firstYearData.male[i]);
-          var lastSum = Math.round(lastYearData.female[i] + lastYearData.male[i]);
+          var firstSum = firstYearData.female[i] + firstYearData.male[i];
+          var lastSum = lastYearData.female[i] + lastYearData.male[i];
+          var roundingFactor = Math.pow(10, app.DECIMALS);        
           
-          var devperc = Math.round((100 * lastSum / firstSum - 100) * 100) / 100;
+          var devperc = Math.round((100 * lastSum / firstSum - 100) * roundingFactor) / roundingFactor;
           if(devperc > 0)
             devperc = '+' + devperc;
           

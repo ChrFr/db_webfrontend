@@ -83,9 +83,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           document.querySelector('#li-overview>a').click();
           
           var prog = app.get('activePrognosis');
-          if(prog){
-            this.el.querySelector('#description-div').style.display = 'block';
-          }
           this.createMap();
           
          /*
@@ -108,6 +105,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                   _this.map.zoomTo(prog.get('boundaries'), true);
 
                   _this.el.querySelector('#description-div').style.display = 'block';
+                  _this.el.querySelector('#overview').style.display = 'block';
                   _this.el.querySelector('#layer-select-wrapper').style.display = 'block';
                   _this.el.querySelector('#sub-map-nav').style.display = 'block';
                   // remove old options
@@ -166,6 +164,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             else{
               // hide all elements interacting with prognoses, when no prognosis is loaded
               _this.el.querySelector('#description-div').style.display = 'none';
+              _this.el.querySelector('#overview').style.display = 'none';
               _this.el.querySelector('#layer-select-wrapper').style.display = 'none';
               _this.el.querySelector('#sub-map-nav').style.display = 'none';
               _this.el.querySelector('#region-select').style.display = 'none';
@@ -211,7 +210,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         renderOverview: function(prognosis){
           var map = this.el.querySelector('#map-header');
           var title = this.el.querySelector('#title');
-          var text = this.el.querySelector('#description') || '';
+          var description = this.el.querySelector('#description');          
           if(!app.get('session').get('user')){
             this.map.setOverlayText('Bitte loggen Sie sich zunächst ein!');
             return false;
@@ -223,7 +222,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           else{       
             this.map.setOverlayText('');
             title.innerText = prognosis.get('name');
-            text.innerHTML = prognosis.get('description');
+            description.innerHTML = prognosis.get('description');
+            this.el.querySelector('#max-inhabitants').innerHTML = prognosis.get('max_bevstand');
             return true;
           }
         },

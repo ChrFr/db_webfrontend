@@ -890,7 +890,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       downloadRawCsv: function () {
-        var filename = this.currentModel.get('name') + '-Rohdaten.csv';
+        var filename = this.currentModel.get('name') + '-Gesamtdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
         this.el.querySelector('#raw-data').style.display = 'none';

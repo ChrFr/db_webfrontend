@@ -12,9 +12,9 @@ module.exports = function () {
       config = require('./config'),
       fs = require('fs'),
       log = require('log4js').getLogger('access'),
-      masterfile = './server/masterkey.txt',
+      masterfile = __dirname + '/masterkey.txt',
       masterkey;
-  
+      
   var bouncer = require ("express-bouncer")(500, 900000, 3);
   
   bouncer.blocked = function (req, res, next, remaining){

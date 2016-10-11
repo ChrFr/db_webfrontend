@@ -12,7 +12,7 @@ module.exports = function () {
       config = require('./config'),
       fs = require('fs'),
       log = require('log4js').getLogger('access'),
-      masterfile = './server/masterkey.txt',
+      masterfile = __dirname + '\\masterkey.txt',
       masterkey;
   
   var bouncer = require ("express-bouncer")(500, 900000, 3);
@@ -23,8 +23,9 @@ module.exports = function () {
   };
     
   fs.stat(masterfile, function(err, stat) {
-    if(err == null)
-        masterkey = fs.readFileSync('./server/masterkey.txt', 'utf8');     
+    if(err == null){
+        masterkey = fs.readFileSync(masterfile, 'utf8');   
+      }
   });
 
   //Mapping taken from express examples https://github.com/strongloop/express

@@ -314,11 +314,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var dataRel = JSON.parse(JSON.stringify(dataAbs));
 
         var relVal = dataRel.y[0];
-        var roundingFactor = Math.pow(10, app.DECIMALS);
 
         for (var i = 0; i < dataRel.y.length; i++) {
           dataRel.y[i] *= 100 / relVal;
-          dataRel.y[i] = Math.round(dataRel.y[i] * roundingFactor) / roundingFactor;
+          dataRel.y[i] = round(dataRel.y[i], app.DECIMALS);
         };
         
         vis = this.el.querySelector('#relative');
@@ -352,28 +351,28 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         columns.push({name: 'total', description: 'Bevölkerungszahl'});
         columns.push({name: 'perc', description: 'Vergleich Vorjahr'});       
         
-        var roundingFactor = Math.pow(10, app.DECIMALS);
-        
         var lastTotal;
         
         _.each(data, function (d) {
           var year = d.jahr,
-              total = Math.round((d.sumFemale + d.sumMale) * roundingFactor) / roundingFactor,
-              perc;
+              total = round((d.sumFemale + d.sumMale), app.DECIMALS),
+              perc, percRep;
           if(lastTotal === undefined){
-            perc = '-';
+            perc = 0;
           }
           else{            
-            perc = Math.round((100 * total / lastTotal - 100) * roundingFactor) / roundingFactor;
-            if(perc > 0)
-              perc = '+' + perc;
-            perc += '%';
+            perc = round((100 * total / lastTotal - 100), app.DECIMALS);
           }
+          percRep = roundRep(perc, app.DECIMALS);
+          if(perc >= 0)
+            percRep = '+' + percRep;
+          percRep += '%';
+          
           lastTotal = total;
           rows.push({
             year: year,
-            total: total,
-            perc: perc
+            total: roundRep(total, app.DECIMALS),
+            perc: percRep
           });
         });
 
@@ -452,13 +451,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               
           rows.push({
             year: d.jahr,
-            births: d.geburten,
-            deaths: d.tote,
-            natSaldo: natSaldo,
-            immigration: d.zuzug,
-            emigration: d.fortzug,
-            migSaldo: migSaldo,
-            absSaldo: absSaldo
+            births: roundRep(d.geburten, app.DECIMALS),
+            deaths: roundRep(d.tote, app.DECIMALS),
+            natSaldo: roundRep(natSaldo, app.DECIMALS),
+            immigration: roundRep(d.zuzug, app.DECIMALS),
+            emigration: roundRep(d.fortzug, app.DECIMALS),
+            migSaldo: roundRep(migSaldo, app.DECIMALS),
+            absSaldo: roundRep(absSaldo, app.DECIMALS)
           })    
         };        
 
@@ -496,8 +495,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         for (var i = 0; i < femaleAges.length; i++) {
           data.push({
             age: i,
-            female: femaleAges[i],
-            male: maleAges[i]
+            female: roundRep(femaleAges[i], app.DECIMALS),
+            male: roundRep(maleAges[i], app.DECIMALS)
           });
         }
 
@@ -546,7 +545,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var ageGroups = JSON.parse(JSON.stringify(app.get('ageGroups')));
         //calc sum over all ages eventually
         ageGroups.push({from: 0, to: Number.MAX_VALUE});
-        var roundingFactor = Math.pow(10, app.DECIMALS);    
 
         this.currentModel.get('data').forEach(function (yearData) {
           var groupedYearData = {jahr: yearData.jahr, values: [], female: [], male: []};
@@ -571,9 +569,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
             var total = maleSum + femaleSum;
 
-            groupedYearData.values.push(Math.round((total) * roundingFactor) / roundingFactor);
-            groupedYearData.female.push(Math.round((femaleSum) * roundingFactor) / roundingFactor);
-            groupedYearData.male.push(Math.round((maleSum) * roundingFactor) / roundingFactor);
+            groupedYearData.values.push(parseFloat(round(total, app.DECIMALS)));
+            groupedYearData.female.push(parseFloat(round(femaleSum, app.DECIMALS)));
+            groupedYearData.male.push(parseFloat(round(maleSum, app.DECIMALS)));
           });
           groupedYearData.total = groupedYearData.values.pop();
           groupedYearData.maleTotal = groupedYearData.male.pop();
@@ -639,18 +637,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           
           var firstSum = firstYearData.female[i] + firstYearData.male[i];
           var lastSum = lastYearData.female[i] + lastYearData.male[i];
-          var roundingFactor = Math.pow(10, app.DECIMALS);        
           
-          var devperc = Math.round((100 * lastSum / firstSum - 100) * roundingFactor) / roundingFactor;
+          var devperc = (100 * lastSum / firstSum - 100);
           if(devperc > 0)
             devperc = '+' + devperc;
           
           rows.push({
             index: i,
             ageGroup: groupName,
-            firstYear: firstSum,
-            lastYear: lastSum,
-            devperc: devperc + '%'
+            firstYear: roundRep(firstSum, app.DECIMALS),
+            lastYear: roundRep(lastSum, app.DECIMALS),
+            devperc: roundRep(devperc, app.DECIMALS) + '%'
           });
         };
         
@@ -955,3 +952,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
     return DemographicDevelopmentView;
   }
 );
+
+function round(num, decimals){
+   var t = Math.pow(10, decimals);  
+   return (Math.round(num * t) / t);
+}
+
+// gives a german representation of a number with commas instead of points rounded by decimals
+// numbers without decimals get a trailing .0
+function roundRep(num, decimals) { 
+   var t = Math.pow(10, decimals);
+   return (Math.round((num * t) + (decimals>0?1:0)*(Math.sign(num) * (10 / Math.pow(100, decimals)))) / t).toFixed(decimals).replace('.',',');
+}

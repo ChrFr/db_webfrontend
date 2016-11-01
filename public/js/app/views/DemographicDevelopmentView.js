@@ -505,10 +505,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        */
       renderAgeTable: function (yearData) {
         var columns = [],
-            title = '';
-
-        if (yearData.jahr == this.currentModel.get('minYear'))
+            title = '',
+            prog = app.get('activePrognosis'),
+            baseYear = prog.get('basisjahr');    
+        
+        if (yearData.jahr == baseYear)
           title = 'Basisjahr';
+        else if(yearData.jahr < baseYear)
+          title = 'Realdaten';
         else
           title = 'Prognose';
 
@@ -929,7 +933,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       downloadAgeTreePng: function (e) {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
         var svg = $('#agetree>svg');
-        downloadPng(svg, filename, this.canvas);//, {width: 2, height: 2});
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadFactorsPng: function (e) {

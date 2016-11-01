@@ -64,7 +64,7 @@ var LineChart = function (options) {
       top: 50,
       right: 35,
       bottom: 90,
-      left: 50
+      left: 70
     };
 
     var innerwidth = this.width - margin.left - margin.right,
@@ -190,13 +190,17 @@ var LineChart = function (options) {
     var yApp = svg.append("g")
             .attr("class", "y axis")
             .call(yAxis);
+        
+    /*  // move tick labes to the left
+    yApp.selectAll('text')
+            .attr("transform", translation(-20, 0))*/
 
     yApp.append("text")
             .attr("y", 6)
             .attr("dy", "0.71em")
             .style("text-anchor", "end")
             .text(this.ylabel)
-            .attr("transform", "rotate(-90), " + translation(0, 0));
+            .attr("transform", "rotate(-90), " + translation(0, -margin.left));
 
     var lines = svg.selectAll(".d3-chart-line")
             .data(this.data.map(function (d) {

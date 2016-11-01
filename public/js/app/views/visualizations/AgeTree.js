@@ -50,7 +50,7 @@ var AgeTree = function (options) {
     var margin = {
       top: 60,
       right: 40,
-      bottom: 30,
+      bottom: 40,
       left: 20,
       middle: 10
     };
@@ -315,14 +315,14 @@ var AgeTree = function (options) {
             .attr('text-anchor', 'middle')
             .text('Anzahl männlich')
             .attr('x', this.width / 4)
-            .attr('y', this.height + margin.bottom);
+            .attr('y', this.height + margin.bottom - 10);
 
     svg.append('text')
             .attr('class', 'female')
             .attr('text-anchor', 'middle')
             .text('Anzahl weiblich')
             .attr('x', 3 * this.width / 4)
-            .attr('y', this.height + margin.bottom);
+            .attr('y', this.height + margin.bottom - 10);
 
     if (this.compareData){
       svg.append('text')

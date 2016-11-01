@@ -261,7 +261,7 @@ function aggregateByKey(array, key, options) {
         function (err, status, user) {
           if (err)
             return res.status(status).send(err);
-          var q = "SELECT id, name, description";
+          var q = "SELECT id, name, description, basisjahr";
           if (user.superuser)
             q += ", users";
           q += " FROM prognosen";
@@ -286,8 +286,8 @@ function aggregateByKey(array, key, options) {
           return res.status(status).send(err);
         if (!user.superuser)
           return res.status(403);
-        query("UPDATE prognosen SET name=$2, description=$3, users=$4 WHERE id=$1;",
-          [req.params.pid, req.body.name, req.body.description, req.body.users],
+        query("UPDATE prognosen SET name=$2, description=$3, users=$4, basisjahr=$5 WHERE id=$1;",
+          [req.params.pid, req.body.name, req.body.description, req.body.users, req.body.basisjahr],
           function (err, result) {
             if (err)
               return res.status(500).send('Interner Fehler.');
@@ -306,8 +306,8 @@ function aggregateByKey(array, key, options) {
         if (!user.superuser)
           return res.status(403);
 
-        query("INSERT INTO prognosen (name, description, users) VALUES ($1, $2, $3);",
-          [req.body.name, req.body.description, req.body.users],
+        query("INSERT INTO prognosen (name, description, users, basisjahr) VALUES ($1, $2, $3, $4);",
+          [req.body.name, req.body.description, req.body.users, req.body.basisjahr],
           function (err, result) {
             if (err)
               return res.status(409).send('Name "' + req.body.name + '" ist bereits vergeben!');

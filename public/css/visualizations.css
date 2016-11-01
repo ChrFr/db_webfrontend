@@ -25,6 +25,12 @@ svg {
     stroke-dasharray: 2,2;
 }
 
+.x.axis .separator {
+    stroke: #888;
+    stroke-width: 2;
+    stroke-dasharray: 6, 6;
+}
+
 .y.axis line {
     stroke: #777;
     stroke-dasharray: 2,2;

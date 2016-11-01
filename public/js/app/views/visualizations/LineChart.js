@@ -20,6 +20,8 @@
  * @param options.maxY       optional, highest value of the y-axis
  * @param options.css        optional, css instructions
  * @param options.cssSource  optional, name of the embedded stylesheet (default: visualizations.css)
+ * @param options.separator  optional, color of each line drawn from given data (in array, css-style)
+ * @param options.colors     optional, color of each line drawn from given data (in array, css-style)
  * 
  * @see line chart
  */
@@ -30,11 +32,15 @@ var LineChart = function (options) {
   this.height = options.height;
   this.css = options.css;
   this.cssSource = options.cssSource || "visualizations.css";
-  this.xlabel = options.xlabel || "x";
-  this.ylabel = options.ylabel || "y";
+  this.xlabel = options.xlabel || "";
+  this.ylabel = options.ylabel || "";
   this.title = options.title || "";
   this.subtitle = options.subtitle || "";
   this.minY = options.minY;
+  this.separator = options.separator;
+  this.colors = options.colors;
+  this.groupLabels = options.groupLabels;
+  
   if (this.minY === undefined)
     this.minY = d3.min(this.data, function (d) {
       return d3.min(d.y);
@@ -48,7 +54,7 @@ var LineChart = function (options) {
   };
 
   this.render = function (callback) {
-    //server-side d3 needs to be loaded seperately
+    //server-side d3 needs to be loaded separately
     if (!d3)
       var d3 = require('d3');
 
@@ -57,12 +63,12 @@ var LineChart = function (options) {
     var margin = {
       top: 50,
       right: 35,
-      bottom: 30,
+      bottom: 90,
       left: 50
     };
 
     var innerwidth = this.width - margin.left - margin.right,
-            innerheight = this.height - margin.top - margin.bottom;
+        innerheight = this.height - margin.top - margin.bottom;
 
     var top = d3.select(this.el).append('svg')
             .attr('xmlns', "http://www.w3.org/2000/svg")
@@ -140,8 +146,12 @@ var LineChart = function (options) {
             .range([innerheight, 0])
             .domain([_this.minY, _this.maxY]);
 
-    var colorScale = d3.scale.category10()
-            .domain(d3.range(this.data.length));
+    var colorScale =  d3.scale.category10()
+                              .domain(d3.range(this.data.length));
+    if (this.colors)
+      colorScale = function(i){
+        return _this.colors[i];
+      }
 
     // AXES
 
@@ -154,7 +164,7 @@ var LineChart = function (options) {
             .scale(xScale)
             .orient('bottom')
             .tickSize(-innerheight)
-            .tickFormat(d3.format("d"));
+            .tickFormat(d3.format("d"));        
 
     var drawLine = d3.svg.line()
             .interpolate("basis")
@@ -175,7 +185,7 @@ var LineChart = function (options) {
             .attr("x", innerwidth)
             .style("text-anchor", "end")
             .text(this.xlabel)
-            .attr("transform", translation(0, margin.bottom));
+            .attr("transform", translation(0, 30));        
 
     var yApp = svg.append("g")
             .attr("class", "y axis")
@@ -200,9 +210,9 @@ var LineChart = function (options) {
             .attr("d", function (d) {
               return drawLine(d);
             })
-            .attr("stroke", function (_, i) {
+            .attr("stroke", function (d, i) {
               return colorScale(i);
-            });
+            });                
 
     lines.append("text")
             .datum(function (d, i) {
@@ -263,19 +273,18 @@ var LineChart = function (options) {
       //first dataset is taken to show dots
       var mousePos = d3.mouse(this)[0];
       if (mousePos < 0)
-        return;
+        return;      
       var xData = _this.data[0].x,
-              yData = _this.data[0].y,
-              x0 = xScale.invert(mousePos),
-              i = bisect(xData, x0) - 1,
-              d = xData[i];
+          yData = _this.data[0].y,
+          x0 = xScale.invert(mousePos),
+          i = bisect(xData, x0) - 1,
+          d = xData[i];
       focus.attr("transform", translation(xScale(d), yScale(yData[i])));
       var back = focus.select("rect");
       var text = focus.select("text");
       back.style("width", parseInt(text.style("width")) + 10);
       back.style("height", text.style("height"));
       text.text(Math.round(yData[i]* 100) / 100);
-      //var bb = text.getBBox();
     }
 
     function translation(x, y) {
@@ -284,6 +293,39 @@ var LineChart = function (options) {
 
     if (callback)
       callback(this.el.innerHTML);
+    
+    xApp.selectAll('g.tick line')
+            .filter(function(d){ 
+              return d == _this.separator;
+            })
+            .attr('class', 'separator'); 
+        
+     
+    var legend = svg.selectAll('.legend')
+            .data(_this.groupLabels.slice())
+            .enter().append('g')
+            .attr('class', 'legend')
+            .attr('transform', function (d, i) {
+              return translation(0, innerheight + 40 + i * 15);
+            });
+
+    legend.append('rect')
+            .attr('x', innerwidth - 14)
+            .attr('width', 10)
+            .attr('height', 10)
+            .style('fill', function (d, i) {
+              return colorScale(i);
+            });
+
+    legend.append('text')
+            .attr('x', innerwidth - 24)
+            .attr('y', 6)
+            .attr('dy', '.35em')
+            .style('text-anchor', 'end')
+            .text(function (d) {
+              return d;
+            });
+
   };
 
 };

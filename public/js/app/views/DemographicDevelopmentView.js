@@ -278,32 +278,53 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             years = [];
 
         // ABSOLUTE DATA
-
-        _.each(data, function (d) {
-          total.push(d.sumFemale + d.sumMale);
-          years.push(d.jahr);
+        
+        var prog = app.get('activePrognosis');
+        var baseYear = prog.get('basisjahr');    
+        var baseIndex = 0;
+        
+        _.each(data, function (d, i) {
+            total.push(d.sumFemale + d.sumMale);
+            years.push(d.jahr);
+            if(d.jahr == baseYear){
+              baseIndex = i;
+            }
         });
 
+        // we put 2 lines into the diagram: the date from first to last available year
+        // and a cut off data beginning with base year (so in fact last part is duplicated, 
+        // but this way you don't have to change the code of LineChart.js)
+        
         var dataAbs = {
           label: '',
           x: years,
           y: total
         };
+        
+        var dataPrognosed = {
+            label: '',
+            x: years.slice(baseIndex, years.length),
+            y: total.slice(baseIndex, total.length),
+        }
 
         var vis = this.el.querySelector('#absolute');
         clearElement(vis);
 
         var width = this.width - 40;
         var height = width * 0.5;
+        
         this.absoluteChart = new LineChart({
           el: vis,
-          data: [dataAbs],
+          data: [dataAbs, dataPrognosed],
           width: width,
           height: height,
           title: 'Bevölkerungsentwicklung absolut',
           subtitle: this.currentModel.get('name'),
-          xlabel: 'Jahr',
+          xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in absoluten Zahlen',
+          groupLabels: ['Realdaten', 'Prognosedaten'],
+          colors: ["RoyalBlue", "YellowGreen"],
+          separator: prog.get('basisjahr'),
           minY: 0
         });
         this.absoluteChart.render();
@@ -318,22 +339,29 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         for (var i = 0; i < dataRel.y.length; i++) {
           dataRel.y[i] *= 100 / relVal;
           dataRel.y[i] = round(dataRel.y[i], app.DECIMALS);
-        };
+        };        
+        
+        var relPrognosed = {
+            label: '',
+            x: dataRel.x.slice(baseIndex, years.length),
+            y: dataRel.y.slice(baseIndex, total.length),
+        }
         
         vis = this.el.querySelector('#relative');
-        clearElement(vis);
-        
-        var prog = app.get('activePrognosis');
+        clearElement(vis);        
         
         this.relativeChart = new LineChart({
           el: vis,
-          data: [dataRel],
+          data: [dataRel, relPrognosed],
           width: width,
           height: height,
           title: 'Bevölkerungsentwicklung relativ',
           subtitle: this.currentModel.get('name'),
-          xlabel: 'Jahr',
+          groupLabels: ['Realdaten', 'Prognosedaten'],
+          xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')',
+          separator: prog.get('basisjahr'),
+          colors: ["RoyalBlue", "YellowGreen"],
           minY: prog.get('min_rel') * 100,
           maxY: prog.get('max_rel') * 100
         });

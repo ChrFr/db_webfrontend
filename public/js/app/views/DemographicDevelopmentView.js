@@ -377,32 +377,37 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         // adapt age data to build table (arrays to single entries)
         columns.push({name: 'year', description: 'Jahr'});
         columns.push({name: 'total', description: 'Bevölkerungszahl'});
-        columns.push({name: 'perc', description: 'Vergleich Vorjahr'});       
-        
-        var lastTotal;
+        columns.push({name: 'perc', description: 'Vergleich Basisjahr'});       
+                
+        var prog = app.get('activePrognosis'),
+            baseYear = prog.get('basisjahr'),
+            baseYearTotal,
+            years = [],
+            totals = [];    
         
         _.each(data, function (d) {
-          var year = d.jahr,
-              total = round((d.sumFemale + d.sumMale), app.DECIMALS),
-              perc, percRep;
-          if(lastTotal === undefined){
-            perc = 0;
-          }
-          else{            
-            perc = round((100 * total / lastTotal - 100), app.DECIMALS);
-          }
-          percRep = roundRep(perc, app.DECIMALS);
+          years.push(d.jahr);
+          var total = round((d.sumFemale + d.sumMale), app.DECIMALS);
+          totals.push(total);
+          if (d.jahr == baseYear)
+            baseYearTotal = total;
+        });
+        
+        years.forEach(function(year, i){
+          var perc = round((100 * totals[i] / baseYearTotal - 100), app.DECIMALS);
+          var percRep = roundRep(perc, app.DECIMALS);
           if(perc >= 0)
             percRep = '+' + percRep;
           percRep += '%';
           
-          lastTotal = total;
           rows.push({
             year: year,
-            total: roundRep(total, app.DECIMALS),
+            total: roundRep(totals[i], app.DECIMALS),
             perc: percRep
           });
         });
+        
+        
 
         this.devTable = new TableView({
           el: this.el.querySelector('#dev-data'),
@@ -626,6 +631,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         app.get('ageGroups').forEach(function (g) {
           groupNames.push(g.name);
         });
+        var prog = app.get('activePrognosis')
 
         this.ageGroupChart = new StackedBarChart({
           el: vis,
@@ -637,7 +643,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           xlabel: 'Jahr',
           ylabel: 'Summe',
           stackLabels: groupNames,
-          bandName: 'jahr'
+          bandName: 'jahr',
+          separator: prog.get('basisjahr'),
         });
         this.ageGroupChart.render();
       },

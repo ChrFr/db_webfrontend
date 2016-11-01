@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(["jquery", "backbone", "text!templates/admin.html",
   "collections/UserCollection", "collections/PrognosisCollection",
    "collections/DDCollection", "models/UserModel", "models/PrognosisModel", 

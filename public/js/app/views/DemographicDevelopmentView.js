@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
   'views/TableView', 'd3', 'd3slider', 'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
   'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
@@ -5,7 +10,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
   function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider, CustomView) {
             
     /** 
-     * @author Christoph Franke
      * 
      * @desc view on demographic development 
      * 

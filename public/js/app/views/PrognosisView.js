@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
   'views/HouseholdsDevelopmentView', 'collections/SubunitCollection', 'collections/LayerCollection',
   'views/OptionView', 'views/visualizations/Map', 'views/Loader', 'views/misc'],
@@ -5,7 +10,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         SubunitCollection, LayerCollection, OptionView){
 
       /** 
-       * @author Christoph Franke
        * 
        * @desc view on a specific prognosis, wraps a map, the household and demographic prognoses and guides the user to the specific prognoses
        * @see map of area of prognoses, description of prognoses, household and demographic prognoses

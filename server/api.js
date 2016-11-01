@@ -1,6 +1,6 @@
 // 28.04.2015
 // author: Christoph Franke
-// client: GGR
+// publisher: GGR
 // purpose: api-routing, map routes to functions
 
 module.exports = function () {

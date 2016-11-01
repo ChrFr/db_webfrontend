@@ -1,5 +1,8 @@
-// SessionModel.js
-// --------
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(["jquery", "backbone"],
     /**
     * Holds the informations about a session.

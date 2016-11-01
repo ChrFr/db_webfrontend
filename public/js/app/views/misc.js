@@ -1,4 +1,9 @@
 /*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
+/*
  * create and return a div containing a bootstrap-alert with the given type and text
  * available types: success, info, danger, warning
  */

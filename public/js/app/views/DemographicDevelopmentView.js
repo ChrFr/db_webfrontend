@@ -325,7 +325,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         clearElement(vis);
         
         var prog = app.get('activePrognosis');
-
+        
         this.relativeChart = new LineChart({
           el: vis,
           data: [dataRel],
@@ -358,7 +358,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         
         _.each(data, function (d) {
           var year = d.jahr,
-              total = Math.round(d.sumFemale + d.sumMale * roundingFactor) / roundingFactor,
+              total = Math.round((d.sumFemale + d.sumMale) * roundingFactor) / roundingFactor,
               perc;
           if(lastTotal === undefined){
             perc = '-';
@@ -890,7 +890,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       downloadRawCsv: function () {
-        var filename = this.currentModel.get('name') + '-Rohdaten.csv';
+        var filename = this.currentModel.get('name') + '-Gesamtdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
         this.el.querySelector('#raw-data').style.display = 'none';

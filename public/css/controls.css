@@ -80,6 +80,11 @@
     /* gap needed because of the tab menu */
     top: 10%;
     z-index: 100;
+    opacity: 0.5;
+}
+
+.side-controls:hover{
+    opacity: 1;
 }
 
 .side-controls label{

@@ -50,7 +50,7 @@ var AgeTree = function (options) {
     var margin = {
       top: 60,
       right: 40,
-      bottom: 30,
+      bottom: 40,
       left: 20,
       middle: 10
     };
@@ -137,24 +137,28 @@ var AgeTree = function (options) {
             .range([this.height, 0]);
 
     // TOOLTIP
-    var mouseOverBar = function (d) {
+    var mouseOverBar = function (d, i) {
+      var leftBar = d3.select(leftBars[0][i]);
+      var rightBar = d3.select(rightBars[0][i]);
+      leftBar.selectAll('rect').classed('highlight', true);
+      rightBar.selectAll('rect').classed('highlight', true);
       var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
-      var bar = d3.select(this);
-      bar.classed('highlight', true);
-      var sex = '';
-      if (bar.classed('female'))
-        sex = 'weiblich';
-      else if (bar.classed('male'))
-        sex = 'männlich';
+      
+      var text = 'Alter: ' + i + '<br>';
+      text += 'Anzahl weiblich: ' + _this.data.alter_weiblich[i] + '<br>';
+      text += 'Anzahl männlich: ' + _this.data.alter_maennlich[i] + '<br>';
 
-      tooltip.html('Geschlecht: ' + sex + '<br>Alter: ' + bar.attr('age') + '<br><b>Anzahl: ' + d + '</b>');
+      tooltip.html(text);
 
       tooltip.style('left', (d3.event.pageX + 10) + 'px')
               .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');
     };
 
-    var mouseOutBar = function (d) {
-      d3.select(this).classed('highlight', false);
+    var mouseOutBar = function (d, i) {
+      var leftBar = d3.select(leftBars[0][i]);
+      var rightBar = d3.select(rightBars[0][i]);
+      leftBar.selectAll('rect').classed('highlight', false);
+      rightBar.selectAll('rect').classed('highlight', false);
       d3.select('body').selectAll('div.tooltip').remove();
     };
 
@@ -311,14 +315,14 @@ var AgeTree = function (options) {
             .attr('text-anchor', 'middle')
             .text('Anzahl männlich')
             .attr('x', this.width / 4)
-            .attr('y', this.height + margin.bottom);
+            .attr('y', this.height + margin.bottom - 10);
 
     svg.append('text')
             .attr('class', 'female')
             .attr('text-anchor', 'middle')
             .text('Anzahl weiblich')
             .attr('x', 3 * this.width / 4)
-            .attr('y', this.height + margin.bottom);
+            .attr('y', this.height + margin.bottom - 10);
 
     if (this.compareData){
       svg.append('text')

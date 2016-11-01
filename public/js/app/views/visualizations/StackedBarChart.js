@@ -196,31 +196,41 @@ var StackedBarChart = function (options) {
 
     // BARS
 
+    var mouseOverBar = function (d) {
+      var stack = d3.select(this);
+      stack.selectAll('rect').classed('highlight', true);
+      
+      var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
+      var text = _this.xlabel + ': ' + d[_this.bandName] + '<br>';
+      tooltip.style('opacity', .9);
+      
+      d.values.forEach(function(value, i){
+        text += '<b>' + _this.stackLabels[i] + '</b>: ' + value + '<br>';
+      });      
+      text += '<b>gesamt</b>: ' + d.total + '<br>';
+      tooltip.html(text);
+      tooltip.style('left', (d3.event.pageX + 10) + 'px')
+             .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');
+    };
+
+    var mouseOutBar = function (d, i) {
+      var stack = d3.select(this);
+      stack.selectAll('rect').classed('highlight', false);      
+      d3.select('body').selectAll('div.tooltip').remove();
+    };
+    
     var groups = svg.selectAll('.group')
             .data(this.data)
             .enter().append('g')
-            .attr('class', 'g')
+            .attr('class', 'stack')
             .attr('transform', function (d) {
               return translation(xScale(d[_this.bandName]), 0);
-            });
-
-    var mouseOverBar = function (d, i) {
-      var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
-      var bar = d3.select(this);
-      bar.classed('highlight', true);
-      tooltip.style('opacity', .9);
-      var parent = d3.select(this.parentNode);
-      tooltip.html(_this.xlabel + ': ' + d.label + '<br>' + _this.stackLabels[i] + ': <b>' + d.value + '</b><br>' + 'Summe: ' + d.total);
-
-      tooltip.style('left', (d3.event.pageX + 10) + 'px')
-              .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');
-    };
-
-    var mouseOutBar = function () {
-      d3.select(this).classed('highlight', false);
-      d3.select('body').selectAll('div.tooltip').remove();
-    };
-
+            })
+            .attr('fill', 'none')
+            .attr('pointer-events', 'all')
+            .on('mouseover', mouseOverBar)
+            .on('mouseout', mouseOutBar);
+    
     groups.selectAll('rect')
             .data(function (d) {
               return d.mapped;
@@ -235,11 +245,18 @@ var StackedBarChart = function (options) {
             })
             .style('fill', function (d, i) {
               return colorScale(i);
-            })
-            .on('mouseover', mouseOverBar)
-            .on('mouseout', mouseOutBar);
-        
-    
+            })  
+            //.on('mouseover', mouseOverBar)
+            //.on('mouseout', mouseOutBar);  
+           
+    /*
+    groups.selectAll('g')
+            .data(this.data)
+            .enter().append('rect')
+            .attr('class', 'overlay')
+            .attr('transform', function (d) {
+              return translation(xScale(d[_this.bandName]), 0);
+            });*/
     
     svg.append('text')
             .attr('x', innerwidth)

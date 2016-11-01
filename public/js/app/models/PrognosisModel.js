@@ -14,7 +14,8 @@ define(["backbone"],
             defaults: {
               name: '',
               description: '',
-              users: []
+              users: [],
+              basisjahr: ''
             },
 
             initialize: function() {

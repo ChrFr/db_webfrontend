@@ -282,32 +282,53 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             years = [];
 
         // ABSOLUTE DATA
-
-        _.each(data, function (d) {
-          total.push(d.sumFemale + d.sumMale);
-          years.push(d.jahr);
+        
+        var prog = app.get('activePrognosis');
+        var baseYear = prog.get('basisjahr');    
+        var baseIndex = 0;
+        
+        _.each(data, function (d, i) {
+            total.push(d.sumFemale + d.sumMale);
+            years.push(d.jahr);
+            if(d.jahr == baseYear){
+              baseIndex = i;
+            }
         });
 
+        // we put 2 lines into the diagram: the date from first to last available year
+        // and a cut off data beginning with base year (so in fact last part is duplicated, 
+        // but this way you don't have to change the code of LineChart.js)
+        
         var dataAbs = {
           label: '',
           x: years,
           y: total
         };
+        
+        var dataPrognosed = {
+            label: '',
+            x: years.slice(baseIndex, years.length),
+            y: total.slice(baseIndex, total.length),
+        }
 
         var vis = this.el.querySelector('#absolute');
         clearElement(vis);
 
         var width = this.width - 40;
         var height = width * 0.5;
+        
         this.absoluteChart = new LineChart({
           el: vis,
-          data: [dataAbs],
+          data: [dataAbs, dataPrognosed],
           width: width,
           height: height,
           title: 'Bevölkerungsentwicklung absolut',
           subtitle: this.currentModel.get('name'),
-          xlabel: 'Jahr',
+          xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in absoluten Zahlen',
+          groupLabels: ['Realdaten', 'Prognosedaten'],
+          colors: ["RoyalBlue", "YellowGreen"],
+          separator: prog.get('basisjahr'),
           minY: 0
         });
         this.absoluteChart.render();
@@ -318,27 +339,33 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var dataRel = JSON.parse(JSON.stringify(dataAbs));
 
         var relVal = dataRel.y[0];
-        var roundingFactor = Math.pow(10, app.DECIMALS);
 
         for (var i = 0; i < dataRel.y.length; i++) {
           dataRel.y[i] *= 100 / relVal;
-          dataRel.y[i] = Math.round(dataRel.y[i] * roundingFactor) / roundingFactor;
-        };
+          dataRel.y[i] = round(dataRel.y[i], app.DECIMALS);
+        };        
+        
+        var relPrognosed = {
+            label: '',
+            x: dataRel.x.slice(baseIndex, years.length),
+            y: dataRel.y.slice(baseIndex, total.length),
+        }
         
         vis = this.el.querySelector('#relative');
-        clearElement(vis);
-        
-        var prog = app.get('activePrognosis');
+        clearElement(vis);        
         
         this.relativeChart = new LineChart({
           el: vis,
-          data: [dataRel],
+          data: [dataRel, relPrognosed],
           width: width,
           height: height,
           title: 'Bevölkerungsentwicklung relativ',
           subtitle: this.currentModel.get('name'),
-          xlabel: 'Jahr',
+          groupLabels: ['Realdaten', 'Prognosedaten'],
+          xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')',
+          separator: prog.get('basisjahr'),
+          colors: ["RoyalBlue", "YellowGreen"],
           minY: prog.get('min_rel') * 100,
           maxY: prog.get('max_rel') * 100
         });
@@ -356,28 +383,28 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         columns.push({name: 'total', description: 'Bevölkerungszahl'});
         columns.push({name: 'perc', description: 'Vergleich Vorjahr'});       
         
-        var roundingFactor = Math.pow(10, app.DECIMALS);
-        
         var lastTotal;
         
         _.each(data, function (d) {
           var year = d.jahr,
-              total = Math.round((d.sumFemale + d.sumMale) * roundingFactor) / roundingFactor,
-              perc;
+              total = round((d.sumFemale + d.sumMale), app.DECIMALS),
+              perc, percRep;
           if(lastTotal === undefined){
-            perc = '-';
+            perc = 0;
           }
           else{            
-            perc = Math.round((100 * total / lastTotal - 100) * roundingFactor) / roundingFactor;
-            if(perc > 0)
-              perc = '+' + perc;
-            perc += '%';
+            perc = round((100 * total / lastTotal - 100), app.DECIMALS);
           }
+          percRep = roundRep(perc, app.DECIMALS);
+          if(perc >= 0)
+            percRep = '+' + percRep;
+          percRep += '%';
+          
           lastTotal = total;
           rows.push({
             year: year,
-            total: total,
-            perc: perc
+            total: roundRep(total, app.DECIMALS),
+            perc: percRep
           });
         });
 
@@ -456,13 +483,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               
           rows.push({
             year: d.jahr,
-            births: d.geburten,
-            deaths: d.tote,
-            natSaldo: natSaldo,
-            immigration: d.zuzug,
-            emigration: d.fortzug,
-            migSaldo: migSaldo,
-            absSaldo: absSaldo
+            births: roundRep(d.geburten, app.DECIMALS),
+            deaths: roundRep(d.tote, app.DECIMALS),
+            natSaldo: roundRep(natSaldo, app.DECIMALS),
+            immigration: roundRep(d.zuzug, app.DECIMALS),
+            emigration: roundRep(d.fortzug, app.DECIMALS),
+            migSaldo: roundRep(migSaldo, app.DECIMALS),
+            absSaldo: roundRep(absSaldo, app.DECIMALS)
           })    
         };        
 
@@ -482,10 +509,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        */
       renderAgeTable: function (yearData) {
         var columns = [],
-            title = '';
-
-        if (yearData.jahr == this.currentModel.get('minYear'))
+            title = '',
+            prog = app.get('activePrognosis'),
+            baseYear = prog.get('basisjahr');    
+        
+        if (yearData.jahr == baseYear)
           title = 'Basisjahr';
+        else if(yearData.jahr < baseYear)
+          title = 'Realdaten';
         else
           title = 'Prognose';
 
@@ -500,8 +531,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         for (var i = 0; i < femaleAges.length; i++) {
           data.push({
             age: i,
-            female: femaleAges[i],
-            male: maleAges[i]
+            female: roundRep(femaleAges[i], app.DECIMALS),
+            male: roundRep(maleAges[i], app.DECIMALS)
           });
         }
 
@@ -550,7 +581,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         var ageGroups = JSON.parse(JSON.stringify(app.get('ageGroups')));
         //calc sum over all ages eventually
         ageGroups.push({from: 0, to: Number.MAX_VALUE});
-        var roundingFactor = Math.pow(10, app.DECIMALS);    
 
         this.currentModel.get('data').forEach(function (yearData) {
           var groupedYearData = {jahr: yearData.jahr, values: [], female: [], male: []};
@@ -575,9 +605,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
             var total = maleSum + femaleSum;
 
-            groupedYearData.values.push(Math.round((total) * roundingFactor) / roundingFactor);
-            groupedYearData.female.push(Math.round((femaleSum) * roundingFactor) / roundingFactor);
-            groupedYearData.male.push(Math.round((maleSum) * roundingFactor) / roundingFactor);
+            groupedYearData.values.push(parseFloat(round(total, app.DECIMALS)));
+            groupedYearData.female.push(parseFloat(round(femaleSum, app.DECIMALS)));
+            groupedYearData.male.push(parseFloat(round(maleSum, app.DECIMALS)));
           });
           groupedYearData.total = groupedYearData.values.pop();
           groupedYearData.maleTotal = groupedYearData.male.pop();
@@ -643,18 +673,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           
           var firstSum = firstYearData.female[i] + firstYearData.male[i];
           var lastSum = lastYearData.female[i] + lastYearData.male[i];
-          var roundingFactor = Math.pow(10, app.DECIMALS);        
           
-          var devperc = Math.round((100 * lastSum / firstSum - 100) * roundingFactor) / roundingFactor;
+          var devperc = (100 * lastSum / firstSum - 100);
           if(devperc > 0)
             devperc = '+' + devperc;
           
           rows.push({
             index: i,
             ageGroup: groupName,
-            firstYear: firstSum,
-            lastYear: lastSum,
-            devperc: devperc + '%'
+            firstYear: roundRep(firstSum, app.DECIMALS),
+            lastYear: roundRep(lastSum, app.DECIMALS),
+            devperc: roundRep(devperc, app.DECIMALS) + '%'
           });
         };
         
@@ -908,7 +937,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       downloadAgeTreePng: function (e) {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
         var svg = $('#agetree>svg');
-        downloadPng(svg, filename, this.canvas);//, {width: 2, height: 2});
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadFactorsPng: function (e) {
@@ -959,3 +988,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
     return DemographicDevelopmentView;
   }
 );
+
+function round(num, decimals){
+   var t = Math.pow(10, decimals);  
+   return (Math.round(num * t) / t);
+}
+
+// gives a german representation of a number with commas instead of points rounded by decimals
+// numbers without decimals get a trailing .0
+function roundRep(num, decimals) { 
+   var t = Math.pow(10, decimals);
+   return (Math.round((num * t) + (decimals>0?1:0)*(Math.sign(num) * (10 / Math.pow(100, decimals)))) / t).toFixed(decimals).replace('.',',');
+}

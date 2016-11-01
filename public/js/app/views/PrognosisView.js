@@ -228,6 +228,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             title.innerText = prognosis.get('name');
             description.innerHTML = prognosis.get('description');
             this.el.querySelector('#max-inhabitants').innerHTML = prognosis.get('max_bevstand');
+            this.el.querySelector('#base-year').innerHTML = prognosis.get('basisjahr');
             return true;
           }
         },

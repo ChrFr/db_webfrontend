@@ -95,6 +95,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
           columns.push({name: "id", description: "ID"});
           columns.push({name: "name", description: "Name"});
           columns.push({name: "description", description: "Beschreibung"});
+          columns.push({name: "basisjahr", description: "Basisjahr"});
           columns.push({name: "users", description: "berechtigte Nutzer"});
 
           _this.prognoses.each(function(prog){
@@ -105,6 +106,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
               'id': prog.get('id'),
               'name': prog.get('name'),
               'description': description,
+              'basisjahr': prog.get('basisjahr'),
               'users': prog.get('users')
             });
           });

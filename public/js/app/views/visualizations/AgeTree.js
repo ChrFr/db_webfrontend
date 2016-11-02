@@ -145,8 +145,8 @@ var AgeTree = function (options) {
       var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
       
       var text = 'Alter: ' + i + '<br>';
-      text += 'Anzahl weiblich: ' + _this.data.alter_weiblich[i] + '<br>';
-      text += 'Anzahl männlich: ' + _this.data.alter_maennlich[i] + '<br>';
+      text += 'Anzahl weiblich: <b>' + _this.data.alter_weiblich[i] + '</b><br>';
+      text += 'Anzahl männlich: <b>' + _this.data.alter_maennlich[i] + '</b><br>';
 
       tooltip.html(text);
 

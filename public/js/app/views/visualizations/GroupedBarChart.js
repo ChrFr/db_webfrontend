@@ -232,7 +232,8 @@ var GroupedBarChart = function (options) {
       bar.classed('highlight', true);
       tooltip.style('opacity', .9);
       var parent = d3.select(this.parentNode);
-      tooltip.html(_this.groupLabels[i] + '<br>' + _this.xlabel + ': ' + parent.datum().label + '<br><b>' + d + '</b>');
+      tooltip.html(_this.xlabel + ': ' + parent.datum().label + '<br>' +
+                   _this.groupLabels[i] + ': <b>' + d + '</b>');
 
       tooltip.style('left', (d3.event.pageX + 10) + 'px')
               .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');

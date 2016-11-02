@@ -215,9 +215,9 @@ var StackedBarChart = function (options) {
       tooltip.style('opacity', .9);
       
       d.values.forEach(function(value, i){
-        text += '<b>' + _this.stackLabels[i] + '</b>: ' + value + '<br>';
+        text += _this.stackLabels[i] + ': <b>' + value + '</b><br>';
       });      
-      text += '<b>gesamt</b>: ' + d.total + '<br>';
+      text += 'gesamt: <b>' + d.total + '</b><br>';
       tooltip.html(text);
       tooltip.style('left', (d3.event.pageX + 10) + 'px')
              .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');

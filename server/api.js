@@ -381,12 +381,15 @@ function aggregateByKey(array, key, options) {
     
     // get demographic development from database
     getData: function (req, res, rsArray, onSuccess) {
-      checkPermission(req.headers, req.params.pid, function (err, status, result) {
+      checkPermission(req.headers, req.params.pid, function (err, status, result) {        
+        var queryDescription = false;
         if (err)
           return res.status(status).send(err);
 
         var year = req.query.year,
-            queryString = "SELECT jahr, alter_weiblich, alter_maennlich, bevstand, geburten, tote, zuzug, fortzug FROM bevoelkerungsprognose WHERE prognose_id=$1",
+            queryString = "SELECT jahr, alter_weiblich, alter_maennlich, " + 
+                          "bevstand, geburten, tote, zuzug, fortzug " + 
+                          "FROM bevoelkerungsprognose WHERE prognose_id=$1",
             params = [req.params.pid];
         var i = 2;
         // array of rs?
@@ -401,7 +404,7 @@ function aggregateByKey(array, key, options) {
         // r single rs?
         else {
           queryString += " AND rs=$" + i;
-          params.push(req.params.rs);
+          params.push(req.params.rs);    
         }
         // specific year queried or all years?   
         if (year) {
@@ -416,7 +419,8 @@ function aggregateByKey(array, key, options) {
         query(queryString, params, function (err, result) {
           if (err || result.length === 0)
             return res.sendStatus(404);
-          return onSuccess(result);
+          else
+            return onSuccess(result);
         });
       });
     },
@@ -426,7 +430,9 @@ function aggregateByKey(array, key, options) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
         if (err)
           return res.status(status).send(err);
-        query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose WHERE prognose_id=$1 ORDER BY rs;", [req.params.pid], function (err, result) {
+        query("SELECT rs, jahr, bevstand FROM bevoelkerungsprognose " + 
+              "WHERE prognose_id=$1 ORDER BY rs;", 
+              [req.params.pid], function (err, result) {
           if (err || result.length === 0)
             return res.sendStatus(404);
           var response = [];
@@ -452,13 +458,20 @@ function aggregateByKey(array, key, options) {
     
     // get details of the demo.development in a spec. region
     getJSON: function (req, res) {
-      demodevelop.getData(req, res, null, function (result) {
+      demodevelop.getData(req, res, null, function (result) {         
         if (req.query.year)
           result = result[0];
-        return res.json({
-          rs: req.params.rs,
-          data: result
-        });
+        var resJSON = { rs: req.params.rs,
+                        description: "",
+                        data: result};   
+        query(
+            "SELECT description FROM basiseinheiten WHERE rs=$1;",
+            [req.params.rs],
+            function (err, descResult){
+              if (!err && descResult.length > 0 && descResult[0].description)
+                resJSON.description = descResult[0].description;   
+              return res.json(resJSON);
+        });          
       });
     },
     

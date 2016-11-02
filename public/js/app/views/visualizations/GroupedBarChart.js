@@ -21,6 +21,7 @@
  * @param options.maxY           optional, highest value of the y-axis
  * @param options.css            optional, css instructions, only needed if rendered on server
  * @param options.cssSource      optional, name of the embedded stylesheet (default: visualizations.css)
+ * @param options.separator      optional, separating line, drawn vertically at given x-Value
  * 
  * @see grouped bar chart
  */
@@ -37,6 +38,8 @@ var GroupedBarChart = function (options) {
   this.title = options.title || '';
   this.subtitle = options.subtitle || '';
   this.groupLabels = options.groupLabels;
+  this.separator = options.separator;
+  
   var minY = options.minY;
   if (minY === undefined)
     minY = d3.min(this.data, function (d) {
@@ -175,10 +178,14 @@ var GroupedBarChart = function (options) {
             .attr('transform', translation(0, innerheight))
             .call(xAxis)
             .selectAll("text")  
-                .style("text-anchor", "end")
-                .attr("dx", "-.8em")
-                .attr("dy", ".15em")
-                .attr("transform", "rotate(-65)" );
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-65)" )
+            .attr("font-weight", function(d){
+              if (d == _this.separator)
+                return "bold";
+            });;
 
     /*
      xApp.append('text')
@@ -237,7 +244,7 @@ var GroupedBarChart = function (options) {
     };
 
     groups.selectAll('rect')
-            .data(function (d) {
+            .data(function (d, i) {
               return d.values;
             })
             .enter().append('rect')
@@ -254,10 +261,27 @@ var GroupedBarChart = function (options) {
             .style('fill', function (d, i) {
               return colorScale(i);
             })
-
             .on('mouseover', mouseOverBar)
             .on('mouseout', mouseOutBar);
+        
+    groups.filter(function(d){
+              return d.label <= _this.separator;
+            })
+          .selectAll('rect')          
+          .style('opacity', function (d, i) {
+            return "0.8";
+          });
 
+    // won't get the ticks with xApp.selectAll, no idea why 
+    var sepTick = svg.selectAll('.x.axis g.tick')
+            .filter(function(d){
+              return d == _this.separator;
+            });
+    sepTick.selectAll('line')
+            .attr('class', 'separator')
+            .attr('y2', -innerheight)
+            .attr('transform', translation( x1Scale.rangeBand() * 3 / 2 + 2, 0));
+        
     function translation(x, y) {
       return 'translate(' + x + ',' + y + ')';
     }

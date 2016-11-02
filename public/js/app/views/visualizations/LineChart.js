@@ -20,7 +20,7 @@
  * @param options.maxY       optional, highest value of the y-axis
  * @param options.css        optional, css instructions
  * @param options.cssSource  optional, name of the embedded stylesheet (default: visualizations.css)
- * @param options.separator  optional, color of each line drawn from given data (in array, css-style)
+ * @param options.separator  optional, separating line, drawn vertically at given x-Value
  * @param options.colors     optional, color of each line drawn from given data (in array, css-style)
  * 
  * @see line chart

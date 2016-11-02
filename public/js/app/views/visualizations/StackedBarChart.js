@@ -21,6 +21,7 @@
  * @param options.maxY           optional, highest value of the y-axis
  * @param options.css            optional, css instructions, only needed if rendered on server
  * @param options.cssSource      optional, name of the embedded stylesheet (default: visualizations.css)
+ * @param options.separator      optional, separating line, drawn vertically at given x-Value
  * 
  * @see stacked bar chart
  */
@@ -39,9 +40,10 @@ var StackedBarChart = function (options) {
   this.stackLabels = options.stackLabels;
   this.bandName = options.bandName || 'band';
   this.maxY = options.maxY;
+  this.separator = options.separator;
 
   this.render = function (callback) {
-    //server-side d3 needs to be loaded seperately
+    //server-side d3 needs to be loaded separately
     if (!d3)
       var d3 = require('d3');
 
@@ -57,11 +59,12 @@ var StackedBarChart = function (options) {
       //stack the bars by adding the predecessor to its length
       for (var i = 0; i < d.values.length; i++) {
         var summed = (i == 0) ? d.values[0] : d.values[i] + d.mapped[i - 1].summed;
+        var label = d[_this.bandName];
         d.mapped.push({
           value: d.values[i],
           summed: summed,
           total: d.total,
-          label: d[_this.bandName]
+          label: label
         });
       }
       //reverse values, so that the bigger ones are drawn first (smaller ones are in front)
@@ -121,9 +124,9 @@ var StackedBarChart = function (options) {
     
     // background
     top.append("rect")
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .attr("fill", "white");
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("fill", "white");
 
     // create svg
     var svg = top.append('svg')
@@ -151,6 +154,9 @@ var StackedBarChart = function (options) {
     var xScale = d3.scale.ordinal()
             .rangeRoundBands([0, innerwidth], .1)
             .domain(this.data.map(function (d) {
+              /*
+              if (_this.separator == d[_this.bandName])
+                return 'Basisjahr' + d[_this.bandName];*/
               return d[_this.bandName];
             }));
 
@@ -178,21 +184,25 @@ var StackedBarChart = function (options) {
             .attr('transform', translation(0, innerheight))
             .call(xAxis)
             .selectAll("text")  
-                .style("text-anchor", "end")
-                .attr("dx", "-.8em")
-                .attr("dy", ".15em")
-                .attr("transform", "rotate(-65)" );
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-65)")
+            .attr("font-weight", function(d){
+              if (d == _this.separator)
+                return "bold";
+            });
 
     var yApp = svg.append('g')
             .attr('class', 'y axis')
             .call(yAxis);
 
     yApp.append('text')
-            .attr('y', 6)
-            .attr('dy', '0.71em')
-            .style('text-anchor', 'end')
-            .text(this.ylabel)
-            .attr('transform', 'rotate(-90), ' + translation(0, 0));
+        .attr('y', 6)
+        .attr('dy', '0.71em')
+        .style('text-anchor', 'end')
+        .text(this.ylabel)
+        .attr('transform', 'rotate(-90), ' + translation(0, 0));
 
     // BARS
 
@@ -245,10 +255,28 @@ var StackedBarChart = function (options) {
             })
             .style('fill', function (d, i) {
               return colorScale(i);
+            }) 
+            .style('opacity', function (d, i) {
+              if (d.label <= _this.separator)
+                return "0.7";
+              return "1.0";
             })  
-            //.on('mouseover', mouseOverBar)
-            //.on('mouseout', mouseOutBar);  
-           
+       
+    // won't get the ticks with xApp.selectAll, no idea why 
+    var sepTick = svg.selectAll('.x.axis g.tick')
+            .filter(function(d){
+              return d == _this.separator;
+            });
+    sepTick.selectAll('line')
+            .attr('class', 'separator')
+            .attr('y2', -innerheight)
+            .attr('transform', translation(xScale.rangeBand() / 4 + 2, 0));
+        /*
+    sepTick.append('text')
+            .attr('font-size', '0.8em')      
+            .style('text-anchor', 'end')
+            .text('Basisjahr')
+            .attr('transform', translation(0, margin.bottom));*/
     /*
     groups.selectAll('g')
             .data(this.data)
@@ -257,13 +285,13 @@ var StackedBarChart = function (options) {
             .attr('transform', function (d) {
               return translation(xScale(d[_this.bandName]), 0);
             });*/
-    
+    /*
     svg.append('text')
             .attr('x', innerwidth)
             .attr('y', 10)
             .attr('font-size', '1em')
             .attr('dy', '1em')
-            .text('Legende');
+            .text('Legende');*/
 
     var legend = svg.selectAll('.legend')
             .data(_this.stackLabels.slice())

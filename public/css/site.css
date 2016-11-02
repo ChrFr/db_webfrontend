@@ -61,11 +61,12 @@ body {
 
 .text-body{
     //background-color: white;
-    padding: 10px;
+    padding: 20px;
+    style: "display: block"
 }
 
 .text-body + .text-body{
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 table tbody tr.highlight, .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {

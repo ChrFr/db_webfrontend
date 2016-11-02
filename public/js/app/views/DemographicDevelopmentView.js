@@ -385,18 +385,17 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       renderDevTable: function (data) {
         var columns = [],
             title = 'Bevölkerungsentwicklung',
-            rows = [];
-
-        // adapt age data to build table (arrays to single entries)
-        columns.push({name: 'year', description: 'Jahr'});
-        columns.push({name: 'total', description: 'Bevölkerungszahl'});
-        columns.push({name: 'perc', description: 'Vergleich Basisjahr'});       
-                
-        var prog = app.get('activePrognosis'),
+            rows = [],      
+            prog = app.get('activePrognosis'),
             baseYear = prog.get('basisjahr'),
             baseYearTotal,
             years = [],
             totals = [];    
+
+        // adapt age data to build table (arrays to single entries)
+        columns.push({name: 'year', description: 'Jahr'});
+        columns.push({name: 'total', description: 'Bevölkerungszahl'});
+        columns.push({name: 'perc', description: 'Vergleich Basisjahr (' + baseYear + ')'});
         
         _.each(data, function (d) {
           years.push(d.jahr);
@@ -418,16 +417,14 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
             total: roundRep(totals[i], app.DECIMALS),
             perc: percRep
           });
-        });
-        
-        
+        });        
 
         this.devTable = new TableView({
           el: this.el.querySelector('#dev-data'),
           columns: columns,
           title: title,
           data: rows,
-          dataHeight: 400,
+          dataHeight: 500,
           pagination: false,
           highlight: true
         });
@@ -514,7 +511,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           columns: columns,
           title: title,
           data: rows,
-          dataHeight: 400,
+          dataHeight: 500,
           pagination: false,
           highlight: true
         });
@@ -560,7 +557,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           columns: columns,
           title: title + ' ' + yearData.jahr,// + ' - ' + this.currentModel.get('name'),
           data: data,
-          dataHeight: 400,
+          dataHeight: 500,
           pagination: false,
           startPage: state.page,
           pageSize: state.size,
@@ -968,7 +965,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
       },
       
       downloadRawCsv: function () {
-        var filename = this.currentModel.get('name') + '-Gesamtdaten.csv';
+        var filename = this.currentModel.get('name') + '-Bevoelkerungsprognose-Gesamtdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
         this.el.querySelector('#raw-data').style.display = 'none';

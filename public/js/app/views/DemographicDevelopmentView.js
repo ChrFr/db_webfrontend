@@ -230,19 +230,28 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         this.width = parseInt(this.el.querySelector('.tab-content').offsetWidth);
         var data = this.currentModel.get('data');
         
-        //visualizations        
+        // visualizations        
         this.renderAgeTree(this.yearData);
         this.renderDevelopment(data);
         this.renderFactorChart(data);
         this.renderAgeGroupChart(this.groupedData);
-        //data tables
+        // data tables
         this.renderAgeGroupTable(this.groupedData); // render 'Basisjahr'
         this.renderAgeTable(this.yearData);
         this.renderDevTable(data);
         this.renderFactorTable(data);
         this.renderRawData(data);
         
+        // description        
+        this.renderDescription(this.currentModel.get('description'));
         // TODO: change size of yearSlider
+      },
+      
+      renderDescription: function(html){
+        //if(html.length == 0)
+        //  html = "keine";
+        var div = this.el.querySelector('#dd-description');
+        div.innerHTML = html;
       },
       
       /* 
@@ -559,15 +568,42 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        */
       renderRawData: function (data) {
         var columns = [];
-        Object.keys(data[0]).forEach(function (i) {
-          if(i !== 'sumFemale' && i !== 'sumMale') // ignore clientside processed data
-            columns.push({name: i, description: i});
+        var maxAge = this.currentModel.get('maxAge');
+                
+        var mappedData = []
+        data.forEach(function (yearData, n){
+          
+          var yearMapped = new Array();
+          // transform data and split the age-columns
+          Object.keys(yearData).forEach(function (key) {  
+            if(key != 'sumFemale' && key != 'sumMale'){ // ignore clientside processed data              
+              if(key == 'alter_weiblich' || key == 'alter_maennlich'){
+                for(var i = 0; i < maxAge; i++){
+                  // header
+                  var splitName = i + '_' + key;
+                  if (n == 0)                
+                    columns.push({name: splitName, description: splitName});
+                  var nAge = 0;
+                  if (i < yearData[key].length)
+                    nAge = yearData[key][i]
+                  yearMapped[splitName] = roundRep(nAge, app.DECIMALS);
+                }               
+              }
+              else{
+                // header
+                if (n == 0)
+                  columns.push({name: key, description: key});
+                yearMapped[key] = yearData[key]
+              }
+            }                       
+          })
+          mappedData.push(yearMapped); 
         });
         
         this.rawTable = new TableView({
           el: this.el.querySelector('#raw-data'),
           columns: columns,
-          data: data,
+          data: mappedData,
           title: data[0].jahr + ' bis ' + data[data.length - 1].jahr,// + ' - ' + this.currentModel.get('name'),
           highlight: true
         });

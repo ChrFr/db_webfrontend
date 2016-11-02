@@ -288,9 +288,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
 
         // ABSOLUTE DATA
         
-        var prog = app.get('activePrognosis');
-        var baseYear = prog.get('basisjahr');    
-        var baseIndex = 0;
+        var prog = app.get('activePrognosis'),
+            baseYear = prog.get('basisjahr'),   
+            baseIndex = 0;
         
         _.each(data, function (d, i) {
             total.push(d.sumFemale + d.sumMale);
@@ -331,7 +331,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           subtitle: this.currentModel.get('name'),
           xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in absoluten Zahlen',
-          groupLabels: ['Realdaten', 'Prognosedaten'],
+          groupLabels: ['Ist-Daten', 'Prognosedaten'],
           colors: ["RoyalBlue", "YellowGreen"],
           separator: prog.get('basisjahr'),
           minY: 0
@@ -433,7 +433,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
        * render bar chart with factors influencing the development
        */
       renderFactorChart: function (data) {
-        var dataSets = [];
+        var dataSets = [],            
+            prog = app.get('activePrognosis');
         
         // base year shouldn't have data of development factors
         for(var i = 1; i < data.length; i++){
@@ -465,6 +466,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
           xlabel: 'Jahr',
           groupLabels: ['Natürlicher Saldo', 'Wanderungssaldo', 'Gesamtsaldo'],
           ylabel: 'Zuwachs',
+          separator: prog.get('basisjahr'),
           yNegativeLabel: 'Abnahme'
         });
         this.factorChart.render();
@@ -526,7 +528,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         if (yearData.jahr == baseYear)
           title = 'Basisjahr';
         else if(yearData.jahr < baseYear)
-          title = 'Realdaten';
+          title = 'Ist-Daten';
         else
           title = 'Prognose';
 
@@ -580,7 +582,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
               if(key == 'alter_weiblich' || key == 'alter_maennlich'){
                 for(var i = 0; i < maxAge; i++){
                   // header
-                  var splitName = i + '_' + key;
+                  var splitName = i + '_' + key.replace("alter", "jahre");;
                   if (n == 0)                
                     columns.push({name: splitName, description: splitName});
                   var nAge = 0;

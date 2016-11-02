@@ -21,7 +21,7 @@
  * @param options.maxY           optional, highest value of the y-axis
  * @param options.css            optional, css instructions, only needed if rendered on server
  * @param options.cssSource      optional, name of the embedded stylesheet (default: visualizations.css)
- * @param options.separator      optional, color of each line drawn from given data (in array, css-style)
+ * @param options.separator      optional, separating line, drawn vertically at given x-Value
  * 
  * @see stacked bar chart
  */
@@ -43,7 +43,7 @@ var StackedBarChart = function (options) {
   this.separator = options.separator;
 
   this.render = function (callback) {
-    //server-side d3 needs to be loaded seperately
+    //server-side d3 needs to be loaded separately
     if (!d3)
       var d3 = require('d3');
 
@@ -270,7 +270,7 @@ var StackedBarChart = function (options) {
     sepTick.selectAll('line')
             .attr('class', 'separator')
             .attr('y2', -innerheight)
-            .attr('transform', translation(10, 0));
+            .attr('transform', translation(xScale.rangeBand() / 4 + 2, 0));
         /*
     sepTick.append('text')
             .attr('font-size', '0.8em')      
@@ -285,13 +285,13 @@ var StackedBarChart = function (options) {
             .attr('transform', function (d) {
               return translation(xScale(d[_this.bandName]), 0);
             });*/
-    
+    /*
     svg.append('text')
             .attr('x', innerwidth)
             .attr('y', 10)
             .attr('font-size', '1em')
             .attr('dy', '1em')
-            .text('Legende');
+            .text('Legende');*/
 
     var legend = svg.selectAll('.legend')
             .data(_this.stackLabels.slice())

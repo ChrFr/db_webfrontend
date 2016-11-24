@@ -101,6 +101,10 @@ th{
     min-height: 20px;
 }
 
+.box-footer{
+    margin-bottom: 65px;
+}
+
 .tab-content, #summary{
     width: 100%;
     z-index: 10;

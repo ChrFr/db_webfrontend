@@ -358,7 +358,7 @@ function aggregateByKey(array, key, options) {
                         
           var sig_sql = "SELECT a.min_rel, a.max_rel, b.max_bevstand, b.bevstand " + 
               "FROM (SELECT min(min_rel) AS min_rel, max(max_rel) AS max_rel FROM min_max_bevprog WHERE prognose_id = $1) AS a " + 
-              "NATURAL JOIN (SELECT ARRAY_AGG(bevstand) AS bevstand, max(bevstand) AS max_bevstand FROM gesamtgebiete WHERE prognose_id = $1) AS b";
+              "NATURAL JOIN (SELECT ARRAY_AGG(bevstand) AS bevstand, max(bevstand) AS max_bevstand FROM gesamtgebiete WHERE prognose_id = $1) AS b"
           
           query(sig_sql, [req.params.pid], function (err, sig_data) {   
             if(err)
@@ -487,6 +487,99 @@ function aggregateByKey(array, key, options) {
             data: aggregateByKey(result, 'jahr', {keyIsInt: true})
           });
         });
+    },
+        
+    /* DEACTIVATED: serverside conversion of data into csv, png, svg */
+    
+    csv: function (req, res) {
+      checkPermission(req.headers, req.params.pid, function (err, status, result) {
+        if (err)
+          return res.status(status).send(err);
+
+        var year = req.query.year;
+
+        demodevelop.getData(req, res, null, function (result) {
+          res.statusCode = 200;
+
+          //MIME Type and filename
+          res.set('Content-Type', 'text/csv');
+          var filename = req.params.rs + '-bevoelkerungsprognose';
+
+          var expanded = "Bevoelkerungsprognose " + req.params.rs;
+          if (year) {
+            filename += '-' + year;
+            expanded += " " + year;
+          }
+          res.setHeader('Content-disposition', 'attachment; filename=' + filename + ".csv");
+
+          for (var i = 0; i < result.length; i++) {
+            if (year)
+              delete result[i]['jahr'];
+
+            expanded += "\n" + expandJsonToCsv({
+              data: result[i],
+              renameFields: {'alter_weiblich': 'Anzahl weiblich',
+                'alter_maennlich': 'Anzahl maennlich'},
+              countName: 'Alter',
+              countPos: (year) ? 0 : 1,
+              writeHead: (i === 0) ? true : false
+            }) + '\n';
+          }
+          res.send(expanded);
+        });
+      });
+    },
+    
+    //converts to SVG
+    svg: function (req, res) {
+      var Render = require('./render');
+      if (!req.query.year)
+        res.status(400).send('SVGs können nur für spezifische Jahre angezeigt werden.');
+      else
+        demodevelop.getData(req, res, null, function (result) {
+          Render.renderAgeTree({
+            data: result[0],
+            width: 400,
+            height: 600
+          }, function (svg) {
+            //MIME Type and filename
+            res.set('Content-Type', 'image/svg+xml');
+            var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".svg";
+            res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+            return res.status(200).send(svg);
+          });
+        });
+    },
+    
+    //converts agetree to PNG
+    agetree: function (req, res) {
+      var Render = require('./render');
+      if (!req.query.year)
+        return res.status(400).send('PNGs können nur für spezifische Jahre angezeigt werden.');
+
+      demodevelop.getData(req, res, null, function (result) {
+        Render.renderAgeTree({
+          data: result[0],
+          width: 400,
+          height: 600,
+          maxX: req.query.maxX
+        }, function (svg) {
+          //MIME Type and filename
+          res.set('Content-Type', 'image/png');
+          var filename = req.params.rs + '-bevoelkerungsprognose-' + req.query.year + ".png";
+          res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+
+          var convert = child_proc.spawn("convert", ["svg:", "png:-"]);
+          convert.stdout.on('data', function (data) {
+            res.write(data);
+          });
+          convert.on('exit', function (code) {
+            return res.end();
+          });
+          convert.stdin.write(svg);
+          convert.stdin.end();
+        });
+      });
     }
   };  
   
@@ -801,9 +894,29 @@ function aggregateByKey(array, key, options) {
           
           '/aggregiert': {
             get: demodevelop.getAggregation
+            /*
+            '/svg': {
+              get: demodevelop.svg
+            },
+            '/csv': {
+              get: demodevelop.csv
+            },
+            '/png': {
+              get: demodevelop.agetree
+            }*/
           },
           '/:rs': {
             get: demodevelop.getJSON
+            /*
+            '/svg': {
+              get: demodevelop.svg
+            },
+            '/csv': {
+              get: demodevelop.csv
+            },
+            '/png': {
+              get: demodevelop.agetree
+            }*/
           }
         }
       }
@@ -814,7 +927,7 @@ function aggregateByKey(array, key, options) {
       post: users.post,
       '/login': {
         get: users.validateCookie,
-        delete: users.logout
+        delete: users.logout,
         //post: users.login
       },
       '/:id': {

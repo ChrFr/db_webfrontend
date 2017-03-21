@@ -139,10 +139,6 @@
         box-shadow: 1px -1px 1px 0px grey;
     }
     
-    #main-menu .menu-link:focus{            
-        outline: none;
-    }
-    
     #main-collapse .active a, #main-collapse a:not(#login-status):hover{    
         height: 45px;
         margin-top: 5px;
@@ -158,11 +154,10 @@
         top: -10px;
         transition: all 0.2s;
         transition-timing-function: ease-out;
-        display: block;   
-        
-        /*box-shadow: 1px -1px 3px 0px grey;
-        transition: all 0.1s;
-        height: 0px;*/
+        display: block;        
+        //box-shadow: 1px -1px 3px 0px grey;
+        //transition: all 0.1s;
+        //height: 0px;
     }
 
     .submenu.active{        
@@ -179,8 +174,7 @@
         color: white;
         background-color: #454545;
         box-sizing: border-box;
-        
-        /*background: linear-gradient( to top, gold 10%, #454545 25%);*/
+        //background: linear-gradient( to top, gold 10%, #454545 25%);
         border-bottom: solid 5px gold;
     }
     

@@ -1,8 +1,8 @@
 {
-  "name": "Verkehrsplanungstool",
-  "title": "GGR Verkehrsplanungstool",
-  "description": "Bachelor thesis, simple webbased traffic planning tool for public participations",
-  "version": "0.0.1",
+  "name": "db_webfrontend",
+  "title": "GGR Prognosen Webfrontend",
+  "description": "Webfrontend for visualizing prognoses stored in a database",
+  "version": "1.0",
   "homepage": "https://github.com/ChrFr/ggr-webfrontend",
   "author": {
     "name": "Christoph Franke",

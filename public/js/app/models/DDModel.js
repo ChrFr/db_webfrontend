@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(["app", "backbone"],
 
     function(app, Backbone) {

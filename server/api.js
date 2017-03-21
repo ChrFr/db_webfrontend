@@ -1,6 +1,6 @@
 // 28.04.2015
 // author: Christoph Franke
-// client: GGR
+// publisher: GGR
 // purpose: api-routing, map routes to functions
 
 module.exports = function () {
@@ -23,8 +23,9 @@ module.exports = function () {
   };
     
   fs.stat(masterfile, function(err, stat) {
-    if(err == null)
-        masterkey = fs.readFileSync('./server/masterkey.txt', 'utf8');     
+    if(err == null){
+        masterkey = fs.readFileSync(masterfile, 'utf8');   
+      }
   });
 
   //Mapping taken from express examples https://github.com/strongloop/express

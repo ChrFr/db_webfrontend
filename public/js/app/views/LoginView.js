@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(['app', 'jquery', 'backbone', 'text!templates/login.html', 'views/misc'],
   function (app, $, Backbone, template) {
     

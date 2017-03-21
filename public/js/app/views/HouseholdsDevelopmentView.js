@@ -1,8 +1,12 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(['app', 'jquery', 'backbone', 'text!templates/hhdevelop.html'],
 
     function(app, $, Backbone, template){
       /** 
-      * @author Christoph Franke
       * 
       * @desc view on development of households
       *  

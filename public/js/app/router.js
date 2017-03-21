@@ -1,10 +1,14 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(['app', 'backbone', 'views/CustomView',
   'views/LoginView', 'views/PrognosisView', 'views/AdminView',
   'text!templates/home.html', 'text!templates/legaldetails.html'],
   function (app, Backbone, Custom, Login, Prognosis, Admin, homeTemplate, legalTemplate) {
             
     /** 
-    * @author Christoph Franke
     * 
     * @desc Routes the applications URL's when using hash tags. 
     */        

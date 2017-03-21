@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(["backbone","models/PrognosisModel"],
 
     function(Backbone, PrognosisModel) {

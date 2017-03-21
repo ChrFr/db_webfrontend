@@ -101,12 +101,16 @@ th{
     min-height: 20px;
 }
 
+.box-footer{
+    margin-bottom: 65px;
+}
+
 .tab-content, #summary{
     width: 100%;
     z-index: 10;
     padding-bottom: 20px; 
-    margin-top: -1px;
     min-height: 200px;
+    //margin-top: -1px; meant to close a little gap between boxes, but causes visualizations to slip to the right at some resolutions
 }
 
 #tables .tab-content{    

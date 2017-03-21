@@ -1,3 +1,8 @@
+/*
+ Author: Christoph Franke
+ Publisher: GGR
+ */
+
 define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "tableexport", 'views/misc'],
     function(Backbone, $, template){
       /*

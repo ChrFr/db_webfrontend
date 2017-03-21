@@ -20,7 +20,8 @@ var express = require("express"),
 // SERVER CONFIGURATION
 
 // morgan logger for automated logging (logs all requests in seperate daily files)
-fs.existsSync(__dirname + '/../logs') || fs.mkdirSync(__dirname + '/../logs'); //create parent directory if not exists
+// create parent directory if not exists
+fs.existsSync(__dirname + '/../logs') || fs.mkdirSync(__dirname + '/../logs'); 
 var logDirectory = __dirname + '/../logs/daily-access';
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
 var accessLogStream = FileStreamRotator.getStream({

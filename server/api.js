@@ -513,29 +513,48 @@ function aggregateByKey(array, key, options) {
         var name = result[0].name,
             progId = req.query.progId,
             level = result[0].agg_level,
-            params = [];        
+            params = [];     
+            
+        var queryStr = ''; 
+        
+        // aggregation level of 0 is same as base units, returned rs arrays
+        // equal the id of the base unit (both the rs)
+        if (level === 0){
+            queryStr = 'SELECT rs AS id, name, ARRAY[rs] AS rs ' + 
+                       'FROM basiseinheiten '
+            if (progId){
+              queryStr += 'WHERE prognose_id=$1 ';
+              params.push(progId);
+            }
+        }        
+        else {
 
-        // grouped inner join of specific layer and subunits -> aggregate rs of subunits
-        var queryStr = "SELECT T.raumeinheit_id AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
-            "FROM (SELECT * FROM aggregierte_raumeinheiten WHERE ";
-        
-        if (progId){
-          queryStr += "prognose_id=$1 and ";
-          params.push(progId);
+            // grouped inner join of specific layer and subunits -> aggregate rs of subunits
+            queryStr = 
+                "SELECT T.raumeinheit_id AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
+                "FROM (SELECT * FROM aggregierte_raumeinheiten WHERE ";
+
+            if (progId){
+              queryStr += "prognose_id=$1 and ";
+              params.push(progId);
+            }
+            params.push(level);
+
+            queryStr += "agg_level=$2) AS T " +
+                        "INNER JOIN " +
+                        "(SELECT DISTINCT rs, name, agg_level{level}_id " +
+                        "FROM basiseinheiten ";
+
+            if (progId)
+              queryStr += "WHERE prognose_id=$1";
+
+            queryStr += ") AS G ON T.raumeinheit_id=G.agg_level{level}_id " + 
+                        "GROUP BY T.name, raumeinheit_id";
+            // pgquery doesn't seem to allow passing names to columns
+            // they are taken from a db-table anyway, so it's be safe to replace directly
+            queryStr = queryStr.replace(new RegExp('{level}', 'g'), level);
         }
-        params.push(level);
         
-        queryStr += "agg_level=$2) AS T " +
-            "INNER JOIN (SELECT DISTINCT rs, name, agg_level{level}_id FROM basiseinheiten ";
-        
-        if (progId)
-          queryStr += "WHERE prognose_id=$1";
-        
-        queryStr += ") AS G ON T.raumeinheit_id=G.agg_level{level}_id GROUP BY T.name, raumeinheit_id";
-        
-        // pgquery doesn't seem to allow passing names to columns
-        // they are taken from a db-table anyway, so it's be safe to replace directly
-        queryStr = queryStr.replace(new RegExp('{level}', 'g'), level);
         query(queryStr, params, function (err, result) {
           return res.status(200).send({
             'id': req.params.id,

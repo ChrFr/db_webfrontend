@@ -377,12 +377,11 @@ function aggregateByKey(array, key, options) {
   
   // ROUTE /prognosen/:pid/bevoelkerungsprognose
 
-  var demodevelop = {
+  var demographics = {
     
     // get demographic development from database
     getData: function (req, res, rsArray, onSuccess) {
-      checkPermission(req.headers, req.params.pid, function (err, status, result) {        
-        var queryDescription = false;
+      checkPermission(req.headers, req.params.pid, function (err, status, result) {   
         if (err)
           return res.status(status).send(err);
 
@@ -425,7 +424,7 @@ function aggregateByKey(array, key, options) {
       });
     },
     
-    // shows an undetailed preview of the demodevelopments in all regions
+    // shows an undetailed preview of the demographics in all regions
     list: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
         if (err)
@@ -458,7 +457,109 @@ function aggregateByKey(array, key, options) {
     
     // get details of the demo.development in a spec. region
     getJSON: function (req, res) {
-      demodevelop.getData(req, res, null, function (result) {         
+      common.getJSON(req, res, demographics);
+    },    
+    
+    // get a list of data for aggregated regions
+    getAggregation: function (req, res) {
+      common.getAggregation(req, res, demographics);
+    }
+  };  
+  
+   // ROUTE /prognosen/:pid/haushaltsprognose
+
+  var households = {
+    
+    // get demographic development from database
+    getData: function (req, res, rsArray, onSuccess) {
+      checkPermission(req.headers, req.params.pid, function (err, status, result) {   
+        if (err)
+          return res.status(status).send(err);
+
+        var year = req.query.year,
+            queryString = "SELECT jahr, hhstand " + 
+                          "FROM haushaltsprognose WHERE prognose_id=$1",
+            params = [req.params.pid];
+        var i = 2;
+        // array of rs?
+        if (rsArray && rsArray instanceof Array) {
+          var p = [];
+          for (i; i < rsArray.length + 2; i++)
+            p.push('$' + i);
+
+          queryString += " AND rs IN (" + p.join(",") + ")";
+          params = params.concat(rsArray);
+        }
+        // r single rs?
+        else {
+          queryString += " AND rs=$" + i;
+          params.push(req.params.rs);    
+        }
+        // specific year queried or all years?   
+        if (year) {
+          queryString += " AND jahr=$3 ";
+          params.push(year);
+        }
+        // else all years ordered by year
+        else {
+          queryString += ' ORDER BY jahr';
+        };
+
+        query(queryString, params, function (err, result) {
+          if (err || result.length === 0)
+            return res.sendStatus(404);
+          else
+            return onSuccess(result);
+        });
+      });
+    },
+    
+    // shows an undetailed preview of the demographics in all regions
+    list: function (req, res) {
+      checkPermission(req.headers, req.params.pid, function (err, status, result) {
+        if (err)
+          return res.status(status).send(err);
+        query("SELECT rs, jahr, hhstand FROM haushaltsprognose " + 
+              "WHERE prognose_id=$1 ORDER BY rs;", 
+              [req.params.pid], function (err, result) {
+          if (err || result.length === 0)
+            return res.sendStatus(404);
+          var response = [];
+          var entry = {'rs': ''};
+          result.forEach(function (r) {
+            //new rs -> push previous entry in response and create new entry
+            if (r.rs !== entry.rs) {
+              if (entry.data){
+                response.push(entry);  
+              }
+              entry = {'rs': r.rs, 'data': []};
+            }
+            delete r.rs;
+            entry.data.push(r);
+          });
+          // push the final entry
+          if(entry) 
+            response.push(entry); 
+          return res.status(200).send(response);
+        });
+      });
+    },
+    
+    // get details of the demo.development in a spec. region
+    getJSON: function (req, res) {
+      common.getJSON(req, res, households);
+    },    
+    
+    // get a list of data for aggregated regions
+    getAggregation: function (req, res) {
+      common.getAggregation(req, res, households);
+    }
+  }; 
+  
+  var common = {
+  
+    getJSON: function (req, res, prognosis) {
+      prognosis.getData(req, res, null, function (result) {         
         if (req.query.year)
           result = result[0];
         var resJSON = { rs: req.params.rs,
@@ -474,21 +575,42 @@ function aggregateByKey(array, key, options) {
         });          
       });
     },
-    
+
     // get a list of data for aggregated regions
-    getAggregation: function (req, res) {
+    getAggregation: function (req, res, prognosis) {
       var rsList = req.query.rs;
       if (!rsList)
         return res.status(400).send('Für Aggregationen werden die Regionalschlüssel als Parameter benötigt.');
       else
-        demodevelop.getData(req, res, rsList, function (result) {
-          return res.json({
+        prognosis.getData(req, res, rsList, function (result) {
+          var resJSON = {
             rs: rsList,
             data: aggregateByKey(result, 'jahr', {keyIsInt: true})
-          });
+          };
+          var i = 1;
+          var p = [];
+          for (i; i < rsList.length + 1; i++)
+            p.push('$' + i);
+
+          var queryString = "SELECT description FROM basiseinheiten WHERE " +
+                            "rs IN (" + p.join(",") + ")";
+
+          query(
+            queryString,
+            rsList,
+            function (err, descResult){
+              var descriptions = [];
+              if (!err && descResult.length > 0){
+                  descResult.forEach(function(descRes){
+                      descriptions.push(descRes.description);
+                  });
+              }
+              resJSON.description = descriptions;   
+              return res.json(resJSON);
+          });   
         });
     }
-  };  
+  };
   
   // ROUTE /layers
 
@@ -521,7 +643,7 @@ function aggregateByKey(array, key, options) {
         // equal the id of the base unit (both the rs)
         if (level === 0){
             queryStr = 'SELECT rs AS id, name, ARRAY[rs] AS rs ' + 
-                       'FROM basiseinheiten '
+                       'FROM basiseinheiten ';
             if (progId){
               queryStr += 'WHERE prognose_id=$1 ';
               params.push(progId);
@@ -816,13 +938,23 @@ function aggregateByKey(array, key, options) {
         put: prognosen.put,
         delete: prognosen.delete,
         '/bevoelkerungsprognose': {
-          get: demodevelop.list,
+          get: demographics.list,
           
           '/aggregiert': {
-            get: demodevelop.getAggregation
+            get: demographics.getAggregation
           },
           '/:rs': {
-            get: demodevelop.getJSON
+            get: demographics.getJSON
+          }
+        },        
+        '/haushaltsprognose': {
+          get: households.list,
+          
+          '/aggregiert': {
+            get: households.getAggregation
+          },
+          '/:rs': {
+            get: households.getJSON
           }
         }
       }

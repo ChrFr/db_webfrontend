@@ -7,7 +7,7 @@ define(["app", "backbone"],
 
     function(app, Backbone) {
 
-        var DemographicDevelopmentModel = Backbone.Model.extend({
+        var DemographicsModel = Backbone.Model.extend({
             idAttribute: 'rs',
             
             urlRoot: 'api/prognosen/{progId}/bevoelkerungsprognose/',
@@ -76,44 +76,7 @@ define(["app", "backbone"],
                 if(progId)
                     this.urlRoot = this.urlRoot.replace('{progId}', progId);
             }
-            /*
-            serverside rendering is deactivated by now! rendered clientside
-            
-            download: function(url, mimeType, fn){                
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', url, true);
-                xhr.responseType = 'arraybuffer';
-
-                xhr.onload = function(e) {
-                  if (this.status == 200) {
-                    var blob = new Blob([xhr.response], {type: mimeType});
-                    saveAs(blob, fn);
-                  }
-                };
-
-                xhr.setRequestHeader("id", app.session.get('user').id );
-                xhr.setRequestHeader("token", app.session.get('token'));
-                xhr.send();
-            },
-            
-            downloadCsv: function(year, fn){
-                var url = this.urlRoot || this.url;
-                url += this.get('rs') + '/csv';
-                if(year)
-                    url += '?year=' + year;
-                this.download(url, "text/csv", fn ||  this.get('rs') + "-" + year + ".png");
-            },
-            
-            downloadAgeTreePng: function(year, maxX, fn){
-                var url = this.urlRoot || this.url;
-                url += this.get('rs') + '/png?year=' + year;
-                if(maxX)
-                    url += '&maxX=' + maxX;
-                
-                this.download(url, "image/png", fn ||  this.get('rs') + "-" + year + ".png");
-            }
-            */
         });
-        return DemographicDevelopmentModel;
+        return DemographicsModel;
     }
 );

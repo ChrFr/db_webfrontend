@@ -3,8 +3,8 @@
  Publisher: GGR
  */
 
-define(['backbone', 'models/DDModel', 'models/DDAggregate'],
-  function (Backbone, DDModel, DDAggregate) {
+define(['backbone'],
+  function (Backbone) {
 
     /** 
      * @author Christoph Franke
@@ -15,17 +15,8 @@ define(['backbone', 'models/DDModel', 'models/DDAggregate'],
      *  
      * @return the DemographicDevelopmentCollection class
      */   
-    var DemographicDevelopmentCollection = Backbone.Collection.extend({
-      // Tells the Backbone Collection that all of it's models will be of type Model 
-      // (listed up top as a dependency), models can be AggregateModels as well (derived) 
-      model: DDModel,
-      url: 'api/prognosen/{progId}/bevoelkerungsprognose/',
-      
-      initialize: function (options) {
-        this.progId = options.progId;
-        this.url = this.url.replace('{progId}', this.progId);
-      },
-      
+    var GenericPrognosisDataCollection = Backbone.Collection.extend({
+        
       // Override
       // set the url to each model matching the id of current prognosis
       fetch: function (options) {
@@ -82,7 +73,7 @@ define(['backbone', 'models/DDModel', 'models/DDAggregate'],
           return model.get('id') == id;
         });
         if (!model) {
-          model = new DDAggregate({
+          model = new this.AggregateModel({
             id: id,
             name: name,
             progId: this.progId,
@@ -103,6 +94,6 @@ define(['backbone', 'models/DDModel', 'models/DDAggregate'],
       reader.readAsText(file);
       }       
     });
-    return DemographicDevelopmentCollection;
+    return GenericPrognosisDataCollection;
   }
 );

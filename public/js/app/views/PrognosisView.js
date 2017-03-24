@@ -3,10 +3,11 @@
  Publisher: GGR
  */
 
-define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/DemographicDevelopmentView',
-  'views/HouseholdsDevelopmentView', 'collections/SubunitCollection', 'collections/LayerCollection',
+define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 
+  'views/DemographicsView', 'views/HouseholdsView', 
+  'collections/SubunitCollection', 'collections/LayerCollection',
   'views/OptionView', 'views/visualizations/Map', 'views/Loader', 'views/misc'],
-    function($, app, Backbone, template, DemographicDevelopmentView, HouseholdsDevelopmentView,
+    function($, app, Backbone, template, DemographicsView, HouseholdsView,
         SubunitCollection, LayerCollection, OptionView){
 
       /** 
@@ -162,11 +163,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                 _this.ddView.close();
               if(_this.hhView)
                 _this.hhView.close();
-              _this.ddView = new DemographicDevelopmentView({
-                el: _this.el.querySelector('#dd-tab').appendChild(document.createElement('div'))
+              _this.ddView = new DemographicsView({
+                el: _this.el.querySelector('#dd-tab').appendChild(
+                        document.createElement('div'))
               });
-              this.hhView = new HouseholdsDevelopmentView({
-                el: _this.el.querySelector('#hh-tab').appendChild(document.createElement('div'))
+              _this.hhView = new HouseholdsView({
+                el: _this.el.querySelector('#hh-tab').appendChild(
+                        document.createElement('div'))
               });
             }
             else{
@@ -216,7 +219,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
          * render the start messages like description and title
          */
         renderOverview: function(prognosis){
-          var map = this.el.querySelector('#map-header');
           var title = this.el.querySelector('#title');
           var description = this.el.querySelector('#description');          
           if(!app.get('session').get('user')){
@@ -276,7 +278,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
             _this.el.querySelector('#selection-label').innerHTML = 'aktuelle Auswahl: <b>Gesamtgebiet</b><br>';
           }
 
-          // SPECIFIC CUSTOM LAYER (e.g. landkreise)
+          // BASE AND AGGREGATION LAYERS (e.g. landkreise)
           else {
             multiTip.style.display = 'block';
 
@@ -415,17 +417,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                     
           _this.map.removeMaps();
 
-/*
-          _this.map.render({
-            topology: topology,
-            subunits: subunits,
-            aggregates: options.aggregates,
-            isTopoJSON: false,
-            callback: options.callback,
-            boundaries: prog.get('boundaries'),
-            onClick: onClick
-          });
-            */
           _this.map.render({
             topology: topology,
             subunits: subunits,

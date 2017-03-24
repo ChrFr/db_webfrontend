@@ -13,7 +13,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/hhdevelop.html'],
       * @return the HouseholdsDevelopmentView class
       * @see    nothing yet besides placeholder text
       */        
-      var HouseholdsDevelopmentView = Backbone.View.extend({
+      var HouseholdsView = Backbone.View.extend({
         // The DOM Element associated with this view
         el: document,
         // View constructor
@@ -42,8 +42,6 @@ define(['app', 'jquery', 'backbone', 'text!templates/hhdevelop.html'],
       });
 
       // Returns the View class
-      return HouseholdsDevelopmentView;
-
+      return HouseholdsView;
     }
-
 );

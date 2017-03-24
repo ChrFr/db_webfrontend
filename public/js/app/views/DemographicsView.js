@@ -3,11 +3,15 @@
  Publisher: GGR
  */
 
-define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
-  'views/TableView', 'd3', 'd3slider', 'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
-  'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
-  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/conversion', 'views/misc', 'jspdf'],
-  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider, CustomView) {
+define(['jquery', 'app', 'backbone', 'text!templates/demographics.html', 
+  'collections/DemographicsCollection', 'views/TableView', 'd3', 'd3slider', 
+  'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 
+  'views/visualizations/Map', 'views/visualizations/LineChart', 
+  'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
+  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 
+  'views/conversion', 'views/misc', 'jspdf'],
+  function ($, app, Backbone, template, DemographicsCollection, TableView, 
+            d3, d3slider, CustomView) {
             
     /** 
      * 
@@ -21,7 +25,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
      * @return the DemographicDevelopmentView class (for chaining)
      * @see    data-visualisations, data-tables
      */        
-    var DemographicDevelopmentView = Backbone.View.extend({
+    var DemographicsView = Backbone.View.extend({
       // The DOM Element associated with this view
       el: document,
       
@@ -36,7 +40,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
         if (progId) {
           // container for all demographic developments (aggregated regions too)
           // serves as cache
-          this.collection = new DDCollection({progId: progId});
+          this.collection = new DemographicsCollection({progId: progId});
           this.collection.fetch({success: this.render});
           this.width = options.width;
         }       
@@ -1027,7 +1031,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collect
     });
 
     // return the view class (for chaining)
-    return DemographicDevelopmentView;
+    return DemographicsView;
   }
 );
 

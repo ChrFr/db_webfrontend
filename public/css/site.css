@@ -139,6 +139,10 @@ th{
     border-radius: 0 0 0 0;
 }
 
+.nav-tabs > li > a:focus{            
+    outline: none;
+}
+
 /* DEACTIVATED CUSTOM NAVTABS
 .nav-tabs > li > a{
     z-index: 1;

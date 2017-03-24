@@ -139,7 +139,7 @@
         box-shadow: 1px -1px 1px 0px grey;
     }
     
-    #main-menu .menu-link:focus{            
+    #main-menu .menu-link:focus, #prognosis-submenu a:focus{            
         outline: none;
     }
     

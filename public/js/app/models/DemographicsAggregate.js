@@ -3,11 +3,11 @@
  Publisher: GGR
  */
 
-define(["backbone", "models/DDModel"],
+define(["backbone", "models/DemographicsModel"],
 
-    function(Backbone, DDModel) {
+    function(Backbone, DemographicsModel) {
 
-        var DemographicDevelopmentAggregate = DDModel.extend({
+        var DemographicsAggregate = DemographicsModel.extend({
             //idAttribute: 'rs',
             
             urlRoot: null,
@@ -26,6 +26,6 @@ define(["backbone", "models/DDModel"],
                     this.url = this.url.replace('{rs}', 'rs[]=' + rs.join('&rs[]='));
             }
         });
-        return DemographicDevelopmentAggregate;
+        return DemographicsAggregate;
     }
 );

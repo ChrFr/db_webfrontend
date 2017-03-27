@@ -44,101 +44,102 @@ module.exports = function () {
       }
     }
   };
-/*
- * @desc aggregate a list of json-objects by given key, by now only sum or 
- *       averages of group-values
- * 
- * @param array             array of json-objects, all json objects have to be uniform,
- *                          that means, they contain the same keys,
- *                          values can be single values or arrays of values
- * @param key               the key, that determines the structure of the aggregate,
- *                          remains untouched
- * @param options.mode      mode for aggregation of values
- *                          if mode as single string is given, all keys get this mode
- *                          if object is given, specify which key gets which mode
- *                          (if not defined, key gets default mode), 
- *                          by now only modes 'sum' or 'average' allowed (default: 'sum') 
- * @param options.isIntKey  true, if the given key is an integer value
- *  
- * @returns aggregated      aggregated json object, keys remain
- */ 
-function aggregateByKey(array, key, options) {
-  var defaultMode = 'sum',
-      mode = options.mode || defaultMode,
-      groups = {},
-      keyModes= {};
-  
-  // build an object with all keys and their modes as values
-  // on the basis of the first json, (all json-objects are expected to be uniform)
-  for (k in array[0]){    
-    if (typeof mode === 'object'){
-      if(k in mode)
-        keyModes[k] = mode[k];
-      else 
-        keyModes[k] = defaultMode;
-    }
-    // mode is a string
-    else 
-      keyModes[k] = mode;
-  }
+    
+  /*
+   * @desc aggregate a list of json-objects by given key, by now only sum or 
+   *       averages of group-values
+   * 
+   * @param array             array of json-objects, all json objects have to be uniform,
+   *                          that means, they contain the same keys,
+   *                          values can be single values or arrays of values
+   * @param key               the key, that determines the structure of the aggregate,
+   *                          remains untouched
+   * @param options.mode      mode for aggregation of values
+   *                          if mode as single string is given, all keys get this mode
+   *                          if object is given, specify which key gets which mode
+   *                          (if not defined, key gets default mode), 
+   *                          by now only modes 'sum' or 'average' allowed (default: 'sum') 
+   * @param options.isIntKey  true, if the given key is an integer value
+   *  
+   * @returns aggregated      aggregated json object, keys remain
+   */ 
+  function aggregateByKey(array, key, options) {
+    var defaultMode = 'sum',
+        mode = options.mode || defaultMode,
+        groups = {},
+        keyModes= {};
 
-  //  map array by key in groups and merge other keys of group into arrays
-  array.forEach(function (item) {
-    if (!groups[item[key]]) {
-      groups[item[key]] = {};
-    }
-    for (var k in item) {
-      if (k !== key) {
-        if (!groups[item[key]][k])
-          groups[item[key]][k] = [item[k]];
-        else
-          groups[item[key]][k].push(item[k]);
+    // build an object with all keys and their modes as values
+    // on the basis of the first json, (all json-objects are expected to be uniform)
+    for (k in array[0]){    
+      if (typeof mode === 'object'){
+        if(k in mode)
+          keyModes[k] = mode[k];
+        else 
+          keyModes[k] = defaultMode;
       }
+      // mode is a string
+      else 
+        keyModes[k] = mode;
     }
-  });
 
-  var result = [];
-  // reduce group key-values and restore input form (array of json objects)
-  for (var gk in groups) {
-    var group = groups[gk];
-    // parse key to int, if requested
-    if (options.keyIsInt)
-      gk = parseInt(gk);
-    var g = {};
-    g[key] = gk;
+    //  map array by key in groups and merge other keys of group into arrays
+    array.forEach(function (item) {
+      if (!groups[item[key]]) {
+        groups[item[key]] = {};
+      }
+      for (var k in item) {
+        if (k !== key) {
+          if (!groups[item[key]][k])
+            groups[item[key]][k] = [item[k]];
+          else
+            groups[item[key]][k].push(item[k]);
+        }
+      }
+    });
 
-    for (var k in group) {
-      var keyMode = keyModes[k];
-      if (keyMode === 'sum' || keyMode === 'average'){
-        // value is an array -> keep array, sum up values at associated indices
-        if (group[k][0] instanceof Array) {
-          g[k] = [];
-          // js vanilla lacks matrix transposition or vector addition
-          for (var i = 0; i < group[k][0].length; i++) {
-            var sum = 0;
-            for (var j = 0; j < group[k].length; j++)
-              sum += group[k][j][i];
+    var result = [];
+    // reduce group key-values and restore input form (array of json objects)
+    for (var gk in groups) {
+      var group = groups[gk];
+      // parse key to int, if requested
+      if (options.keyIsInt)
+        gk = parseInt(gk);
+      var g = {};
+      g[key] = gk;
+
+      for (var k in group) {
+        var keyMode = keyModes[k];
+        if (keyMode === 'sum' || keyMode === 'average'){
+          // value is an array -> keep array, sum up values at associated indices
+          if (group[k][0] instanceof Array) {
+            g[k] = [];
+            // js vanilla lacks matrix transposition or vector addition
+            for (var i = 0; i < group[k][0].length; i++) {
+              var sum = 0;
+              for (var j = 0; j < group[k].length; j++)
+                sum += group[k][j][i];
+              // average the sum, if requested by given mode
+              if (keyMode === 'average')
+                sum /= group[k].length;
+              g[k].push(sum);
+            }
+          }
+          // value is no array -> simple sum over groups
+          else {
+            g[k] = group[k].reduce(function (sum, element) {
+              return sum + element;
+            }, 0);
             // average the sum, if requested by given mode
             if (keyMode === 'average')
-              sum /= group[k].length;
-            g[k].push(sum);
+              g[k] /= group[k].length;
           }
         }
-        // value is no array -> simple sum over groups
-        else {
-          g[k] = group[k].reduce(function (sum, element) {
-            return sum + element;
-          }, 0);
-          // average the sum, if requested by given mode
-          if (keyMode === 'average')
-            g[k] /= group[k].length;
-        }
       }
-    }
-    result.push(g);
-  };
-  return result;
-}
+      result.push(g);
+    };
+    return result;
+  }
 
   /*
    * transform json object by splitting array fields
@@ -912,7 +913,6 @@ function aggregateByKey(array, key, options) {
     }
   };
 
-
   // MAP THE REST-ROUTES TO THE FUNCTIONS
 
   api.map({
@@ -937,7 +937,7 @@ function aggregateByKey(array, key, options) {
         get: prognosen.get,
         put: prognosen.put,
         delete: prognosen.delete,
-        '/bevoelkerungsprognose': {
+        '/bevoelkerung': {
           get: demographics.list,
           
           '/aggregiert': {
@@ -947,7 +947,7 @@ function aggregateByKey(array, key, options) {
             get: demographics.getJSON
           }
         },        
-        '/haushaltsprognose': {
+        '/haushalte': {
           get: households.list,
           
           '/aggregiert': {
@@ -978,6 +978,5 @@ function aggregateByKey(array, key, options) {
   
   api.post("/users/login", bouncer.block, users.login);
   
-
   return api;
 }();

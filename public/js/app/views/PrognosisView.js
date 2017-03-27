@@ -324,7 +324,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
                   var name = names.join(', ');
 
                   var region = {
-                    id: values.join('-'),
                     name: name,
                     rs: rsAggr
                   };

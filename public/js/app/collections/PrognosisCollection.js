@@ -3,9 +3,9 @@
  Publisher: GGR
  */
 
-define(["backbone","models/PrognosisModel"],
+define(['app', "backbone","models/PrognosisModel"],
 
-    function(Backbone, PrognosisModel) {
+    function(app, Backbone, PrognosisModel) {
 
         // Creates a new Backbone Collection class object
         var PrognosisCollection = Backbone.Collection.extend({
@@ -13,7 +13,7 @@ define(["backbone","models/PrognosisModel"],
             // Tells the Backbone Collection that all of it's models will be of type Model (listed up top as a dependency)
             model: PrognosisModel,
             
-            url: 'api/prognosen/',
+            url: app.api.prognoses,
 
             initialize: function(options){ 
             },    

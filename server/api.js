@@ -478,7 +478,7 @@ module.exports = function () {
           return res.status(status).send(err);
 
         var year = req.query.year,
-            queryString = "SELECT jahr, hhstand " + 
+            queryString = "SELECT jahr, hhstand, hhgroessen " + 
                           "FROM haushaltsprognose WHERE prognose_id=$1",
             params = [req.params.pid];
         var i = 2;

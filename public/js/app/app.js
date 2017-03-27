@@ -17,6 +17,8 @@ define(['backbone'],
     app.api = {
       base:      '/api', // base Rest-API URL
       prognoses: '/api/prognosen/',
+      households: 'haushalte',
+      demographics: 'bevoelkerung',
       users:     '/api/users/',
       login:     '/api/users/login/',
       layers:    'api/gebiete/',

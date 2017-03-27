@@ -3,13 +3,13 @@
  Publisher: GGR
  */
 
-define(['backbone', 'collections/GenericPrognosisDataCollection', 
+define(['app', 'backbone', 'collections/GenericPrognosisDataCollection', 
         'models/DemographicsModel'],
-  function (Backbone, GenericPrognosisDataCollection, DemographicsModel) {
+  function (app, Backbone, GenericPrognosisDataCollection, DemographicsModel) {
 
     var DemographicsCollection = GenericPrognosisDataCollection.extend({
       model: DemographicsModel,
-      category: 'bevoelkerung'
+      category: app.api.demographics
     });
     return DemographicsCollection;
   }

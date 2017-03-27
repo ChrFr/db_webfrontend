@@ -15,7 +15,7 @@ define(['app', 'backbone'],
      * 
      * @param  options.progId  id of the prognosis the data belongs to  
      *  
-     * @return the GenericPrognosisDataCollection class
+     * @return the collection holding models with prognosis data for different regions
      */   
     var GenericPrognosisDataCollection = Backbone.Collection.extend({
       

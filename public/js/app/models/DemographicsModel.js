@@ -26,10 +26,10 @@ define(["app", "backbone", 'models/GenericPrognosisDataModel'],
           // preprocess other characteristic numbers and round to defined decimals
           _.each(data, function (item) {
             var femaleAges = item.alter_weiblich,
-                    maleAges = item.alter_maennlich,
-                    sumFemale = 0,
-                    sumMale = 0,
-                    roundingFactor = Math.pow(10, app.DECIMALS);
+                maleAges = item.alter_maennlich,
+                sumFemale = 0,
+                sumMale = 0,
+                roundingFactor = Math.pow(10, app.DECIMALS);
 
             for (var i = 0; i < femaleAges.length; i++) {
               femaleAges[i] = Math.round(femaleAges[i] * roundingFactor) / roundingFactor;

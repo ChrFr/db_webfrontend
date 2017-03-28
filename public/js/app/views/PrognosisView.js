@@ -167,16 +167,16 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
               // remove old views        
               if(_this.ddView)
                 _this.ddView.close();
-              if(_this.hhView)
-                _this.hhView.close();
+//              if(_this.hhView)
+//                _this.hhView.close();
               _this.ddView = new DemographicsView({
                 el: _this.el.querySelector('#dd-tab').appendChild(
                         document.createElement('div'))
               });
-              _this.hhView = new HouseholdsView({
-                el: _this.el.querySelector('#hh-tab').appendChild(
-                        document.createElement('div'))
-              });
+//              _this.hhView = new HouseholdsView({
+//                el: _this.el.querySelector('#hh-tab').appendChild(
+//                        document.createElement('div'))
+//              });
             }
             else{
               // hide all elements interacting with prognoses, when no prognosis is loaded
@@ -188,8 +188,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
               _this.el.querySelector('#region-label').style.display = 'none';
               if(_this.ddView)
                 _this.ddView.close();
-              if(_this.hhView)
-                _this.hhView.close();
+//              if(_this.hhView)
+//                _this.hhView.close();
               _this.map.removeMaps();
               _this.el.querySelector('#selection-label').innerHTML = '';
             }
@@ -452,8 +452,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
           app.unbind('activePrognosis');
           if(this.ddView)
             this.ddView.close();
-          if(this.hhView)
-            this.hhView.close();
+//          if(this.hhView)
+//            this.hhView.close();
           this.unbind(); // Unbind all local event bindings
           this.remove(); // Remove view from DOM
         }

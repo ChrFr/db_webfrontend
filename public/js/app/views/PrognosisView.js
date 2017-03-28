@@ -12,8 +12,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
 
       /** 
        * 
-       * @desc view on a specific prognosis, wraps a map, the household and demographic prognoses and guides the user to the specific prognoses
-       * @see map of area of prognoses, description of prognoses, household and demographic prognoses
+       * @desc view on a specific prognosis, wraps a map, the household and 
+       * demographic prognoses and guides the user to the specific prognoses
+       * @see map of area of prognoses, description of prognoses, household 
+       * and demographic prognoses
        */
       var PrognosisView = Backbone.View.extend({
         // The DOM Element associated with this view
@@ -25,13 +27,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
           var _this = this;
           this.layers = new LayerCollection();
           this.subunits = new SubunitCollection();
-          // layer information needed to region selection and to finally render map, so you can already fetch them before rendering view
+          // layer information needed to region selection and to finally render 
+          // map, so you can already fetch them before rendering view
           this.layers.fetch({
             success: function(){
               _this.render();
             },
             error: function(){
-              _this.render(); // render anyway, if fetching layers fails, you can at least choose Gesamtgebiet/subunits on layer selection
+              _this.render(); // render anyway, if fetching layers fails, 
+              //you can at least choose Gesamtgebiet/subunits on layer selection
             }
           });          
         
@@ -60,10 +64,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
         
         /*
          * activate the menu link in the navbar when a link is clicked here
-         * not best practice, because cross linking with navbar, but better for usability
+         * not best practice, because cross linking with navbar, but better 
+         * for usability
          */
         tabChange: function(e){
-          // don't know why it is currentTarget instead of target here, e.target is strangely enough the headline inside the link
+          // don't know why it is currentTarget instead of target here, 
+          // e.target is strangely enough the headline inside the link
           var href = e.currentTarget.getAttribute("href");
           var links = document.querySelector('#prognosis-collapse').getElementsByTagName('li');
           for(var i = 0; i < links.length; i++)
@@ -240,8 +246,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
         },
         
         /*
-         * change the region-layer (e.g. whole area, landkreis, subunits ...) to given layerId and rerender map
-         * subunits are smallest entities, so all higher layers have to be aggregated from those
+         * change the region-layer (e.g. whole area, landkreis, subunits ...) 
+         * to given layerId and rerender map subunits are smallest entities, 
+         * so all higher layers have to be aggregated from those
          */
         changeLayer: function(layerId){
           this.map.setOverlayText('');          
@@ -254,10 +261,12 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
 
           clearElement(regionSelector);
           
-          // SPECIAL CASE: WHOLE area (all subunits summed up); needs no region-selection
+          // SPECIAL CASE: WHOLE area (all subunits summed up); 
+          // needs no region-selection
           if(layerId == -2){
-            // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
-            document.querySelector('#li-dd a').click();
+            // if overview is active switch to demodevelopment tab
+            if (document.querySelector('#li-overview').classList.contains('active'))
+              document.querySelector('#li-dd a').click();
             var _this = this;
             regionSelector.style.display = 'none';
             this.el.querySelector('#region-label').style.display = 'none';
@@ -306,8 +315,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
 
                 // listen to selection
                 regionSelector.onchange = function(){
-                  // switch to demodevelopment tab, Warning!: this needs to be changed once households are implemented!!!!!!!
-                  document.querySelector('#li-dd a').click();
+                  // if overview is active switch to demodevelopment tab
+                  if (document.querySelector('#li-overview').classList.contains('active'))
+                    document.querySelector('#li-dd a').click();
                   if(regionSelector.selectedIndex <= 0)
                     return;
                   var rsAggr = [], names = [], values = [];
@@ -366,7 +376,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
         
         /*
          * render the map of regions
-         * options.aggregates: array of regions with id, name and rs (array of rs); regions on map with the given rs will be aggregated to given id/name
+         * options.aggregates: array of regions with id, name and rs 
+         *                     (array of rs); regions on map with the given rs 
+         *                     will be aggregated to given id/name
          * options.callback: called after map is rendered
          */
         renderMap: function(options){

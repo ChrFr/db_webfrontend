@@ -202,6 +202,11 @@ th{
     margin: 0 auto;
 }
 
+#region-select {
+    resize: vertical;
+    width: 100%;
+}
+
 .form-control:focus, select:focus{    
     box-shadow: 0px 0px 2px 1px gold;
     border: solid 1px gold;

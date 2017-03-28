@@ -5,8 +5,8 @@
 
 define(['jquery', 'app', 'backbone', 'text!templates/demographics.html', 
   'collections/DemographicsCollection', 'views/TableView', 'd3', 'd3slider', 
-  'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 
-  'views/visualizations/Map', 'views/visualizations/LineChart', 
+  'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree',
+  'views/visualizations/LineChart', 
   'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
   'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 
   'views/conversion', 'views/misc', 'jspdf'],
@@ -114,8 +114,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         Loader(this.el.querySelector('#agetree'));
         
         model.fetch({success: function () {
-          //_this.el.querySelector('#visualizations').style.display = 'block';
-          _this.el.querySelector('#tables').style.display = 'block';
+          
+          /* render the bottom controls of the agetree tab */          
           var sideControls = _this.el.getElementsByClassName('side-controls');
           for (var i = 0; i < sideControls.length; i++) 
             sideControls[i].style.display = 'block';   
@@ -235,6 +235,9 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         if(!this.currentModel)
           return;        
         
+        // show tables
+        this.el.querySelector('#tables').style.display = 'block';
+          
         this.width = parseInt(this.el.querySelector('.tab-content').offsetWidth);
         var data = this.currentModel.get('data');
         
@@ -374,7 +377,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
           height: height,
           title: 'Bevölkerungsentwicklung relativ',
           subtitle: this.currentModel.get('name'),
-          groupLabels: ['Realdaten', 'Prognosedaten'],
+          groupLabels: ['Ist-Daten', 'Prognosedaten'],
           xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')',
           separator: prog.get('basisjahr'),

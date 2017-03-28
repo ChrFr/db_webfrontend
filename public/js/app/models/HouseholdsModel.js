@@ -19,7 +19,6 @@ define(["app", "backbone", 'models/GenericPrognosisDataModel'],
 
           // preprocess other characteristic numbers and round to defined decimals
           _.each(data, function (item) {
-            console.log(item)
             var hhsizes = item.hhgroessen,
                 sumHouseholds = 0,
                 roundingFactor = Math.pow(10, app.DECIMALS);

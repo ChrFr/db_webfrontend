@@ -5,7 +5,8 @@
 
 define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         'collections/HouseholdsCollection', 'views/TableView',
-        'views/visualizations/LineChart', ],
+        'views/visualizations/LineChart', 
+        'views/visualizations/StackedBarChart'],
 
   function(app, $, Backbone, template, HouseholdsCollection, TableView){
     /** 
@@ -22,7 +23,6 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
 
-        console.log(this.el);
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
         var progId = app.get('activePrognosis').id;
         if (progId) {
@@ -73,14 +73,19 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         var data = this.currentModel.get('data');
         this.width = parseInt(this.el.querySelector('.tab-content').offsetWidth);
         
-        this.renderDevelopment(data);
+        this.renderDevelopmentChart(data);
         this.renderDevTable(data);
+        this.renderSizesChart(data);
+        //this.renderSizesTable(data);
+        
+        // description        
+        this.renderDescription(this.currentModel.get('description'));
       },
       
       /*
        * render 2 line charts with demo. development
        */
-      renderDevelopment: function (data) {
+      renderDevelopmentChart: function (data) {
         var households = [],
             years = [];
 
@@ -219,6 +224,150 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
           data: rows,
           dataHeight: 500,
           pagination: false,
+          highlight: true
+        });
+      },
+            
+      renderDescription: function(html){
+        //if(html.length == 0)
+        //  html = "keine";
+        var div = this.el.querySelector('#description');
+        div.innerHTML = html;
+      },      
+      
+      /*
+       * render a stacked bar-chart with agegroups
+       */
+      renderSizesChart: function (data) {
+        var vis = this.el.querySelector('#sizes-chart');
+        clearElement(vis);
+        var groupedData = [];
+
+        var width = this.width - 70;
+        var height = width * 0.8;
+        var maxSize = 0;
+        
+        _.each(data, function (d) {
+            maxSize = Math.max(maxSize, d.hhgroessen.length);
+            groupedData.push({'jahr': d.jahr,
+                              'values': d.hhgroessen});   
+        });        
+        
+        var groupNames = [];//_.range(1, maxSize + 1);
+        for (var i = 1; i < maxSize + 1; i++){
+          var name = i + ' Person';
+          if (i > 1) name += 'en';
+          groupNames.push(name);          
+        }
+        var prog = app.get('activePrognosis');
+
+        this.sizesChart = new StackedBarChart({
+          el: vis,
+          data: groupedData,
+          width: width,
+          height: height,
+          title: 'Haushaltsgrößen',
+          subtitle: this.currentModel.get('name'),
+          xlabel: 'Jahr',
+          ylabel: 'Summe',
+          stackLabels: groupNames,
+          bandName: 'jahr',
+          separator: prog.get('basisjahr')
+        });
+        this.sizesChart.render();
+      },
+      
+      /*
+       * render a table with mail and female ages for given year
+       */
+      renderSizesTable: function (yearData) {
+        var columns = [],
+            title = '',
+            prog = app.get('activePrognosis'),
+            baseYear = prog.get('basisjahr');    
+        
+        if (yearData.jahr == baseYear)
+          title = 'Basisjahr';
+        else if(yearData.jahr < baseYear)
+          title = 'Ist-Daten';
+        else
+          title = 'Prognose';
+
+        columns.push({name: 'age', description: 'Alter'});
+        columns.push({name: 'female', description: 'Anzahl weiblich'});
+        columns.push({name: 'male', description: 'Anzahl männlich'});
+
+        var femaleAges = yearData.alter_weiblich;
+        var maleAges = yearData.alter_maennlich;
+
+        var data = [];
+        for (var i = 0; i < femaleAges.length; i++) {
+          data.push({
+            age: i,
+            female: roundRep(femaleAges[i], app.DECIMALS),
+            male: roundRep(maleAges[i], app.DECIMALS)
+          });
+        }
+
+        //get state of prev. table to apply on new one
+        var state = (this.ageTable) ? this.ageTable.getState() : {};
+
+        this.ageTable = new TableView({
+          el: this.el.querySelector('#age-data'),
+          columns: columns,
+          title: title + ' ' + yearData.jahr,// + ' - ' + this.currentModel.get('name'),
+          data: data,
+          dataHeight: 500,
+          pagination: false,
+          startPage: state.page,
+          pageSize: state.size,
+          highlight: true
+        });
+      },
+      
+      /*
+       * render a table with the raw data received from the server
+       * table is currently hidden, but rendered to export the data when requested
+       */
+      renderRawData: function (data) {
+        var columns = [];
+        var maxAge = this.currentModel.get('maxAge');
+                
+        var mappedData = [];
+        data.forEach(function (yearData, n){
+          
+          var yearMapped = new Array();
+          // transform data and split the age-columns
+          Object.keys(yearData).forEach(function (key) {  
+            if(key != 'sumFemale' && key != 'sumMale'){ // ignore clientside processed data              
+              if(key == 'alter_weiblich' || key == 'alter_maennlich'){
+                for(var i = 0; i < maxAge; i++){
+                  // header
+                  var splitName = i + '_' + key.replace("alter", "jahre");;
+                  if (n == 0)                
+                    columns.push({name: splitName, description: splitName});
+                  var nAge = 0;
+                  if (i < yearData[key].length)
+                    nAge = yearData[key][i]
+                  yearMapped[splitName] = roundRep(nAge, app.DECIMALS);
+                }               
+              }
+              else{
+                // header
+                if (n == 0)
+                  columns.push({name: key, description: key});
+                yearMapped[key] = yearData[key];
+              }
+            }                       
+          });
+          mappedData.push(yearMapped); 
+        });
+        
+        this.rawTable = new TableView({
+          el: this.el.querySelector('#raw-data'),
+          columns: columns,
+          data: mappedData,
+          title: data[0].jahr + ' bis ' + data[data.length - 1].jahr,// + ' - ' + this.currentModel.get('name'),
           highlight: true
         });
       },

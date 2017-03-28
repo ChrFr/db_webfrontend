@@ -82,7 +82,7 @@ var StackedBarChart = function (options) {
 
     var margin = {
       top: 50,
-      right: 50,
+      right: 70,
       bottom: 70,
       left: 60
     };

@@ -302,6 +302,13 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
                 // aggregate smallest entities to regions
                 var rsMap = {}; // relate enitity ids to id of aggregation of those entities
                 var aggregates = layer.get('regionen');
+                
+                aggregates.sort(function(a, b){
+                  if (a.name < b.name)
+                    return -1;
+                  return 1;
+                });
+                
                 aggregates.forEach(function(region){
                   new OptionView({// options for selector
                     el: regionSelector,

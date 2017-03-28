@@ -3,17 +3,12 @@
  Publisher: GGR
  */
 
-define(["backbone"],
+define(['app', "backbone"],
 
-    function(Backbone) {
+    function(app, Backbone) {
 
-        // Creates a new Backbone Collection class object
-        var LayerCollection = Backbone.Collection.extend({
-            
-            url: 'api/gebiete/',
-
-            initialize: function(){   
-            },    
+        var LayerCollection = Backbone.Collection.extend({            
+            url: app.api.layers
         });
         return LayerCollection;
     }

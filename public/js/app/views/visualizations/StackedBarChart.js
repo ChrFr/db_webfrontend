@@ -51,10 +51,11 @@ var StackedBarChart = function (options) {
 
     // preprocess data
     this.data.forEach(function (d) {
-      if (! 'total' in d)
+      if (!('total' in d)){
         d.total = d.values.length ? d.values.reduce(function (a, b) {
           return a + b;
         }) : 0;
+      }
       d.mapped = [];
       //stack the bars by adding the predecessor to its length
       for (var i = 0; i < d.values.length; i++) {
@@ -70,6 +71,7 @@ var StackedBarChart = function (options) {
       //reverse values, so that the bigger ones are drawn first (smaller ones are in front)
       d.mapped.reverse();
     });
+    
     //reversed values -> labels have to be reversed as well
     this.stackLabels.reverse();
 
@@ -80,7 +82,7 @@ var StackedBarChart = function (options) {
 
     var margin = {
       top: 50,
-      right: 50,
+      right: 70,
       bottom: 70,
       left: 60
     };
@@ -154,9 +156,6 @@ var StackedBarChart = function (options) {
     var xScale = d3.scale.ordinal()
             .rangeRoundBands([0, innerwidth], .1)
             .domain(this.data.map(function (d) {
-              /*
-              if (_this.separator == d[_this.bandName])
-                return 'Basisjahr' + d[_this.bandName];*/
               return d[_this.bandName];
             }));
 
@@ -214,9 +213,10 @@ var StackedBarChart = function (options) {
       var text = _this.xlabel + ': ' + d[_this.bandName] + '<br>';
       tooltip.style('opacity', .9);
       
-      d.values.forEach(function(value, i){
-        text += _this.stackLabels[i] + ': <b>' + value + '</b><br>';
-      });      
+      var l = _this.stackLabels.length;
+      for (var i = 0; i < l; i++){
+        text += _this.stackLabels[i] + ': <b>' + d.values[l - i - 1] + '</b><br>';
+      };      
       text += 'gesamt: <b>' + d.total + '</b><br>';
       tooltip.html(text);
       tooltip.style('left', (d3.event.pageX + 10) + 'px')
@@ -271,28 +271,7 @@ var StackedBarChart = function (options) {
             .attr('class', 'separator')
             .attr('y2', -innerheight)
             .attr('transform', translation(xScale.rangeBand() / 4 + 2, 0));
-        /*
-    sepTick.append('text')
-            .attr('font-size', '0.8em')      
-            .style('text-anchor', 'end')
-            .text('Basisjahr')
-            .attr('transform', translation(0, margin.bottom));*/
-    /*
-    groups.selectAll('g')
-            .data(this.data)
-            .enter().append('rect')
-            .attr('class', 'overlay')
-            .attr('transform', function (d) {
-              return translation(xScale(d[_this.bandName]), 0);
-            });*/
-    /*
-    svg.append('text')
-            .attr('x', innerwidth)
-            .attr('y', 10)
-            .attr('font-size', '1em')
-            .attr('dy', '1em')
-            .text('Legende');*/
-
+    
     var legend = svg.selectAll('.legend')
             .data(_this.stackLabels.slice())
             .enter().append('g')

@@ -5,10 +5,10 @@
 
 define(["jquery", "backbone", "text!templates/admin.html",
   "collections/UserCollection", "collections/PrognosisCollection",
-   "collections/DDCollection", "models/UserModel", "models/PrognosisModel", 
+   "collections/DemographicsCollection", "models/UserModel", "models/PrognosisModel", 
   "views/TableView", "bootstrap", 'views/misc'],
-  function($, Backbone, template, UserCollection, PrognosisCollection, DDCollection, 
-           UserModel, PrognosisModel, TableView){
+  function($, Backbone, template, UserCollection, PrognosisCollection, 
+           DemographicsCollection, UserModel, PrognosisModel, TableView){
                             
     /** 
     * @author Christoph Franke
@@ -296,7 +296,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 var files = dialog.querySelector("#upload-demo-csv").files;
                 if(files.length > 0){
                   var file = files[0];
-                  var dd = new DDCollection({progId: model.get('id')});
+                  var dd = new DemographicsCollection({progId: model.get('id')});
                   dd.fromCSV(file);
                 }
                }*/

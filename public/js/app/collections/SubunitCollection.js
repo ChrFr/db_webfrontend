@@ -3,19 +3,17 @@
  Publisher: GGR
  */
 
-define(['backbone'],
-  function (Backbone) {
+define(['app', 'backbone'],
+  function (app, Backbone) {
 
     // Creates a new Backbone Collection class object
     var SubunitCollection = Backbone.Collection.extend({
-      url: 'api/gebiete/basiseinheiten',
-      initialize: function () {
-      },
+      url: app.api.subunits,
       
       //order function
       comparator: function (model) {
         return model.get('rs');
-      },
+      }
     });
     return SubunitCollection;
   }

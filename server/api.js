@@ -44,102 +44,101 @@ module.exports = function () {
       }
     }
   };
-    
-  /*
-   * @desc aggregate a list of json-objects by given key, by now only sum or 
-   *       averages of group-values
-   * 
-   * @param array             array of json-objects, all json objects have to be uniform,
-   *                          that means, they contain the same keys,
-   *                          values can be single values or arrays of values
-   * @param key               the key, that determines the structure of the aggregate,
-   *                          remains untouched
-   * @param options.mode      mode for aggregation of values
-   *                          if mode as single string is given, all keys get this mode
-   *                          if object is given, specify which key gets which mode
-   *                          (if not defined, key gets default mode), 
-   *                          by now only modes 'sum' or 'average' allowed (default: 'sum') 
-   * @param options.isIntKey  true, if the given key is an integer value
-   *  
-   * @returns aggregated      aggregated json object, keys remain
-   */ 
-  function aggregateByKey(array, key, options) {
-    var defaultMode = 'sum',
-        mode = options.mode || defaultMode,
-        groups = {},
-        keyModes= {};
-
-    // build an object with all keys and their modes as values
-    // on the basis of the first json, (all json-objects are expected to be uniform)
-    for (k in array[0]){    
-      if (typeof mode === 'object'){
-        if(k in mode)
-          keyModes[k] = mode[k];
-        else 
-          keyModes[k] = defaultMode;
-      }
-      // mode is a string
+/*
+ * @desc aggregate a list of json-objects by given key, by now only sum or 
+ *       averages of group-values
+ * 
+ * @param array             array of json-objects, all json objects have to be uniform,
+ *                          that means, they contain the same keys,
+ *                          values can be single values or arrays of values
+ * @param key               the key, that determines the structure of the aggregate,
+ *                          remains untouched
+ * @param options.mode      mode for aggregation of values
+ *                          if mode as single string is given, all keys get this mode
+ *                          if object is given, specify which key gets which mode
+ *                          (if not defined, key gets default mode), 
+ *                          by now only modes 'sum' or 'average' allowed (default: 'sum') 
+ * @param options.isIntKey  true, if the given key is an integer value
+ *  
+ * @returns aggregated      aggregated json object, keys remain
+ */ 
+function aggregateByKey(array, key, options) {
+  var defaultMode = 'sum',
+      mode = options.mode || defaultMode,
+      groups = {},
+      keyModes= {};
+  
+  // build an object with all keys and their modes as values
+  // on the basis of the first json, (all json-objects are expected to be uniform)
+  for (k in array[0]){    
+    if (typeof mode === 'object'){
+      if(k in mode)
+        keyModes[k] = mode[k];
       else 
-        keyModes[k] = mode;
+        keyModes[k] = defaultMode;
     }
+    // mode is a string
+    else 
+      keyModes[k] = mode;
+  }
 
-    //  map array by key in groups and merge other keys of group into arrays
-    array.forEach(function (item) {
-      if (!groups[item[key]]) {
-        groups[item[key]] = {};
+  //  map array by key in groups and merge other keys of group into arrays
+  array.forEach(function (item) {
+    if (!groups[item[key]]) {
+      groups[item[key]] = {};
+    }
+    for (var k in item) {
+      if (k !== key) {
+        if (!groups[item[key]][k])
+          groups[item[key]][k] = [item[k]];
+        else
+          groups[item[key]][k].push(item[k]);
       }
-      for (var k in item) {
-        if (k !== key) {
-          if (!groups[item[key]][k])
-            groups[item[key]][k] = [item[k]];
-          else
-            groups[item[key]][k].push(item[k]);
-        }
-      }
-    });
+    }
+  });
 
-    var result = [];
-    // reduce group key-values and restore input form (array of json objects)
-    for (var gk in groups) {
-      var group = groups[gk];
-      // parse key to int, if requested
-      if (options.keyIsInt)
-        gk = parseInt(gk);
-      var g = {};
-      g[key] = gk;
+  var result = [];
+  // reduce group key-values and restore input form (array of json objects)
+  for (var gk in groups) {
+    var group = groups[gk];
+    // parse key to int, if requested
+    if (options.keyIsInt)
+      gk = parseInt(gk);
+    var g = {};
+    g[key] = gk;
 
-      for (var k in group) {
-        var keyMode = keyModes[k];
-        if (keyMode === 'sum' || keyMode === 'average'){
-          // value is an array -> keep array, sum up values at associated indices
-          if (group[k][0] instanceof Array) {
-            g[k] = [];
-            // js vanilla lacks matrix transposition or vector addition
-            for (var i = 0; i < group[k][0].length; i++) {
-              var sum = 0;
-              for (var j = 0; j < group[k].length; j++)
-                sum += group[k][j][i];
-              // average the sum, if requested by given mode
-              if (keyMode === 'average')
-                sum /= group[k].length;
-              g[k].push(sum);
-            }
-          }
-          // value is no array -> simple sum over groups
-          else {
-            g[k] = group[k].reduce(function (sum, element) {
-              return sum + element;
-            }, 0);
+    for (var k in group) {
+      var keyMode = keyModes[k];
+      if (keyMode === 'sum' || keyMode === 'average'){
+        // value is an array -> keep array, sum up values at associated indices
+        if (group[k][0] instanceof Array) {
+          g[k] = [];
+          // js vanilla lacks matrix transposition or vector addition
+          for (var i = 0; i < group[k][0].length; i++) {
+            var sum = 0;
+            for (var j = 0; j < group[k].length; j++)
+              sum += group[k][j][i];
             // average the sum, if requested by given mode
             if (keyMode === 'average')
-              g[k] /= group[k].length;
+              sum /= group[k].length;
+            g[k].push(sum);
           }
         }
+        // value is no array -> simple sum over groups
+        else {
+          g[k] = group[k].reduce(function (sum, element) {
+            return sum + element;
+          }, 0);
+          // average the sum, if requested by given mode
+          if (keyMode === 'average')
+            g[k] /= group[k].length;
+        }
       }
-      result.push(g);
-    };
-    return result;
-  }
+    }
+    result.push(g);
+  };
+  return result;
+}
 
   /*
    * transform json object by splitting array fields
@@ -378,11 +377,12 @@ module.exports = function () {
   
   // ROUTE /prognosen/:pid/bevoelkerungsprognose
 
-  var demographics = {
+  var demodevelop = {
     
     // get demographic development from database
     getData: function (req, res, rsArray, onSuccess) {
-      checkPermission(req.headers, req.params.pid, function (err, status, result) {   
+      checkPermission(req.headers, req.params.pid, function (err, status, result) {        
+        var queryDescription = false;
         if (err)
           return res.status(status).send(err);
 
@@ -425,7 +425,7 @@ module.exports = function () {
       });
     },
     
-    // shows an undetailed preview of the demographics in all regions
+    // shows an undetailed preview of the demodevelopments in all regions
     list: function (req, res) {
       checkPermission(req.headers, req.params.pid, function (err, status, result) {
         if (err)
@@ -458,109 +458,7 @@ module.exports = function () {
     
     // get details of the demo.development in a spec. region
     getJSON: function (req, res) {
-      common.getJSON(req, res, demographics);
-    },    
-    
-    // get a list of data for aggregated regions
-    getAggregation: function (req, res) {
-      common.getAggregation(req, res, demographics);
-    }
-  };  
-  
-   // ROUTE /prognosen/:pid/haushaltsprognose
-
-  var households = {
-    
-    // get demographic development from database
-    getData: function (req, res, rsArray, onSuccess) {
-      checkPermission(req.headers, req.params.pid, function (err, status, result) {   
-        if (err)
-          return res.status(status).send(err);
-
-        var year = req.query.year,
-            queryString = "SELECT jahr, hhstand, hhgroessen " + 
-                          "FROM haushaltsprognose WHERE prognose_id=$1",
-            params = [req.params.pid];
-        var i = 2;
-        // array of rs?
-        if (rsArray && rsArray instanceof Array) {
-          var p = [];
-          for (i; i < rsArray.length + 2; i++)
-            p.push('$' + i);
-
-          queryString += " AND rs IN (" + p.join(",") + ")";
-          params = params.concat(rsArray);
-        }
-        // r single rs?
-        else {
-          queryString += " AND rs=$" + i;
-          params.push(req.params.rs);    
-        }
-        // specific year queried or all years?   
-        if (year) {
-          queryString += " AND jahr=$3 ";
-          params.push(year);
-        }
-        // else all years ordered by year
-        else {
-          queryString += ' ORDER BY jahr';
-        };
-
-        query(queryString, params, function (err, result) {
-          if (err || result.length === 0)
-            return res.sendStatus(404);
-          else
-            return onSuccess(result);
-        });
-      });
-    },
-    
-    // shows an undetailed preview of the demographics in all regions
-    list: function (req, res) {
-      checkPermission(req.headers, req.params.pid, function (err, status, result) {
-        if (err)
-          return res.status(status).send(err);
-        query("SELECT rs, jahr, hhstand FROM haushaltsprognose " + 
-              "WHERE prognose_id=$1 ORDER BY rs;", 
-              [req.params.pid], function (err, result) {
-          if (err || result.length === 0)
-            return res.sendStatus(404);
-          var response = [];
-          var entry = {'rs': ''};
-          result.forEach(function (r) {
-            //new rs -> push previous entry in response and create new entry
-            if (r.rs !== entry.rs) {
-              if (entry.data){
-                response.push(entry);  
-              }
-              entry = {'rs': r.rs, 'data': []};
-            }
-            delete r.rs;
-            entry.data.push(r);
-          });
-          // push the final entry
-          if(entry) 
-            response.push(entry); 
-          return res.status(200).send(response);
-        });
-      });
-    },
-    
-    // get details of the demo.development in a spec. region
-    getJSON: function (req, res) {
-      common.getJSON(req, res, households);
-    },    
-    
-    // get a list of data for aggregated regions
-    getAggregation: function (req, res) {
-      common.getAggregation(req, res, households);
-    }
-  }; 
-  
-  var common = {
-  
-    getJSON: function (req, res, prognosis) {
-      prognosis.getData(req, res, null, function (result) {         
+      demodevelop.getData(req, res, null, function (result) {         
         if (req.query.year)
           result = result[0];
         var resJSON = { rs: req.params.rs,
@@ -576,39 +474,18 @@ module.exports = function () {
         });          
       });
     },
-
+    
     // get a list of data for aggregated regions
-    getAggregation: function (req, res, prognosis) {
+    getAggregation: function (req, res) {
       var rsList = req.query.rs;
       if (!rsList)
         return res.status(400).send('Für Aggregationen werden die Regionalschlüssel als Parameter benötigt.');
       else
-        prognosis.getData(req, res, rsList, function (result) {
-          var resJSON = {
+        demodevelop.getData(req, res, rsList, function (result) {
+          return res.json({
             rs: rsList,
             data: aggregateByKey(result, 'jahr', {keyIsInt: true})
-          };
-          var i = 1;
-          var p = [];
-          for (i; i < rsList.length + 1; i++)
-            p.push('$' + i);
-
-          var queryString = "SELECT description FROM basiseinheiten WHERE " +
-                            "rs IN (" + p.join(",") + ")";
-
-          query(
-            queryString,
-            rsList,
-            function (err, descResult){
-              var descriptions = [];
-              if (!err && descResult.length > 0){
-                  descResult.forEach(function(descRes){
-                      descriptions.push(descRes.description);
-                  });
-              }
-              resJSON.description = descriptions;   
-              return res.json(resJSON);
-          });   
+          });
         });
     },
         
@@ -704,7 +581,7 @@ module.exports = function () {
         });
       });
     }
-  };
+  };  
   
   // ROUTE /layers
 
@@ -729,48 +606,29 @@ module.exports = function () {
         var name = result[0].name,
             progId = req.query.progId,
             level = result[0].agg_level,
-            params = [];     
-            
-        var queryStr = ''; 
+            params = [];        
+
+        // grouped inner join of specific layer and subunits -> aggregate rs of subunits
+        var queryStr = "SELECT T.raumeinheit_id AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
+            "FROM (SELECT * FROM aggregierte_raumeinheiten WHERE ";
         
-        // aggregation level of 0 is same as base units, returned rs arrays
-        // equal the id of the base unit (both the rs)
-        if (level === 0){
-            queryStr = 'SELECT rs AS id, name, ARRAY[rs] AS rs ' + 
-                       'FROM basiseinheiten ';
-            if (progId){
-              queryStr += 'WHERE prognose_id=$1 ';
-              params.push(progId);
-            }
-        }        
-        else {
-
-            // grouped inner join of specific layer and subunits -> aggregate rs of subunits
-            queryStr = 
-                "SELECT T.raumeinheit_id AS id, T.name, ARRAY_AGG(G.rs) AS rs " + 
-                "FROM (SELECT * FROM aggregierte_raumeinheiten WHERE ";
-
-            if (progId){
-              queryStr += "prognose_id=$1 and ";
-              params.push(progId);
-            }
-            params.push(level);
-
-            queryStr += "agg_level=$2) AS T " +
-                        "INNER JOIN " +
-                        "(SELECT DISTINCT rs, name, agg_level{level}_id " +
-                        "FROM basiseinheiten ";
-
-            if (progId)
-              queryStr += "WHERE prognose_id=$1";
-
-            queryStr += ") AS G ON T.raumeinheit_id=G.agg_level{level}_id " + 
-                        "GROUP BY T.name, raumeinheit_id";
-            // pgquery doesn't seem to allow passing names to columns
-            // they are taken from a db-table anyway, so it's be safe to replace directly
-            queryStr = queryStr.replace(new RegExp('{level}', 'g'), level);
+        if (progId){
+          queryStr += "prognose_id=$1 and ";
+          params.push(progId);
         }
+        params.push(level);
         
+        queryStr += "agg_level=$2) AS T " +
+            "INNER JOIN (SELECT DISTINCT rs, name, agg_level{level}_id FROM basiseinheiten ";
+        
+        if (progId)
+          queryStr += "WHERE prognose_id=$1";
+        
+        queryStr += ") AS G ON T.raumeinheit_id=G.agg_level{level}_id GROUP BY T.name, raumeinheit_id";
+        
+        // pgquery doesn't seem to allow passing names to columns
+        // they are taken from a db-table anyway, so it's be safe to replace directly
+        queryStr = queryStr.replace(new RegExp('{level}', 'g'), level);
         query(queryStr, params, function (err, result) {
           return res.status(200).send({
             'id': req.params.id,
@@ -1006,6 +864,7 @@ module.exports = function () {
     }
   };
 
+
   // MAP THE REST-ROUTES TO THE FUNCTIONS
 
   api.map({
@@ -1030,24 +889,34 @@ module.exports = function () {
         get: prognosen.get,
         put: prognosen.put,
         delete: prognosen.delete,
-        '/bevoelkerung': {
-          get: demographics.list,
+        '/bevoelkerungsprognose': {
+          get: demodevelop.list,
           
           '/aggregiert': {
-            get: demographics.getAggregation
+            get: demodevelop.getAggregation
+            /*
+            '/svg': {
+              get: demodevelop.svg
+            },
+            '/csv': {
+              get: demodevelop.csv
+            },
+            '/png': {
+              get: demodevelop.agetree
+            }*/
           },
           '/:rs': {
-            get: demographics.getJSON
-          }
-        },        
-        '/haushalte': {
-          get: households.list,
-          
-          '/aggregiert': {
-            get: households.getAggregation
-          },
-          '/:rs': {
-            get: households.getJSON
+            get: demodevelop.getJSON
+            /*
+            '/svg': {
+              get: demodevelop.svg
+            },
+            '/csv': {
+              get: demodevelop.csv
+            },
+            '/png': {
+              get: demodevelop.agetree
+            }*/
           }
         }
       }
@@ -1071,5 +940,6 @@ module.exports = function () {
   
   api.post("/users/login", bouncer.block, users.login);
   
+
   return api;
 }();

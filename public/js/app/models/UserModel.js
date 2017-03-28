@@ -3,11 +3,13 @@
  Publisher: GGR
  */
 
-define(['app', "backbone"],
+define(["backbone"],
 
-    function(app, Backbone) {
+    function(Backbone) {
 
         var UserModel = Backbone.Model.extend({
+            
+            urlRoot: 'api/users',
             
             defaults: {
                 name: '',

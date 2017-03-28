@@ -3,15 +3,11 @@
  Publisher: GGR
  */
 
-define(['jquery', 'app', 'backbone', 'text!templates/demographics.html', 
-  'collections/DemographicsCollection', 'views/TableView', 'd3', 'd3slider', 
-  'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree',
-  'views/visualizations/LineChart', 
-  'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
-  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 
-  'views/conversion', 'views/misc', 'jspdf'],
-  function ($, app, Backbone, template, DemographicsCollection, TableView, 
-            d3, d3slider, CustomView) {
+define(['jquery', 'app', 'backbone', 'text!templates/demodevelop.html', 'collections/DDCollection',
+  'views/TableView', 'd3', 'd3slider', 'views/CustomView', 'bootstrap', 'views/visualizations/AgeTree', 'views/visualizations/Map',
+  'views/visualizations/LineChart', 'views/visualizations/GroupedBarChart', 'views/visualizations/StackedBarChart',
+  'canvg', 'pnglink', 'filesaver', 'topojson', 'views/Loader', 'views/conversion', 'views/misc', 'jspdf'],
+  function ($, app, Backbone, template, DDCollection, TableView, d3, d3slider, CustomView) {
             
     /** 
      * 
@@ -25,7 +21,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
      * @return the DemographicDevelopmentView class (for chaining)
      * @see    data-visualisations, data-tables
      */        
-    var DemographicsView = Backbone.View.extend({
+    var DemographicDevelopmentView = Backbone.View.extend({
       // The DOM Element associated with this view
       el: document,
       
@@ -40,7 +36,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         if (progId) {
           // container for all demographic developments (aggregated regions too)
           // serves as cache
-          this.collection = new DemographicsCollection({progId: progId});
+          this.collection = new DDCollection({progId: progId});
           this.collection.fetch({success: this.render});
           this.width = options.width;
         }       
@@ -114,8 +110,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         Loader(this.el.querySelector('#agetree'));
         
         model.fetch({success: function () {
-          
-          /* render the bottom controls of the agetree tab */          
+          //_this.el.querySelector('#visualizations').style.display = 'block';
+          _this.el.querySelector('#tables').style.display = 'block';
           var sideControls = _this.el.getElementsByClassName('side-controls');
           for (var i = 0; i < sideControls.length; i++) 
             sideControls[i].style.display = 'block';   
@@ -125,6 +121,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
 
           // you get 0 as widths of elements in inactive tabs
           _this.width = parseInt(_this.el.querySelector('.tab-content').offsetWidth);
+
+          //_this.width = width? width: _this.width // if you can't determine current width get last known
 
           var maxYear = model.get('maxYear'),
               minYear = model.get('minYear'),
@@ -233,9 +231,6 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         if(!this.currentModel)
           return;        
         
-        // show tables
-        this.el.querySelector('#tables').style.display = 'block';
-          
         this.width = parseInt(this.el.querySelector('.tab-content').offsetWidth);
         var data = this.currentModel.get('data');
         
@@ -259,7 +254,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
       renderDescription: function(html){
         //if(html.length == 0)
         //  html = "keine";
-        var div = this.el.querySelector('#description');
+        var div = this.el.querySelector('#dd-description');
         div.innerHTML = html;
       },
       
@@ -362,8 +357,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         var relPrognosed = {
             label: '',
             x: dataRel.x.slice(baseIndex, years.length),
-            y: dataRel.y.slice(baseIndex, total.length)
-        };
+            y: dataRel.y.slice(baseIndex, total.length),
+        }
         
         vis = this.el.querySelector('#relative');
         clearElement(vis);        
@@ -375,7 +370,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
           height: height,
           title: 'Bevölkerungsentwicklung relativ',
           subtitle: this.currentModel.get('name'),
-          groupLabels: ['Ist-Daten', 'Prognosedaten'],
+          groupLabels: ['Realdaten', 'Prognosedaten'],
           xlabel: '', // you may put 'Jahr' here, but it's obvious
           ylabel: 'Gesamtbevölkerung in Prozent (relativ zu ' + dataRel.x[0] + ')',
           separator: prog.get('basisjahr'),
@@ -578,7 +573,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         var columns = [];
         var maxAge = this.currentModel.get('maxAge');
                 
-        var mappedData = [];
+        var mappedData = []
         data.forEach(function (yearData, n){
           
           var yearMapped = new Array();
@@ -601,10 +596,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
                 // header
                 if (n == 0)
                   columns.push({name: key, description: key});
-                yearMapped[key] = yearData[key];
+                yearMapped[key] = yearData[key]
               }
             }                       
-          });
+          })
           mappedData.push(yearMapped); 
         });
         
@@ -675,8 +670,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         app.get('ageGroups').forEach(function (g) {
           groupNames.push(g.name);
         });
-        var prog = app.get('activePrognosis');
-        
+        var prog = app.get('activePrognosis')
+
         this.ageGroupChart = new StackedBarChart({
           el: vis,
           data: data,
@@ -688,7 +683,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
           ylabel: 'Summe',
           stackLabels: groupNames,
           bandName: 'jahr',
-          separator: prog.get('basisjahr')
+          separator: prog.get('basisjahr'),
         });
         this.ageGroupChart.render();
       },
@@ -1032,7 +1027,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
     });
 
     // return the view class (for chaining)
-    return DemographicsView;
+    return DemographicDevelopmentView;
   }
 );
 

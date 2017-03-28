@@ -139,10 +139,6 @@
         box-shadow: 1px -1px 1px 0px grey;
     }
     
-    #main-menu .menu-link:focus, #prognosis-submenu a:focus{            
-        outline: none;
-    }
-    
     #main-collapse .active a, #main-collapse a:not(#login-status):hover{    
         height: 45px;
         margin-top: 5px;

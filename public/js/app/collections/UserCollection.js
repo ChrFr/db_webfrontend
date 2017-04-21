@@ -3,16 +3,16 @@
  Publisher: GGR
  */
 
-define(["backbone", "models/UserModel"],
+define(['app', "backbone", "models/UserModel"],
 
-    function(Backbone, UserModel) {
+    function(app, Backbone, UserModel) {
 
         // Creates a new Backbone Collection class object
         var UserCollection = Backbone.Collection.extend({
 
             model: UserModel,
             
-            url: 'api/users',
+            url: app.api.users,
 
             initialize: function(){   
             },

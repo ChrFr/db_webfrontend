@@ -11,8 +11,18 @@ define(['backbone'],
 
     var app = {
       root: '/', // root path of the application
-      URL: '/', // base application URL
-      API: '/api' // base Rest-API URL
+      URL: '/' // base application URL
+    };
+    
+    app.api = {
+      base:      '/api', // base Rest-API URL
+      prognoses: '/api/prognosen/',
+      households: 'haushalte',
+      demographics: 'bevoelkerung',
+      users:     '/api/users/',
+      login:     '/api/users/login/',
+      layers:    'api/gebiete/',
+      subunits:  'api/gebiete/basiseinheiten'
     };
     
     // closure (private variables)

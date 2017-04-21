@@ -3,16 +3,16 @@
  Publisher: GGR
  */
 
-define(["jquery", "backbone"],
+define(['app', "jquery", "backbone"],
     /**
     * Holds the informations about a session.
     *
     * @return  the SessionModel class
     */
-    function ($, Backbone) {
+    function (app, $, Backbone) {
 
         var SessionModel = Backbone.Model.extend({
-            url: 'api/users/login',
+            url: app.api.login,
             defaults: {
                 user: null,
                 token: null

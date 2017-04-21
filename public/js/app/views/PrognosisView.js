@@ -54,7 +54,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
         
         events: {
           // navigate to the specific prognoses
-          'click #sub-map-nav>a': 'tabChange',
+          'click #sub-map-nav>a': 'tabChange'
         },
         
         /*
@@ -119,14 +119,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
                   // create options for layer selection in preparation for map rendering
                   // default layers first
                   new OptionView({el: layerSelector, name: 'Gesamtgebiet', value: -2});  
-                  var basicLayer = _this.layers.find(function(model){ 
-                    return model.get('prognose_id') == progId && model.get('level') == 0; 
-                  });
-                  new OptionView({el: layerSelector, name: basicLayer.get('name'), value: -1});
 
                   _this.layers.each(function(layer){
                     // only take options of active prognosis, ignore basic level (is already added)
-                    if (layer.get('prognose_id') === progId && layer.get('level') > 0)
+                    if (layer.get('prognose_id') === progId)
                       new OptionView({
                         el: layerSelector,
                         name: layer.get('name'),
@@ -273,7 +269,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html', 'views/Dem
           }
 
           // BASIC LAYER basiseinheiten (subunits, smallest enitity) has level 0 in database
-          else if(layerId == -1){
+          else if(layerId == 0){
             multiTip.style.display = 'block';
             regionSelector.style.display = 'block';
             this.el.querySelector('#region-label').style.display = 'block';

@@ -60,7 +60,7 @@ body {
 }
 
 .text-body{
-    //background-color: white;
+    /*background-color: white;*/
     padding: 20px;
     style: "display: block"
 }
@@ -110,7 +110,7 @@ th{
     z-index: 10;
     padding-bottom: 20px; 
     min-height: 200px;
-    //margin-top: -1px; meant to close a little gap between boxes, but causes visualizations to slip to the right at some resolutions
+    /*margin-top: -1px; meant to close a little gap between boxes, but causes visualizations to slip to the right at some resolutions*/
 }
 
 #tables .tab-content{    
@@ -178,7 +178,7 @@ th{
 
 #prognosis-data td{
     padding: 1px 5px 1px 5px !important;
-    //line-height: 0.5;
+    /*line-height: 0.5;*/
 }
 
 .modal{

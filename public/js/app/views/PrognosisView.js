@@ -370,10 +370,10 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
             width: width,
             height: height,
             background: {
-              source: './shapes/europa.json',
+              source: './shapes/bundeslaender.json',
               isTopoJSON: true,
               callback: callback, 
-              zoomTo: false
+              zoomTo: true
             },
             copyright: {
               text: 'Kartenmaterial: © Bundesamt für Kartographie und Geodäsie, Frankfurt am Main',

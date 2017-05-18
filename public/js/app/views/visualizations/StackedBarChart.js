@@ -91,8 +91,6 @@ var StackedBarChart = function (options) {
         innerheight = this.height - margin.top - margin.bottom;
 
     var top = d3.select(this.el).append('svg')
-            .attr('xmlns', 'http://www.w3.org/2000/svg')
-            .attr('xmlns:xmlns:xlink', 'http://www.w3.org/1999/xlink')
             .attr('width', this.width)
             .attr('height', this.height);
 

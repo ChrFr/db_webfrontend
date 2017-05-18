@@ -12,6 +12,7 @@
  * @param options.background options for a background map, see comments above function renderMap() to see how it is formed
  * @param options.copyright.text copyright of the map
  * @param options.copyright.link link to the site that owns the copyright
+ * @param options.zoomTo initially zoom to bounding box of background map
  */
 var Map = function(options){  
   
@@ -31,7 +32,6 @@ var Map = function(options){
   * @param options.aggregates the areas that will be aggregated from subunits (e.g. landkreise are composed of gemeinden)
   * @param options.isTopoJSON indicator for the data-type, if the data is topoJSON set it to true else false (or don't set at all)
   * @param options.callback callback is called after map is rendered (loading from file is asynchronous!)
-  *  
   */
   this.render = function(options){
     if(!options.subunits) options.subunits = [];
@@ -69,8 +69,8 @@ var Map = function(options){
 
   var projection = d3.geo.mercator()
       .center([13.23, 52.31]) // centered on berlin by default; doesn't matter, if zoomed on bounding box
-      .scale(10000)
-      .translate([innerwidth / 2, innerheight / 2]);
+      .translate([innerwidth / 2, innerheight / 2])
+      .scale([ innerwidth * 3]);
 
   var path = d3.geo.path()
       .projection(projection);
@@ -123,8 +123,6 @@ var Map = function(options){
   }
 
   var svg = d3.select(this.el).append('svg')
-      .attr('xmlns', 'http://www.w3.org/2000/svg')
-      .attr('xmlns:xmlns:xlink', 'http://www.w3.org/1999/xlink')
       .attr('width', innerwidth)
       .attr('height', innerheight);
 
@@ -262,15 +260,58 @@ var Map = function(options){
     /* render TopoJSON */
     if(options.isTopoJSON){
       
+      var features = topojson.feature(map, map.objects.toplayer).features;
       // background map
       g.append('g')
-          .selectAll('.background')
-          .data(topojson.feature(map, map.objects.toplayer).features)
-          .enter().append('path')
-          .attr('class', 'background id')
-          .attr('d', path)
-          .attr('cursor', 'move');
+        .selectAll('.background')
+        .data(features)
+        .enter()
+        .append('path')
+        .attr('class', 'background id')
+        .attr('d', path)
+        .attr('cursor', 'move')
 
+      // calc. bounding box of background map
+      var minx = miny = Number.POSITIVE_INFINITY,
+          maxx = maxy = 0;
+
+      features.forEach(function(feat){
+        var bounds = d3.geo.bounds(feat);
+        minx = Math.min(bounds[0][0], minx);
+        miny = Math.min(bounds[0][1], miny);
+        maxx = Math.max(bounds[1][0], maxx);
+        maxy = Math.max(bounds[1][1], maxy);
+      });
+     
+      var bboxPoly = {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [ minx, miny ],
+              [ minx, maxy ],
+              [ maxx, maxy ],
+              [ maxx, miny ],
+              [ minx, miny ]
+            ]
+          ]
+        },
+        "properties": {}
+      };
+      //var path = d3.geo.path()
+      //           .projection(projection);
+         
+      // prepend bounding box (just to add handlers for dragging the map even 
+      // if you click outside the map)
+      g.append('g')
+        .append('path')
+        .datum(bboxPoly)
+        .attr('d', path)
+        //.attr('fill', 'orange')
+        .attr('opacity', 0)
+        .attr('cursor', 'move')
+        .attr('class', 'background id')
       var boundaries, submap;
 
       // detailed map
@@ -321,7 +362,7 @@ var Map = function(options){
           return a === b;
         });
       }
-      zoomTo(boundaries, false);
+      if (options.zoomTo) zoomTo(boundaries, false);
     }
 
     /* render GeoJSON */

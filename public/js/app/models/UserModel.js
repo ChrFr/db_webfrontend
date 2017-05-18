@@ -8,6 +8,8 @@ define(['app', "backbone"],
     function(app, Backbone) {
 
         var UserModel = Backbone.Model.extend({
+          
+            urlRoot: app.api.users,
             
             defaults: {
                 name: '',

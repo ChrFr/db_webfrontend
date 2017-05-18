@@ -3,11 +3,13 @@
  Publisher: GGR
  */
 
-define(["backbone"],
+define(['app', "backbone"],
 
-    function(Backbone) {
+    function(app, Backbone) {
 
         var PrognosisModel = Backbone.Model.extend({
+          
+            urlRoot: app.api.prognoses,
             
             defaults: {
               name: '',

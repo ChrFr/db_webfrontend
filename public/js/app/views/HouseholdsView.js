@@ -22,14 +22,20 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
 
       initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
+        var _this = this;
 
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
         var progId = app.get('activePrognosis').id;
         if (progId) {
-          // container for all demographic developments (aggregated regions too)
+          // container for all household developments (aggregated regions too)
           // serves as cache
           this.collection = new HouseholdsCollection({progId: progId});
-          this.collection.fetch({success: this.render});
+          this.collection.fetch({
+            success: this.render,
+            error : function() {
+                _this.el.innerHTML = '<h4><i> Keine Haushaltsprognose verf&uumlgbar </i></h4>';
+            }
+          });
           this.width = options.width;
         }
       },
@@ -65,7 +71,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       
       renderData: function (){
         if(!this.currentModel)
-          return;        
+          return;
         
         // show tables
         this.el.querySelector('#tables').style.display = 'block';
@@ -243,7 +249,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         clearElement(vis);
         var groupedData = [];
 
-        var width = this.width - 70;
+        var width = this.width - 20;
         var height = width * 0.8;
         var maxSize = 0;
         
@@ -257,6 +263,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         for (var i = 1; i < maxSize + 1; i++){
           var name = i + ' Person';
           if (i > 1) name += 'en';
+          if (i == maxSize) name += ' und mehr';
           groupNames.push(name);          
         }
         var prog = app.get('activePrognosis');
@@ -274,6 +281,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
           bandName: 'jahr',
           separator: prog.get('basisjahr')
         });
+        this.sizesChart.margin.right = 120;
         this.sizesChart.render();
       },
       

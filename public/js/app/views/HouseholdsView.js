@@ -41,7 +41,11 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       },
 
       events: {
-
+        // download buttons clicked
+        'click .sizes-tab .download-btn.png': 'downloadSizesPng',
+        'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
+        'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',    
+        'click #raw-data-btn': 'downloadRawCsv',
       },
 
       // render view
@@ -83,6 +87,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         this.renderDevTable(data);
         this.renderSizesChart(data);
         //this.renderSizesTable(data);
+        this.renderRawData(data);
         
         // description        
         this.renderDescription(this.currentModel.get('description'));
@@ -251,13 +256,12 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
 
         var width = this.width - 20;
         var height = width * 0.8;
-        var maxSize = 0;
+        var maxSize = this.currentModel.get('maxSize');
         
         _.each(data, function (d) {
-            maxSize = Math.max(maxSize, d.hhgroessen.length);
             groupedData.push({'jahr': d.jahr,
                               'values': d.hhgroessen});   
-        });        
+        });
         
         var groupNames = [];//_.range(1, maxSize + 1);
         for (var i = 1; i < maxSize + 1; i++){
@@ -285,10 +289,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         this.sizesChart.render();
       },
       
-      /*
-       * render a table with mail and female ages for given year
-       */
-      renderSizesTable: function (yearData) {
+      renderSizesTable: function (yearData) {/*
         var columns = [],
             title = '',
             prog = app.get('activePrognosis'),
@@ -330,7 +331,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
           startPage: state.page,
           pageSize: state.size,
           highlight: true
-        });
+        });*/
       },
       
       /*
@@ -339,25 +340,25 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
        */
       renderRawData: function (data) {
         var columns = [];
-        var maxAge = this.currentModel.get('maxAge');
+        var maxSize = this.currentModel.get('maxSize');
                 
         var mappedData = [];
         data.forEach(function (yearData, n){
-          
           var yearMapped = new Array();
           // transform data and split the age-columns
-          Object.keys(yearData).forEach(function (key) {  
-            if(key != 'sumFemale' && key != 'sumMale'){ // ignore clientside processed data              
-              if(key == 'alter_weiblich' || key == 'alter_maennlich'){
-                for(var i = 0; i < maxAge; i++){
+          Object.keys(yearData).forEach(function (key) {    
+            if (key != 'sumHouseholds') {        
+              if(key == 'hhgroessen'){
+                for(var i = 0; i < maxSize; i++){
                   // header
-                  var splitName = i + '_' + key.replace("alter", "jahre");;
+                  var splitName = i + 1 + '_Person';
+                  if (i > 0) splitName += 'en';
                   if (n == 0)                
                     columns.push({name: splitName, description: splitName});
-                  var nAge = 0;
+                  var nP = 0;
                   if (i < yearData[key].length)
-                    nAge = yearData[key][i]
-                  yearMapped[splitName] = roundRep(nAge, app.DECIMALS);
+                    nP = yearData[key][i]
+                  yearMapped[splitName] = roundRep(nP, app.DECIMALS);
                 }               
               }
               else{
@@ -366,7 +367,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
                   columns.push({name: key, description: key});
                 yearMapped[key] = yearData[key];
               }
-            }                       
+            }
           });
           mappedData.push(yearMapped); 
         });
@@ -378,6 +379,18 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
           title: data[0].jahr + ' bis ' + data[data.length - 1].jahr,// + ' - ' + this.currentModel.get('name'),
           highlight: true
         });
+      },
+      
+      downloadDevelopmentCsv: function(){
+        var filename = this.currentModel.get('name') + '-Haushaltsentwicklung.csv';
+        this.devTable.save(filename);
+      },
+      
+      downloadRawCsv: function () {
+        var filename = this.currentModel.get('name') + '-Haushaltsprognose-Gesamtdaten.csv';
+        this.el.querySelector('#raw-data').style.display = 'block';
+        this.rawTable.save(filename);
+        this.el.querySelector('#raw-data').style.display = 'none';
       },
 
       //remove the view

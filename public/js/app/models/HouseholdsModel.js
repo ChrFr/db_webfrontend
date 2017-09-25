@@ -16,9 +16,12 @@ define(["app", "backbone", 'models/GenericPrognosisDataModel'],
 
         options.success = function (model, res, opt) {
           var data = model.get('data');
+          var maxSize = 0;
 
           // preprocess other characteristic numbers and round to defined decimals
           _.each(data, function (item) {
+            
+            maxSize = Math.max(maxSize, item.hhgroessen.length);
             var hhsizes = item.hhgroessen,
                 sumHouseholds = 0,
                 roundingFactor = Math.pow(10, app.DECIMALS);
@@ -29,6 +32,7 @@ define(["app", "backbone", 'models/GenericPrognosisDataModel'],
             };
             item.sumHouseholds = sumHouseholds;
           });
+          model.set('maxSize', maxSize);
           if (callback)
             callback(model, res, opt);
         };

@@ -43,6 +43,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       events: {
         // download buttons clicked
         'click .sizes-tab .download-btn.png': 'downloadSizesPng',
+        'click .sizes-tab .download-btn.csv': 'downloadSizesCsv', 
         'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
         'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',    
         'click #raw-data-btn': 'downloadRawCsv',
@@ -52,6 +53,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       render: function() {
         this.template = _.template(template, {});
         this.el.innerHTML = this.template; 
+        this.canvas = document.getElementById('pngRenderer');
         app.bind('activeRegion', this.renderRegion);
         return this;
       },       
@@ -67,7 +69,9 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         Loader(this.el.querySelector('#absolute'));
 
         model.fetch({success: function(){    
-          
+          var sideControls = _this.el.getElementsByClassName('side-controls');
+          for (var i = 0; i < sideControls.length; i++) 
+            sideControls[i].style.display = 'block';   
           _this.currentModel = model;
           _this.renderData();
         }});
@@ -86,7 +90,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         this.renderDevelopmentChart(data);
         this.renderDevTable(data);
         this.renderSizesChart(data);
-        //this.renderSizesTable(data);
+        this.renderSizesTable(data);
         this.renderRawData(data);
         
         // description        
@@ -289,49 +293,43 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         this.sizesChart.render();
       },
       
-      renderSizesTable: function (yearData) {/*
+      renderSizesTable: function (data) {
         var columns = [],
-            title = '',
-            prog = app.get('activePrognosis'),
-            baseYear = prog.get('basisjahr');    
+            title = 'Haushaltsgrößen';   
+        var firstYearData = data[0];
+        var lastYearData = data[data.length-1]; 
         
-        if (yearData.jahr == baseYear)
-          title = 'Basisjahr';
-        else if(yearData.jahr < baseYear)
-          title = 'Ist-Daten';
-        else
-          title = 'Prognose';
-
-        columns.push({name: 'age', description: 'Alter'});
-        columns.push({name: 'female', description: 'Anzahl weiblich'});
-        columns.push({name: 'male', description: 'Anzahl männlich'});
-
-        var femaleAges = yearData.alter_weiblich;
-        var maleAges = yearData.alter_maennlich;
-
-        var data = [];
-        for (var i = 0; i < femaleAges.length; i++) {
-          data.push({
-            age: i,
-            female: roundRep(femaleAges[i], app.DECIMALS),
-            male: roundRep(maleAges[i], app.DECIMALS)
+        columns.push({name: 'size', description: 'Person(en) je Haushalt'});
+        columns.push({name: 'firstYear', description: firstYearData.jahr});
+        columns.push({name: 'lastYear', description: lastYearData.jahr});
+        columns.push({name: 'devperc', description: 'Entwicklung'});
+        
+        var rows = [];
+        var maxSize = this.currentModel.get('maxSize');
+        for (var i = 0; i < maxSize; i++) {          
+          
+          var firstSize = firstYearData.hhgroessen[i];
+          var lastSize = lastYearData.hhgroessen[i];
+          var devperc = (100 * lastSize / firstSize - 100);
+          if(devperc > 0)
+            devperc = '+' + devperc;
+          
+          rows.push({
+            size: i + 1,
+            firstYear: roundRep(firstSize, app.DECIMALS),
+            lastYear: roundRep(lastSize, app.DECIMALS),
+            devperc: roundRep(devperc, app.DECIMALS) + '%'
           });
-        }
-
-        //get state of prev. table to apply on new one
-        var state = (this.ageTable) ? this.ageTable.getState() : {};
-
-        this.ageTable = new TableView({
-          el: this.el.querySelector('#age-data'),
+        };
+        
+        this.sizesTable = new TableView({
+          el: this.el.querySelector('#sizes-data'),
           columns: columns,
-          title: title + ' ' + yearData.jahr,// + ' - ' + this.currentModel.get('name'),
-          data: data,
-          dataHeight: 500,
-          pagination: false,
-          startPage: state.page,
-          pageSize: state.size,
-          highlight: true
-        });*/
+          data: rows,
+          dataHeight: 300,
+          title: title,
+          clickable: true
+        });
       },
       
       /*
@@ -386,11 +384,31 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         this.devTable.save(filename);
       },
       
+      downloadSizesCsv: function(){
+        var filename = this.currentModel.get('name') + '-Haushaltsgroessen.csv';
+        this.sizesTable.save(filename);
+      },
+      
       downloadRawCsv: function () {
         var filename = this.currentModel.get('name') + '-Haushaltsprognose-Gesamtdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
         this.el.querySelector('#raw-data').style.display = 'none';
+      },
+      
+      downloadDevelopmentPng: function (e) {
+        var filename = this.currentModel.get('name') + '-Haushaltsentwicklung-absolut.png';
+        var svg = $(this.el.querySelector('#absolute>svg'));
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
+        var filename = this.currentModel.get('name') + '-Haushaltsentwicklung-relativ.png';
+        var svg = $(this.el.querySelector('#relative>svg'));
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
+      },
+      
+      downloadSizesPng: function (e) {
+        var filename = this.currentModel.get('name') + '-Haushaltsgroessen.png';
+        var svg = $(this.el.querySelector('#sizes-chart>svg'));
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
 
       //remove the view

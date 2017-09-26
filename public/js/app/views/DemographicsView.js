@@ -983,28 +983,28 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
       
       downloadAgeTreePng: function (e) {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
-        var svg = $('#agetree>svg');
+        var svg = $(this.el.querySelector('#agetree>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadFactorsPng: function (e) {
         var filename = this.currentModel.get('name') + '-Entwicklung.png';
-        var svg = $('#factorchart>svg');
+        var svg = $(this.el.querySelector('#factorchart>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadAgeGroupChartPng: function (e) {
         var filename = this.currentModel.get('name') + '-Altersgruppen.png';
-        var svg = $('#agegroupchart>svg');
+        var svg = $(this.el.querySelector('#agegroupchart>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadDevelopmentPng: function (e) {
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
-        var svg = $('#absolute>svg');
+        var svg = $(this.el.querySelector('#absolute>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-relativ.png';
-        var svg = $('#relative>svg');
+        var svg = $(this.el.querySelector('#relative>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       

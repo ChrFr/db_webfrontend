@@ -363,7 +363,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
                 // header
                 if (n == 0)
                   columns.push({name: key, description: key});
-                yearMapped[key] = yearData[key];
+                yearMapped[key] = roundRep(yearData[key], app.DECIMALS);
               }
             }
           });

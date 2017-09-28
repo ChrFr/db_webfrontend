@@ -287,7 +287,7 @@ var LineChart = function (options) {
       var text = focus.select("text");
       back.style("width", parseInt(text.style("width")) + 10);
       back.style("height", text.style("height"));
-      text.text(Math.round(yData[i]* 100) / 100);
+      text.text((Math.round(yData[i]* 100) / 100).toString().replace('.',','));
     }
 
     function translation(x, y) {

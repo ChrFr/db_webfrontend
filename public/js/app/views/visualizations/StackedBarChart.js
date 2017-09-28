@@ -208,14 +208,14 @@ var StackedBarChart = function (options) {
       stack.selectAll('rect').classed('highlight', true);
       
       var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
-      var text = _this.xlabel + ': ' + d[_this.bandName] + '<br>';
+      var text = _this.xlabel + ': ' + d[_this.bandName].toString().replace('.',',') + '<br>';
       tooltip.style('opacity', .9);
       
       var l = _this.stackLabels.length;
       for (var i = 0; i < l; i++){
-        text += _this.stackLabels[i] + ': <b>' + d.values[l - i - 1] + '</b><br>';
+        text += _this.stackLabels[i] + ': <b>' + d.values[l - i - 1].toString().replace('.',',') + '</b><br>';
       };      
-      text += 'gesamt: <b>' + d.total + '</b><br>';
+      text += 'gesamt: <b>' + d.total.toString().replace('.',',') + '</b><br>';
       tooltip.html(text);
       tooltip.style('left', (d3.event.pageX + 10) + 'px')
              .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');

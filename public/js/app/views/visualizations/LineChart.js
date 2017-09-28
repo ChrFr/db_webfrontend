@@ -156,7 +156,8 @@ var LineChart = function (options) {
     var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .tickSize(-innerwidth);
+            .tickSize(-innerwidth)
+            .tickFormat(d3.format("d"));
 
     var xAxis = d3.svg.axis()
             .scale(xScale)

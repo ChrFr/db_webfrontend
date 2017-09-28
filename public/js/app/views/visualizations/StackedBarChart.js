@@ -173,7 +173,8 @@ var StackedBarChart = function (options) {
     var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .tickSize(-innerwidth);
+            .tickSize(-innerwidth)
+            .tickFormat(d3.format("d"));
 
     var xApp = svg.append('g')
             .attr('class', 'x axis')

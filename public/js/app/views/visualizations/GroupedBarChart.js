@@ -169,7 +169,8 @@ var GroupedBarChart = function (options) {
     var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .tickSize(-this.width);
+            .tickSize(-this.width)
+            .tickFormat(d3.format("d"));
 
     var xApp = svg.append('g')
             .attr('class', 'x axis')

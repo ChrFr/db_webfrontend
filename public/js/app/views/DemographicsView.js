@@ -1041,9 +1041,23 @@ function round(num, decimals){
    return (Math.round(num * t) / t);
 }
 
+function signum(num){
+  if (num < 0) return -1;
+  if (num == 0) return 0;
+  return 1;
+}
+
 // gives a german representation of a number with commas instead of points rounded by decimals
 // numbers without decimals get a trailing .0
 function roundRep(num, decimals) { 
+  
+  var sig = 0;
+  try {
+    sig = Math.sign(num);
+  }
+  catch(err) {
+      sig = signum(num);
+  }
    var t = Math.pow(10, decimals);
-   return (Math.round((num * t) + (decimals>0?1:0)*(Math.sign(num) * (10 / Math.pow(100, decimals)))) / t).toFixed(decimals).replace('.',',');
+   return (Math.round((num * t) + (decimals>0?1:0)*(sig * (10 / Math.pow(100, decimals)))) / t).toFixed(decimals).replace('.',',');
 }

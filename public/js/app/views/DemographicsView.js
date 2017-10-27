@@ -57,7 +57,8 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         'click .age-tab .download-btn.png': 'downloadAgeTreePng',
         'click .agegroup-tab>.download-btn.csv': 'downloadAgeGroupCsv',
         'click .agegroup-tab .download-btn.png': 'downloadAgeGroupChartPng',
-        'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
+        'click #relative-c .download-btn.png': 'downloadRelativePng',
+        'click #absolute-c .download-btn.png': 'downloadAbsolutePng',
         'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',
         'click .factor-tab .download-btn.png': 'downloadFactorsPng',
         'click .factor-tab .download-btn.csv': 'downloadFactorsCsv',        
@@ -999,12 +1000,15 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
-      downloadDevelopmentPng: function (e) {
-        var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
-        var svg = $(this.el.querySelector('#absolute>svg'));
-        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
+      downloadRelativePng: function (e) {
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-relativ.png';
         var svg = $(this.el.querySelector('#relative>svg'));
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
+      },
+      
+      downloadAbsolutePng: function (e) {
+        var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
+        var svg = $(this.el.querySelector('#absolute>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       

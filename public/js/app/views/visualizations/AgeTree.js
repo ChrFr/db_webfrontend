@@ -274,13 +274,15 @@ var AgeTree = function (options) {
             .scale(_this.xScale)
             .orient('bottom')
             .ticks(5)
-            .tickSize(-this.height);
+            .tickSize(-this.height)
+            .tickFormat(d3.format("d"));
 
     var xAxisLeft = d3.svg.axis()
             .scale(_this.xScale.copy().range([pointA, 0]))
             .orient('bottom')
             .ticks(5)
-            .tickSize(-this.height);
+            .tickSize(-this.height)
+            .tickFormat(d3.format("d"));
 
     svg.append('g')
             .attr('class', 'axis y left')

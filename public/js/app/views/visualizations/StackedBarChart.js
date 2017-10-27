@@ -41,6 +41,12 @@ var StackedBarChart = function (options) {
   this.bandName = options.bandName || 'band';
   this.maxY = options.maxY;
   this.separator = options.separator;
+  this.margin = {
+    top: 50,
+    right: 70,
+    bottom: 70,
+    left: 60
+  };
 
   this.render = function (callback) {
     //server-side d3 needs to be loaded separately
@@ -80,15 +86,8 @@ var StackedBarChart = function (options) {
         return d.total;
       }) * 1.1;
 
-    var margin = {
-      top: 50,
-      right: 70,
-      bottom: 70,
-      left: 60
-    };
-
-    var innerwidth = this.width - margin.left - margin.right,
-        innerheight = this.height - margin.top - margin.bottom;
+    var innerwidth = this.width - this.margin.left - this.margin.right,
+        innerheight = this.height - this.margin.top - this.margin.bottom;
 
     var top = d3.select(this.el).append('svg')
             .attr('width', this.width)
@@ -131,20 +130,20 @@ var StackedBarChart = function (options) {
     // create svg
     var svg = top.append('svg')
             .append('g')
-            .attr('transform', translation(margin.left, margin.top));
+            .attr('transform', translation(this.margin.left, this.margin.top));
 
     // TITLE
 
     svg.append('text')
             .attr('class', 'title')
             .attr('x', 0)
-            .attr('y', 30 - (margin.top))
+            .attr('y', 30 - (this.margin.top))
             .text(this.title);
 
     svg.append('text')
             .attr('class', 'subtitle')
             .attr('x', 0)
-            .attr('y', 30 - (margin.top))
+            .attr('y', 30 - (this.margin.top))
             .attr('font-size', '1em')
             .attr('dy', '1em')
             .text(this.subtitle);
@@ -174,7 +173,8 @@ var StackedBarChart = function (options) {
     var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .tickSize(-innerwidth);
+            .tickSize(-innerwidth)
+            .tickFormat(d3.format("d"));
 
     var xApp = svg.append('g')
             .attr('class', 'x axis')
@@ -208,14 +208,14 @@ var StackedBarChart = function (options) {
       stack.selectAll('rect').classed('highlight', true);
       
       var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
-      var text = _this.xlabel + ': ' + d[_this.bandName] + '<br>';
+      var text = _this.xlabel + ': ' + d[_this.bandName].toString().replace('.',',') + '<br>';
       tooltip.style('opacity', .9);
       
       var l = _this.stackLabels.length;
       for (var i = 0; i < l; i++){
-        text += _this.stackLabels[i] + ': <b>' + d.values[l - i - 1] + '</b><br>';
+        text += _this.stackLabels[i] + ': <b>' + d.values[l - i - 1].toString().replace('.',',') + '</b><br>';
       };      
-      text += 'gesamt: <b>' + d.total + '</b><br>';
+      text += 'gesamt: <b>' + d.total.toString().replace('.',',') + '</b><br>';
       tooltip.html(text);
       tooltip.style('left', (d3.event.pageX + 10) + 'px')
              .style('top', (d3.event.pageY - parseInt(tooltip.style('height'))) + 'px');

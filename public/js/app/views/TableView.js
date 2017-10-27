@@ -17,6 +17,19 @@ define(["backbone", "jquery", "text!templates/table.html", "bootstraptable", "ta
         el: document,
         // View constructor
         initialize: function(options){
+          // workaround for IE11
+          if (!String.prototype.endsWith) {
+            String.prototype.endsWith = function(searchString, position) {
+                var subjectString = this.toString();
+                if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                  position = subjectString.length;
+                }
+                position -= searchString.length;
+                var lastIndex = subjectString.indexOf(searchString, position);
+                return lastIndex !== -1 && lastIndex === position;
+            };
+          }
+          
           _.bindAll(this, 'render');
           this.columns = options.columns;
           this.data = options.data;

@@ -156,7 +156,8 @@ var LineChart = function (options) {
     var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .tickSize(-innerwidth);
+            .tickSize(-innerwidth)
+            .tickFormat(d3.format("d"));
 
     var xAxis = d3.svg.axis()
             .scale(xScale)
@@ -286,7 +287,7 @@ var LineChart = function (options) {
       var text = focus.select("text");
       back.style("width", parseInt(text.style("width")) + 10);
       back.style("height", text.style("height"));
-      text.text(Math.round(yData[i]* 100) / 100);
+      text.text((Math.round(yData[i]* 100) / 100).toString().replace('.',','));
     }
 
     function translation(x, y) {

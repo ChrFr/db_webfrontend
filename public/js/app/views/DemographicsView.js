@@ -983,28 +983,28 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
       
       downloadAgeTreePng: function (e) {
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterspyramide.png';
-        var svg = $('#agetree>svg');
+        var svg = $(this.el.querySelector('#agetree>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadFactorsPng: function (e) {
         var filename = this.currentModel.get('name') + '-Entwicklung.png';
-        var svg = $('#factorchart>svg');
+        var svg = $(this.el.querySelector('#factorchart>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadAgeGroupChartPng: function (e) {
         var filename = this.currentModel.get('name') + '-Altersgruppen.png';
-        var svg = $('#agegroupchart>svg');
+        var svg = $(this.el.querySelector('#agegroupchart>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
       downloadDevelopmentPng: function (e) {
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-absolut.png';
-        var svg = $('#absolute>svg');
+        var svg = $(this.el.querySelector('#absolute>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung-relativ.png';
-        var svg = $('#relative>svg');
+        var svg = $(this.el.querySelector('#relative>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
       
@@ -1041,9 +1041,23 @@ function round(num, decimals){
    return (Math.round(num * t) / t);
 }
 
+function signum(num){
+  if (num < 0) return -1;
+  if (num == 0) return 0;
+  return 1;
+}
+
 // gives a german representation of a number with commas instead of points rounded by decimals
 // numbers without decimals get a trailing .0
 function roundRep(num, decimals) { 
+  
+  var sig = 0;
+  try {
+    sig = Math.sign(num);
+  }
+  catch(err) {
+      sig = signum(num);
+  }
    var t = Math.pow(10, decimals);
-   return (Math.round((num * t) + (decimals>0?1:0)*(Math.sign(num) * (10 / Math.pow(100, decimals)))) / t).toFixed(decimals).replace('.',',');
+   return (Math.round((num * t) + (decimals>0?1:0)*(sig * (10 / Math.pow(100, decimals)))) / t).toFixed(decimals).replace('.',',');
 }

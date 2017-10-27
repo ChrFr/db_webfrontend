@@ -44,7 +44,8 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         // download buttons clicked
         'click .sizes-tab .download-btn.png': 'downloadSizesPng',
         'click .sizes-tab .download-btn.csv': 'downloadSizesCsv', 
-        'click .development-tab .download-btn.png': 'downloadDevelopmentPng',
+        'click #relative-c .download-btn.png': 'downloadRelativePng',
+        'click #absolute-c .download-btn.png': 'downloadAbsolutePng',
         'click .development-tab .download-btn.csv': 'downloadDevelopmentCsv',    
         'click #raw-data-btn': 'downloadRawCsv',
       },
@@ -396,14 +397,18 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
         this.el.querySelector('#raw-data').style.display = 'none';
       },
       
-      downloadDevelopmentPng: function (e) {
-        var filename = this.currentModel.get('name') + '-Haushaltsentwicklung-absolut.png';
-        var svg = $(this.el.querySelector('#absolute>svg'));
-        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
+      downloadRelativePng: function (e) {
         var filename = this.currentModel.get('name') + '-Haushaltsentwicklung-relativ.png';
         var svg = $(this.el.querySelector('#relative>svg'));
         downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
       },
+      
+      downloadAbsolutePng: function (e) {
+        var filename = this.currentModel.get('name') + '-Haushaltsentwicklung-absolut.png';
+        var svg = $(this.el.querySelector('#absolute>svg'));
+        downloadPng(svg, filename, this.canvas, {width: 2, height: 2});
+      },
+      
       
       downloadSizesPng: function (e) {
         var filename = this.currentModel.get('name') + '-Haushaltsgroessen.png';

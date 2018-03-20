@@ -10,5 +10,5 @@ services:
       - "8097:8000"
 
     volumes:
-      - ./config.js:/home/prognosen/server/config.js
+      - ./config.js:/prognosen/server/config.js
     restart: unless-stopped

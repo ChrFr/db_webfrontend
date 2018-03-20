@@ -5,7 +5,7 @@ services:
   web:
     image: chrfr/db_webfrontend:latest
 
-    command: git pull 
+    command: bash -c "git pull && npm install && node /prognosen/server/server.js"
     ports:
       - "8097:8000"
 

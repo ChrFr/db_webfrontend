@@ -1,0 +1,15 @@
+version: '1.0'
+
+services:
+
+  web:
+    env_file: .env
+    image: chrfr/prognosen:latest
+
+    command: git pull 
+    ports:
+      - "${PORT}:8000"
+
+    volumes:
+      - /server/config.js:config.js
+    restart: always

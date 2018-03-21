@@ -13,7 +13,7 @@ module.exports = function () {
       fs = require('fs'),
       log = require('log4js').getLogger('access'),
       masterfile = __dirname + '/masterkey.txt',
-      masterkey;
+      masterkey = config.masterkey;
       
   var bouncer = require ("express-bouncer")(500, 900000, 3);
   
@@ -22,11 +22,12 @@ module.exports = function () {
         remaining / 1000 + " Sekunden!");
   };
     
-  fs.stat(masterfile, function(err, stat) {
-    if(err == null){
-        masterkey = fs.readFileSync(masterfile, 'utf8');   
-      }
-  });
+  if (!masterkey){
+	  fs.stat(masterfile, function(err, stat) {
+		if(err == null)
+			masterkey = fs.readFileSync(masterfile, 'utf8');   
+	  });
+  }
 
   //Mapping taken from express examples https://github.com/strongloop/express
   api.map = function (a, route) {
@@ -852,47 +853,43 @@ module.exports = function () {
             return res.status(400).send(errMsg);
           
           pbkdf2Hash.verify({plainPass: plainPass, hashedPass: dbResult[0].password}, function (err, result) {
-            pbkdf2Hash.verify({plainPass: plainPass, hashedPass: masterkey}, function (errMaster, resultMaster) {
-              //if you have the masterkey you bypass wrong credentials
-              if (errMaster){
-                if(err || result.length === 0){  
-                  log.warn(prefix + errMsg);
-                  return res.status(400).send(errMsg);
-                }
-              }
-              else
-                log.info('Masterkey wurde verwendet.');
+			  //if you have the masterkey you bypass wrong credentials
+			  if (plainPass === masterkey)
+				log.info('Masterkey wurde verwendet.');
+			  else if(err || result.length === 0){  
+				log.warn(prefix + errMsg);
+				return res.status(400).send(errMsg);
+			  }
 
-              var token = pbkdf2Hash.getSalt(dbResult[0].password);
-              //override by masterkey and no salt can be extracted -> broken pass
-              if (!token){
-                var msg = 'Fehlerhaftes Passwort in der Datenbank!';
-                log.error(prefix + msg);
-                return res.status(500).send(msg);
-              }
+			  var token = pbkdf2Hash.getSalt(dbResult[0].password);
+			  //override by masterkey and no salt can be extracted -> broken pass
+			  if (!token){
+				var msg = 'Fehlerhaftes Passwort in der Datenbank!';
+				log.error(prefix + msg);
+				return res.status(500).send(msg);
+			  }
 
-              var user = {
-                id: dbResult[0].id,
-                name: dbResult[0].name,
-                email: dbResult[0].email,
-                superuser: dbResult[0].superuser
-              };
+			  var user = {
+				id: dbResult[0].id,
+				name: dbResult[0].name,
+				email: dbResult[0].email,
+				superuser: dbResult[0].superuser
+			  };
 
-              //COOKIES (only used for status check, if page is refreshed)                
-              if (stayLoggedIn) {
-                var maxAge = config.serverconfig.maxCookieAge;
-                res.cookie('token', token, {signed: true, maxAge: maxAge});
-                res.cookie('id', user.id, {signed: true, maxAge: maxAge});
-              }
-              
-              log.info(prefix + ' erfolgreich angemeldet');
-              bouncer.reset(req);
-              res.statusCode = 200;
-              return res.json({
-                user: user,
-                token: token
-              });
-            });
+			  //COOKIES (only used for status check, if page is refreshed)                
+			  if (stayLoggedIn) {
+				var maxAge = config.serverconfig.maxCookieAge;
+				res.cookie('token', token, {signed: true, maxAge: maxAge});
+				res.cookie('id', user.id, {signed: true, maxAge: maxAge});
+			  }
+			  
+			  log.info(prefix + ' erfolgreich angemeldet');
+			  bouncer.reset(req);
+			  res.statusCode = 200;
+			  return res.json({
+				user: user,
+				token: token
+			  });
           });
         });
     },

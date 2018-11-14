@@ -1,14 +1,22 @@
-version: '3.1'
+version: '2'
 
 services:
-
   web:
-    image: chrfr/db_webfrontend:latest
 
+    image: chrfr/db_webfrontend
+    links:
+      - postgis23-96:database
     command: bash -c "git pull && npm install && node /prognosen/server/server.js"
     ports:
       - "8097:8000"
-
     volumes:
-      - ./config.js:/prognosen/server/config.js
+      - "./config.js:/prognosen/server/config.js"
     restart: unless-stopped
+    networks:
+      prognosen_network:
+        ipv4_address: 173.23.0.3
+
+  postgis23-96:
+    restart: always
+    image: maxboh/postgis_pgrepack_kmeans_plpythonu:9.6-2.4-2.5
+    user: 'postgres:postgres'

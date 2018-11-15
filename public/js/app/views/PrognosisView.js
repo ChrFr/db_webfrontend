@@ -227,6 +227,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
         renderOverview: function(prognosis){
           var title = this.el.querySelector('#title');
           var description = this.el.querySelector('#description');          
+          var report = this.el.querySelector('#download-report');
           if(!app.get('session').get('user')){
             this.map.setOverlayText('Bitte loggen Sie sich zunächst ein!');
             return false;
@@ -238,6 +239,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
           else{       
             this.map.setOverlayText('');
             title.innerText = prognosis.get('name');
+            report.href = prognosis.get('report');
             description.innerHTML = prognosis.get('description');
             this.el.querySelector('#max-inhabitants').innerHTML = prognosis.get('max_bevstand');
             this.el.querySelector('#base-year').innerHTML = prognosis.get('basisjahr');

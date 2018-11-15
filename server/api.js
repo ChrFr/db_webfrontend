@@ -13,8 +13,9 @@ module.exports = function () {
       fs = require('fs'),
       log = require('log4js').getLogger('access'),
       masterfile = __dirname + '/masterkey.txt',
+      mediaUrl = '/media/',
+      mediaDir = __dirname + '/../public' + mediaUrl,
       masterkey = config.masterkey;
-      
   var bouncer = require ("express-bouncer")(500, 900000, 3);
   
   bouncer.blocked = function (req, res, next, remaining){
@@ -22,11 +23,22 @@ module.exports = function () {
         remaining / 1000 + " Sekunden!");
   };
     
+  function toMediaFile (filename, data){
+    var regex = /^data:.+\/(.+);base64,(.*)$/,
+        matches = data.match(regex),
+        ext = matches[1],
+        d = matches[2];
+    var buffer = Buffer.from(d, 'base64');
+    fs.writeFileSync(mediaDir + filename, buffer);
+    var url = mediaUrl + filename;
+    return url;
+  };
+    
   if (!masterkey){
-	  fs.stat(masterfile, function(err, stat) {
-		if(err == null)
-			masterkey = fs.readFileSync(masterfile, 'utf8');   
-	  });
+    fs.stat(masterfile, function(err, stat) {
+      if(err == null)
+        masterkey = fs.readFileSync(masterfile, 'utf8');   
+    });
   }
 
   //Mapping taken from express examples https://github.com/strongloop/express
@@ -264,7 +276,7 @@ module.exports = function () {
         function (err, status, user) {
           if (err)
             return res.status(status).send(err);
-          var q = "SELECT id, name, description, basisjahr";
+          var q = "SELECT id, name, description, basisjahr, report";
           if (user.superuser)
             q += ", users";
           q += " FROM prognosen";
@@ -289,8 +301,15 @@ module.exports = function () {
           return res.status(status).send(err);
         if (!user.superuser)
           return res.status(403);
-        query("UPDATE prognosen SET name=$2, description=$3, users=$4, basisjahr=$5 WHERE id=$1;",
-          [req.params.pid, req.body.name, req.body.description, req.body.users, req.body.basisjahr],
+        var params = [req.params.pid, req.body.name, req.body.description, req.body.users, req.body.basisjahr];
+        var add = '';
+        if (req.body.report && req.body.report.name){
+          var url = toMediaFile(req.body.report.name, req.body.report.data);
+          add = ', report=$6'
+          params.push(url);
+        }
+        query("UPDATE prognosen SET name=$2, description=$3, users=$4, basisjahr=$5" + add + " WHERE id=$1;",
+          params,
           function (err, result) {
             if (err)
               return res.status(500).send('Interner Fehler.');
@@ -300,7 +319,6 @@ module.exports = function () {
       });
     },
     
-    
     // add prognosis to database
     post: function (req, res) {
       authenticate(req.headers, function (err, status, user) {
@@ -308,9 +326,13 @@ module.exports = function () {
           return res.status(status).send(err);
         if (!user.superuser)
           return res.status(403);
+        var url;
+        if (req.body.report && req.body.report.name){
+          url = toMediaFile(req.body.report.name, req.body.report.data);
+        }
 
-        query("INSERT INTO prognosen (name, description, users, basisjahr) VALUES ($1, $2, $3, $4);",
-          [req.body.name, req.body.description, req.body.users, req.body.basisjahr],
+        query("INSERT INTO prognosen (name, description, users, basisjahr, report) VALUES ($1, $2, $3, $4, $5);",
+          [req.body.name, req.body.description, req.body.users, req.body.basisjahr, url],
           function (err, result) {
             if (err)
               return res.status(409).send('Name "' + req.body.name + '" ist bereits vergeben!');

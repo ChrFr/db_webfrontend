@@ -96,17 +96,20 @@ define(["jquery", "backbone", "text!templates/admin.html",
           columns.push({name: "name", description: "Name"});
           columns.push({name: "description", description: "Beschreibung"});
           columns.push({name: "basisjahr", description: "Basisjahr"});
+          columns.push({name: "report", description: "Bericht"});
           columns.push({name: "users", description: "berechtigte Nutzer"});
 
           _this.prognoses.each(function(prog){
             var description = prog.get('description') || '';
             if(description.length > 100)
               description = description.substring(0, 100) + " [...]";
+            var report = prog.get('report');
             data.push({
               'id': prog.get('id'),
               'name': prog.get('name'),
               'description': description,
               'basisjahr': prog.get('basisjahr'),
+              'report': (report) ? "<a target='_blank' href='" + report + "'>" + report + "</a>": '-',
               'users': prog.get('users')
             });
           });
@@ -252,10 +255,12 @@ define(["jquery", "backbone", "text!templates/admin.html",
         _.each(attributes, function(attribute){
           var attribute = $(attribute);
           var value = model.get(attribute.attr('name'));
-          if(attribute.attr('type') === 'checkbox')
+          if(attribute.attr('type') === 'file')
+            attribute.val('');
+          else if(attribute.attr('type') === 'checkbox')
             attribute.prop('checked', value);
           else
-            value = attribute.val(value);
+            attribute.val(value);
         });
       },
       
@@ -263,7 +268,8 @@ define(["jquery", "backbone", "text!templates/admin.html",
       // parse form inputs into model and submit it
       onSubmit: function(event){
         var dialog = findAncestor(event.target, 'modal');
-        var _this = this;
+        var _this = this,
+            ready = true;
         //by now only one model supported for submission
         var model = _this.selectedModels[0];
         if(this.validateForm()){
@@ -275,6 +281,23 @@ define(["jquery", "backbone", "text!templates/admin.html",
             if(attribute.attr('type') === 'checkbox')
               value = attribute.prop('checked');
             // multi-checkbox to array
+            else if(attribute.attr('type') === 'file'){
+              var files = attribute[0].files;
+              if (files.length > 0){
+                ready = false;
+                var reader = new FileReader();
+                reader.readAsDataURL(files[0]);
+                reader.onload = function(e){
+                  value = e.target.result;
+                  model.set(attribute.attr('name'), {
+                    name: files[0].name,
+                    data: value
+                  });
+                  ready = true;
+                }
+              }
+              else value = '';
+            }
             else if(attribute.hasClass('multi-checkbox')){
               value = [];
               _.each(attribute.children(), function(checkbox){
@@ -285,29 +308,40 @@ define(["jquery", "backbone", "text!templates/admin.html",
             else
               value = attribute.val();
             model.set(attribute.attr('name'), value);
-          });          
-          model.save({}, {
-            dataType: 'text',
-            success: function(m, response){
-              _this.alert('success', 'Anfrage war erfolgreich!');
-              /* file upload deactivated
-              if(dialog.id === 'editPrognosisDialog'){  
-                // upload file              
-                var files = dialog.querySelector("#upload-demo-csv").files;
-                if(files.length > 0){
-                  var file = files[0];
-                  var dd = new DemographicsCollection({progId: model.get('id')});
-                  dd.fromCSV(file);
+          });       
+          
+          // ugly way to wait for file to be ready (only ONE file supported this way)
+          // too lazy for creating a callback ^^
+          function wait(){
+            if (ready) {
+              model.save({}, {
+                dataType: 'text',
+                success: function(m, response){
+                  _this.alert('success', 'Anfrage war erfolgreich!');
+                  /* file upload deactivated
+                  if(dialog.id === 'editPrognosisDialog'){  
+                    // upload file              
+                    var files = dialog.querySelector("#upload-demo-csv").files;
+                    if(files.length > 0){
+                      var file = files[0];
+                      var dd = new DemographicsCollection({progId: model.get('id')});
+                      dd.fromCSV(file);
+                    }
+                   }*/
+                  // update tables
+                  _this.showUserTable();
+                  _this.showPrognoses();              
+                },
+                error: function(m, response){
+                  _this.alert('danger', response.responseText);
                 }
-               }*/
-              // update tables
-              _this.showUserTable();
-              _this.showPrognoses();              
-            },
-            error: function(m, response){
-              _this.alert('danger', response.responseText);
+              });
+              return;
             }
-          });
+            setTimeout(wait, 100);
+          }
+          wait()
+          
         }
       },
       

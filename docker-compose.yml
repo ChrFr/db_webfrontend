@@ -11,6 +11,7 @@ services:
       - "8097:8000"
     volumes:
       - "./config.js:/prognosen/server/config.js"
+      - ./media:/prognosen/public/media
     restart: unless-stopped
     networks:
       prognosen_network:

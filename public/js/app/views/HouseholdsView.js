@@ -23,7 +23,8 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
         var _this = this;
-
+        this.user = app.get('session').get('user');
+        
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
         var progId = app.get('activePrognosis').id;
         if (progId) {
@@ -52,7 +53,7 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
 
       // render view
       render: function() {
-        this.template = _.template(template, {});
+        this.template = _.template(template, {user: this.user});
         this.el.innerHTML = this.template; 
         this.canvas = document.getElementById('pngRenderer');
         app.bind('activeRegion', this.renderRegion);
@@ -381,16 +382,19 @@ define(['app', 'jquery', 'backbone', 'text!templates/households.html',
       },
       
       downloadDevelopmentCsv: function(){
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Haushaltsentwicklung.csv';
         this.devTable.save(filename);
       },
       
       downloadSizesCsv: function(){
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Haushaltsgroessen.csv';
         this.sizesTable.save(filename);
       },
       
       downloadRawCsv: function () {
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Haushaltsprognose-Gesamtdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);

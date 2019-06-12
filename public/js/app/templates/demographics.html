@@ -143,13 +143,17 @@
       <div class='tab-pane active development-tab'>  <!-- this one is active at first, because corresponding development vis is the first active one-->
         <div id='dev-data'></div> 
         <br>
+        <% if (!user.limited_access) {%>
         <button type='button' class='btn btn-secondary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Tabelle als csv</button>
+        <%}%>
         <br>
       </div>    
       <div class='tab-pane age-tab'>    
         <div id='age-data'></div>
         <br>
+        <% if (!user.limited_access) {%>
         <button type='button' class='btn btn-secondary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Tabelle als csv</button>
+        <%}%>
         <br>
       </div>       
       <div class='tab-pane agegroup-tab'>  
@@ -157,19 +161,25 @@
         <br>
         <label> Altersgruppe </label> <br>
         <button id='add-agegroups' type='button' class='btn btn-secondary' title='Altersgruppe hinzufügen'>Hinzufügen</button> 
-        <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button> 
+        <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button>         
+        <% if (!user.limited_access) {%>
         <button type='button' class='btn btn-secondary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Tabelle als csv</button>
+        <%}%> 
         <br>
       </div>   
       <div class='tab-pane factor-tab'>  
         <div id='factor-data'></div> 
         <br>
+        <% if (!user.limited_access) {%>
         <button type='button' class='btn btn-secondary download-btn csv' title='Datenblatt als csv-Datei speichern.'>Tabelle als csv</button>
+        <%}%> 
         <br>
       </div>    
     </div>
     <div class='shadow-box box-footer'>
+      <% if (!user.limited_access) {%>
       <button type='button' id='raw-data-btn' class='btn btn-primary download-btn csv' title='Vollständige Bevölkerungsprognose für gewählte Region als csv-Datei speichern.'>Gesamtdaten als csv</button>
+      <%}%> 
     </div>
   </div>        
 </div>

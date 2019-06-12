@@ -34,6 +34,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
        */
       initialize: function (options) {
         _.bindAll(this, 'render', 'renderRegion');
+        this.user = app.get('session').get('user');
 
         // you need an active prognosis to proceed (else nothing to show, is intercepted by router anyway)
         var progId = app.get('activePrognosis').id;
@@ -88,7 +89,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
        * render view
        */ 
       render: function () {
-        this.template = _.template(template, {});
+        this.template = _.template(template, {user: this.user});
         this.el.innerHTML = this.template;     
         // aux. canvas for conversion into png
         this.canvas = document.getElementById('pngRenderer');
@@ -956,21 +957,25 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
       // FUNCTIONS FOR CONVERTING CURRENT MODELDATA TO CSV/PNG
       
       downloadAgeTableCsv: function () {
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-' + this.currentYear + '-Alterstabelle.csv';
         this.ageTable.save(filename);
       },
       
       downloadDevelopmentCsv: function(){
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Bevoelkerungsentwicklung.csv';
         this.devTable.save(filename);
       },
       
       downloadFactorsCsv: function(){
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Einflussfaktoren.csv';
         this.factorTable.save(filename);
       },
       
       downloadRawCsv: function () {
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Bevoelkerungsprognose-Gesamtdaten.csv';
         this.el.querySelector('#raw-data').style.display = 'block';
         this.rawTable.save(filename);
@@ -978,6 +983,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
       },
       
       downloadAgeGroupCsv: function () {
+        if (this.user.limited_access) return;
         var filename = this.currentModel.get('name') + '-Altersgruppen.csv';
         this.ageGroupTable.save(filename);
       },

@@ -63,6 +63,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
             columns.push({name: "name", description: "Name"});
             columns.push({name: "email", description: "E-Mail"});
             columns.push({name: "superuser", description: "Superuser"});
+            columns.push({name: "limited_access", description: "Eingeschränkter Zugriff"});
             columns.push({name: "password", description: "Passwort"});
 
             _this.users.each(function(user){
@@ -71,6 +72,7 @@ define(["jquery", "backbone", "text!templates/admin.html",
                 'name': user.get('name'),
                 'email': user.get('email'),
                 'superuser': user.get('superuser'),
+                'limited_access': user.get('limited_access'),
                 'password': '&#8226;&#8226;&#8226;&#8226;'
               });
             });
@@ -278,8 +280,9 @@ define(["jquery", "backbone", "text!templates/admin.html",
           _.each(attributes, function(attribute){
             var attribute = $(attribute);
             var value = '';
-            if(attribute.attr('type') === 'checkbox')
+            if(attribute.attr('type') === 'checkbox'){
               value = attribute.prop('checked');
+            }
             // multi-checkbox to array
             else if(attribute.attr('type') === 'file'){
               var files = attribute[0].files;

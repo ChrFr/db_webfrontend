@@ -25,6 +25,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
         initialize: function(){
           // Calls the view's render method
           var _this = this;
+          this.user = app.get('session').get('user');
           this.layers = new LayerCollection();
           this.subunits = new SubunitCollection();
           // layer information needed to region selection and to finally render 
@@ -87,7 +88,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
          */
         render: function(){
           var _this = this;
-          this.template = _.template(template, {});
+          this.template = _.template(template, {user: this.user});
           this.el.innerHTML = this.template;
 
           // overview should be opened, when new prognosis is selected
@@ -262,7 +263,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
               regionSelector = this.el.querySelector('#region-select'),
               multiTip = this.el.querySelector('#multi-tip');      
           
-          multiTip.style.display = 'none';
+          if (multiTip) multiTip.style.display = 'none';
 
           clearElement(regionSelector);
           
@@ -294,7 +295,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
 
           // BASE AND AGGREGATION LAYERS (e.g. landkreise)
           else {
-            multiTip.style.display = 'block';
+            if (multiTip) multiTip.style.display = 'block';
 
             this.layers.get(layerId).fetch({
               data: {progId: progId},
@@ -407,7 +408,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
             for(var i = 0, j = regionSelector.options.length; i < j; ++i){
               if(regionSelector.options[i].innerHTML === name){
                 // ctrl or shift pressed while clicking -> allow multiselect
-                if(d3.event.ctrlKey || d3.event.shiftKey)
+                if ((d3.event.ctrlKey || d3.event.shiftKey) && (!_this.user.limited_access))
                   //invert selection (maybe it was already selected
                   regionSelector.options[i].selected = !regionSelector.options[i].selected;
                 // simple click -> single selection

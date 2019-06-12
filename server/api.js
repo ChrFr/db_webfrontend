@@ -230,6 +230,7 @@ module.exports = function () {
         id: id,
         name: result[0].name,
         email: result[0].email,
+        limited_access: result[0].limited_access,
         superuser: result[0].superuser
       };
 
@@ -747,7 +748,7 @@ module.exports = function () {
           return res.status(status).send(err);
         if (!user.superuser)
           return res.status(403);
-        query("SELECT id, name, email, superuser from users;", [],
+        query("SELECT id, name, email, superuser, limited_access from users;", [],
           function (err, result) {
             if (err)
               return res.sendStatus(500);
@@ -763,7 +764,7 @@ module.exports = function () {
           return res.status(status).send(err);
         if (!user.superuser)
           return res.status(403);
-        query("SELECT id, name, email, superuser from users WHERE id=$1;", [req.params.id],
+        query("SELECT id, name, email, superuser, limited_access from users WHERE id=$1;", [req.params.id],
           function (err, result) {
             if (err || result.length === 0)
               return res.sendStatus(404);
@@ -781,12 +782,13 @@ module.exports = function () {
           return res.status(403);
         var name = req.body.name;
         var email = req.body.email;
+        var limited_access = req.body.limited_access;
 
         pbkdf2Hash.hash({plainPass: req.body.password}, function (err, hashedPass) {
           if (err)
             return res.status(500).send('Interner Fehler.');
-          query("INSERT INTO users (name, email, password, superuser) VALUES ($1, $2, $3, $4);",
-            [name, email, hashedPass, req.body.superuser],
+          query("INSERT INTO users (name, email, password, superuser, limited_access) VALUES ($1, $2, $3, $4, $5);",
+            [name, email, hashedPass, req.body.superuser, limited_access],
             function (err, result) {
               if (err)
                 return res.status(409).send('Name "' + name + '" ist bereits vergeben!');
@@ -808,8 +810,8 @@ module.exports = function () {
         pbkdf2Hash.hash({plainPass: req.body.password}, function (err, hashedPass) {
           if (err)
             return res.status(500).send('Interner Fehler.');
-          query("UPDATE users SET name=$2, email=$3, superuser=$4, password=$5 WHERE id=$1;",
-            [req.params.id, req.body.name, req.body.email, req.body.superuser, hashedPass],
+          query("UPDATE users SET name=$2, email=$3, superuser=$4, password=$5, limited_access=$6 WHERE id=$1;",
+            [req.params.id, req.body.name, req.body.email, req.body.superuser, hashedPass, req.body.limited_access],
             function (err, result) {
               if (err)
                 return res.status(500).send('Interner Fehler.');
@@ -895,6 +897,7 @@ module.exports = function () {
 				id: dbResult[0].id,
 				name: dbResult[0].name,
 				email: dbResult[0].email,
+                                limited_access: dbResult[0].limited_access,
 				superuser: dbResult[0].superuser
 			  };
 

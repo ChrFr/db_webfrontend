@@ -15,6 +15,8 @@
     <div class="row shadow-box" id='map'></div> 
     <div class='row shadow-box box-footer' id='sub-map-nav' style='display: none'>
       <div id='selection-label'></div> 
+      
+      <% if (!user.limited_access) {%>
       <label id="multi-tip" style='float: left; text-align: left; font-size: 0.7em; display: none;'>
         <br>
         <u> Tipps</u>  <br>
@@ -22,6 +24,7 @@
         Sie können mit dem Mausrad zoomen und bei gedrückter linker Maustaste die Karte bewegen.                 
       </label>      
       <br>
+      <%}%>
       <!--
       <a href='#overview-tab' data-toggle='tab'>
         Übersicht 

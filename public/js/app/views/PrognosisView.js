@@ -335,17 +335,24 @@ define(['jquery', 'app', 'backbone', 'text!templates/prognosis.html',
                     return;
                   var rsAggr = [], names = [], values = [];
 
-                  // check which regions are selected
-                  for(var i = 0, len = regionSelector.options.length; i < len; i++){
-                    var opt = regionSelector.options[i];
-                    if(opt.selected){
-                      values.push(opt.value);
-                      rsAggr = rsAggr.concat(rsMap[opt.value]);
-                      names.push(opt.innerHTML);
+                  if (!_this.user.limited_access){
+                    // check which regions are selected
+                    for(var i = 0, len = regionSelector.options.length; i < len; i++){
+                      var opt = regionSelector.options[i];
+                      if(opt.selected){
+                        values.push(opt.value);
+                        rsAggr = rsAggr.concat(rsMap[opt.value]);
+                        names.push(opt.innerHTML);
+                      }
                     }
+                    var name = names.join(', ');
                   }
-                  var name = names.join(', ');
-
+                  else {
+                    var opt = regionSelector.options[regionSelector.selectedIndex]; 
+                    values.push(opt.value);
+                    rsAggr = [rsMap[opt.value]];
+                    name = opt.innerHTML;
+                  }
                   var region = {
                     name: name,
                     rs: rsAggr

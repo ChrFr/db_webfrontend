@@ -9,7 +9,7 @@
       </div>
       <div class='col-md-7'> 
         <div id='region-label' style='display: none'> Region </div>
-        <select id='region-select' style='display: none' multiple> </select><br>
+        <select id='region-select' style='display: none' <% if (!user.limited_access) {%> multiple <%}%>> </select><br>
       </div>
     </div>
     <div class="row shadow-box" id='map'></div> 

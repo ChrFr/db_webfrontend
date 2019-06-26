@@ -158,11 +158,11 @@
       </div>       
       <div class='tab-pane agegroup-tab'>  
         <div id='agegroup-data'></div> 
-        <br>
+        <br>        
+        <% if (!user.limited_access) {%>
         <label> Altersgruppe </label> <br>
         <button id='add-agegroups' type='button' class='btn btn-secondary' title='Altersgruppe hinzufügen'>Hinzufügen</button> 
-        <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button>         
-        <% if (!user.limited_access) {%>
+        <button id='delete-agegroups' type='button' class='btn btn-secondary' title='ausgewählte Altersgruppen entfernen'>Entfernen</button>      
         <button type='button' class='btn btn-secondary download-btn csv' style='float: right;' title='Datenblatt als csv-Datei speichern.'>Tabelle als csv</button>
         <%}%> 
         <br>

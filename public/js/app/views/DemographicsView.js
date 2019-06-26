@@ -743,7 +743,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
           dataHeight: 300,
           title: title,
           clickable: true,
-          selectable: true
+          selectable: !this.user.limited_access
         });
       },
       
@@ -756,6 +756,7 @@ define(['jquery', 'app', 'backbone', 'text!templates/demographics.html',
        * sorted insertion of user defined agegroups (in app)
        */
       addAgeGroup: function () {
+        if (this.user.limited_access) return;
         var from = parseInt(this.el.querySelector('#agegroup-from').value),
             to = parseInt(this.el.querySelector('#agegroup-to').value),
             groupName = from + ((to === null || isNaN(to)) ? '+' : ' - ' + to);
